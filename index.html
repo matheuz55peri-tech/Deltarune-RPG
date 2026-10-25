@@ -440,6 +440,15 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="./assets/pdf-compact.js?v=7" defer></script>
 <script src="./assets/themes/theme-expansion.js?v=9" defer></script>
+<link rel="stylesheet" href="./assets/themes-v9.css?v=9">
+<link rel="stylesheet" href="./assets/theme-cosmos.css?v=9">
+<link rel="stylesheet" href="./assets/theme-waterfall.css?v=9">
+<link rel="stylesheet" href="./assets/theme-balcony.css?v=9">
+<link rel="stylesheet" href="./assets/theme-metro.css?v=9">
+<link rel="stylesheet" href="./assets/theme-hydrangea.css?v=9">
+<link rel="stylesheet" href="./assets/theme-bedroom.css?v=9">
+<link rel="stylesheet" href="./assets/theme-lamplight.css?v=9">
+<link rel="stylesheet" href="./assets/theme-playground.css?v=9">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -452,6 +461,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       </a>
       <div class="top-right">
   <div class="live">REGISTRO LOCAL ATIVO</div>
+  <button type="button" class="reset-top" id="soundToggle" aria-pressed="false" title="Ativar ou desativar sons de interface">♫ SONS: OFF</button>
   <div class="theme-control" id="themeControl">
     <button type="button" class="reset-top theme-toggle" id="themeToggle" aria-expanded="false" aria-controls="themePopover">TEMAS <span class="theme-now" id="themeNow">ORIGINAL</span></button>
     <section class="theme-popover" id="themePopover" aria-label="Selecionar tema visual" hidden>
@@ -461,6 +471,10 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <button class="theme-option" type="button" data-theme-choice="classic" aria-pressed="true"><span class="theme-thumb"></span><span class="theme-info"><span><strong>ORIGINAL</strong><small style="display:block">O mundo das almas</small></span></span></button>
         <button class="theme-option" type="button" data-theme-choice="snow" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>NEVE</strong><small style="display:block">Gelo &amp; inverno</small></span></span></button>
         <button class="theme-option" type="button" data-theme-choice="forest" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>FLORESTA</strong><small style="display:block">Noite &amp; vaga-lumes</small></span></span></button>
+        <button class="theme-option" type="button" data-theme-choice="cosmos" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>COSMOS</strong><small style="display:block">Céu de estrelas</small></span></span></button>
+        <button class="theme-option" type="button" data-theme-choice="city" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>CIDADE</strong><small style="display:block">Varanda, metrô e quarto</small></span></span></button>
+        <button class="theme-option" type="button" data-theme-choice="garden" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>JARDIM</strong><small style="display:block">Hortênsias azuis</small></span></span></button>
+        <button class="theme-option" type="button" data-theme-choice="nightfall" aria-pressed="false"><span class="theme-thumb"></span><span class="theme-info"><span><strong>NOITE DOURADA</strong><small style="display:block">Parque e lampião</small></span></span></button>
       </div>
       <div class="winter-options" id="winterOptions" hidden>
         <strong>✦ PAISAGEM DE INVERNO</strong>
@@ -469,7 +483,24 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
           <button type="button" class="winter-choice" data-snow-choice="garden" aria-pressed="false"><span class="scene-preview"></span><span>Jardim de neve<br><small>Ilustração</small></span></button>
         </div>
       </div>
-      <p class="theme-tip">✧ A escolha fica salva somente neste navegador e não modifica a ficha.</p>
+      
+      <div class="theme-subgroup" id="forestOptions" hidden><h3>✦ PAISAGEM DA FLORESTA</h3><div class="theme-scene-options">
+        <button type="button" class="theme-scene-btn" data-scene="fireflies" data-group="forest"><span class="theme-scene-icon" style="background:linear-gradient(135deg,#002b35,#0e7466)"></span>Vaga-lumes</button>
+        <button type="button" class="theme-scene-btn" data-scene="waterfall" data-group="forest"><span class="theme-scene-icon"></span>Cachoeira</button>
+      </div></div>
+      <div class="theme-subgroup" id="cityOptions" hidden><h3>✦ CENÁRIOS DA CIDADE</h3><div class="theme-scene-options">
+        <button type="button" class="theme-scene-btn" data-scene="balcony" data-group="city"><span class="theme-scene-icon"></span>Varanda</button>
+        <button type="button" class="theme-scene-btn" data-scene="metro" data-group="city"><span class="theme-scene-icon"></span>Metrô</button>
+        <button type="button" class="theme-scene-btn" data-scene="bedroom" data-group="city"><span class="theme-scene-icon"></span>Quarto</button>
+      </div></div>
+      <div class="theme-subgroup" id="gardenOptions" hidden><h3>✦ JARDIM</h3><div class="theme-scene-options">
+        <button type="button" class="theme-scene-btn" data-scene="hydrangea" data-group="garden"><span class="theme-scene-icon"></span>Hortênsias</button>
+      </div></div>
+      <div class="theme-subgroup" id="nightOptions" hidden><h3>✦ AMBIENTES DA NOITE</h3><div class="theme-scene-options">
+        <button type="button" class="theme-scene-btn" data-scene="playground" data-group="nightfall"><span class="theme-scene-icon"></span>Parque</button>
+        <button type="button" class="theme-scene-btn" data-scene="lamplight" data-group="nightfall"><span class="theme-scene-icon"></span>Lampião</button>
+      </div></div>
+<p class="theme-tip">✧ A escolha fica salva somente neste navegador e não modifica a ficha.</p>
     </section>
   </div>
   <button class="reset-top" id="resetBtn" type="button">↺ REINICIAR FICHA</button>
@@ -1078,17 +1109,29 @@ loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory
 
 /* DELTA v5 — preferência estética independente do estado do personagem. */
 const THEME_STORAGE_KEY = 'delta-rpg-appearance-v1';
-const THEME_NAMES={classic:'ORIGINAL',snow:'NEVE',forest:'FLORESTA'};
-let appearance={theme:'classic',snowScene:'forest'};
+const THEME_NAMES={classic:'ORIGINAL',snow:'NEVE',forest:'FLORESTA',cosmos:'COSMOS',city:'CIDADE',garden:'JARDIM',nightfall:'NOITE DOURADA'};
+let appearance={theme:'classic',snowScene:'forest',forestScene:'fireflies',cityScene:'balcony',gardenScene:'hydrangea',nightScene:'playground'};
 try{
  const storedAppearance=JSON.parse(localStorage.getItem(THEME_STORAGE_KEY)||'null');
  if(storedAppearance&&typeof storedAppearance==='object')appearance={...appearance,...storedAppearance};
 }catch(err){console.warn('Preferência de tema não pôde ser carregada.',err)}
 if(!THEME_NAMES[appearance.theme])appearance.theme='classic';
 if(!['forest','garden'].includes(appearance.snowScene))appearance.snowScene='forest';
+const allowedScenes={forest:['fireflies','waterfall'],city:['balcony','metro','bedroom'],garden:['hydrangea'],nightfall:['playground','lamplight']};
+const themeSceneKey={forest:'forestScene',city:'cityScene',garden:'gardenScene',nightfall:'nightScene'};
+for(const [theme,scenes] of Object.entries(allowedScenes)){const key=themeSceneKey[theme];if(!scenes.includes(appearance[key]))appearance[key]=scenes[0]}
 function applyAppearance(){
  document.documentElement.setAttribute('data-theme',appearance.theme);
  document.documentElement.setAttribute('data-winter-scene',appearance.snowScene);
+ const sceneKey=themeSceneKey[appearance.theme];
+ const scene=sceneKey?appearance[sceneKey]:(appearance.theme==='cosmos'?'cosmos':'');
+ if(scene&&scene!=='fireflies')document.documentElement.setAttribute('data-theme-scene',scene);
+ else document.documentElement.removeAttribute('data-theme-scene');
+ for(const [theme,id] of [['forest','forestOptions'],['city','cityOptions'],['garden','gardenOptions'],['nightfall','nightOptions']])$(id).hidden=appearance.theme!==theme;
+ document.querySelectorAll('[data-scene]').forEach(btn=>{
+  const key=themeSceneKey[btn.dataset.group];
+  btn.setAttribute('aria-pressed',String(appearance[key]===btn.dataset.scene));
+ });
  $('themeNow').textContent=THEME_NAMES[appearance.theme];
  $('winterOptions').hidden=appearance.theme!=='snow';
  document.querySelectorAll('[data-theme-choice]').forEach(btn=>{
@@ -1098,7 +1141,7 @@ function applyAppearance(){
   btn.setAttribute('aria-pressed',String(btn.dataset.snowChoice===appearance.snowScene));
  });
  const meta=document.querySelector('meta[name="theme-color"]');
- if(meta)meta.content={classic:'#080713',snow:'#0d2941',forest:'#051d25'}[appearance.theme];
+ if(meta)meta.content={classic:'#080713',snow:'#0d2941',forest:'#051d25',cosmos:'#140720',city:'#131539',garden:'#082c2a',nightfall:'#261a10'}[appearance.theme]||'#080713';
  try{localStorage.setItem(THEME_STORAGE_KEY,JSON.stringify(appearance))}catch(err){}
 }
 function toggleThemePopover(shouldOpen){
@@ -1111,10 +1154,15 @@ $('themeClose').addEventListener('click',()=>{toggleThemePopover(false);$('theme
 document.querySelectorAll('[data-theme-choice]').forEach(btn=>btn.addEventListener('click',()=>{
  appearance.theme=btn.dataset.themeChoice;
  applyAppearance();
- if(appearance.theme!=='snow')toggleThemePopover(false);
+ if(!['snow','forest','city','garden','nightfall'].includes(appearance.theme))toggleThemePopover(false);
 }));
 document.querySelectorAll('[data-snow-choice]').forEach(btn=>btn.addEventListener('click',()=>{
  appearance.snowScene=btn.dataset.snowChoice;
+ applyAppearance();
+}));
+document.querySelectorAll('[data-scene]').forEach(btn=>btn.addEventListener('click',()=>{
+ const group=btn.dataset.group,key=themeSceneKey[group];if(!key)return;
+ appearance.theme=group;appearance[key]=btn.dataset.scene;
  applyAppearance();
 }));
 document.addEventListener('click',event=>{
@@ -1128,5 +1176,6 @@ applyAppearance();
 })();
 
 </script>
+<script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 </body>
 </html>
