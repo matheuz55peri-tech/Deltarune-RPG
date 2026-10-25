@@ -1137,7 +1137,179 @@ $('importFileBtn').addEventListener('click',()=>$('importFileInput').click());
 $('importFileInput').addEventListener('change',importFile);
 $('exportActiveFileBtn').addEventListener('click',()=>exportFile(activeSaveId));
 
-// EQUIPMENT_JAVASCRIPT_INSERT_POINT
+
+/* EQUIPAMENTOS DELTA RPG · nove slots, aumentos cumulativos e FILES */
+const EQUIP_SLOTS=[
+ {key:'helmet',name:'CAPACETE',icon:'♜',group:'ARMADURA'},
+ {key:'chest',name:'PEITORAL',icon:'⬡',group:'ARMADURA'},
+ {key:'legs',name:'CALÇA',icon:'▥',group:'ARMADURA'},
+ {key:'boots',name:'BOTAS',icon:'⌑',group:'ARMADURA'},
+ {key:'necklace',name:'COLAR',icon:'◇',group:'ACESSÓRIOS'},
+ {key:'ring1',name:'ANEL I',icon:'◉',group:'ACESSÓRIOS'},
+ {key:'ring2',name:'ANEL II',icon:'◎',group:'ACESSÓRIOS'},
+ {key:'weapon',name:'ARMA',icon:'⚔',group:'MÃOS'},
+ {key:'shield',name:'ESCUDO',icon:'⛨',group:'MÃOS'}
+];
+const EQUIP_STATS=[{key:'strength',label:'FORÇA'},{key:'defense',label:'DEFESA'},
+ {key:'intelligence',label:'INTELIGÊNCIA'},{key:'agility',label:'AGILIDADE'}];
+function normalizeEquipment(source){
+ const output={};const records=source&&typeof source==='object'&&!Array.isArray(source)?source:{};
+ for(const slot of EQUIP_SLOTS){
+  const entry=records[slot.key];if(!entry||typeof entry!=='object'||Array.isArray(entry))continue;
+  const bonuses=(Array.isArray(entry.bonuses)?entry.bonuses:[]).slice(0,8)
+   .filter(b=>b&&EQUIP_STATS.some(stat=>stat.key===b.stat))
+   .map(b=>({stat:b.stat,value:clamp(Math.trunc(b.value),1,999)}));
+  output[slot.key]={
+   name:String(entry.name||'').slice(0,65),
+   weight:clamp(Math.round(Number(entry.weight||0)*10)/10,0,9999),
+   bonuses,isDamage:entry.isDamage===true,damageDice:String(entry.damageDice||'').slice(0,40)
+  };
+ }
+ return output;
+}
+let selectedEquipmentSlot='helmet';
+const equipped=(slot)=>state.equipment?.[slot]||null;
+const slotLabel=(slot)=>EQUIP_SLOTS.find(s=>s.key===slot)?.name||slot;
+const bonusSummary=(item)=>!item?.bonuses?.length?'SEM BÔNUS':
+ item.bonuses.map(b=>'+'+fmt(b.value)+' '+(EQUIP_STATS.find(s=>s.key===b.stat)?.label||b.stat)).join(' · ');
+function equipmentNode(tag,cls,label){
+ const element=document.createElement(tag);
+ if(cls)element.className=cls;
+ if(label!==undefined)element.textContent=label;
+ return element;
+}
+function renderEquipment(){
+ const grid=$('equipmentGrid'),detail=$('equipmentDetails');if(!grid||!detail)return;
+ grid.replaceChildren();
+ for(const grp of [{name:'ARMADURA',cls:'armor'},{name:'ACESSÓRIOS',cls:'trinkets'},{name:'MÃOS',cls:'hands'}]){
+  const section=equipmentNode('section','equip-section '+grp.cls);
+  section.appendChild(equipmentNode('h3','',grp.name));
+  const choices=equipmentNode('div','equip-slots');
+  for(const slot of EQUIP_SLOTS.filter(s=>s.group===grp.name)){
+   const item=equipped(slot.key);
+   const button=equipmentNode('button','equip-slot'+(item?' filled':'')+(selectedEquipmentSlot===slot.key?' selected':''));
+   button.type='button';button.setAttribute('aria-pressed',String(selectedEquipmentSlot===slot.key));
+   button.setAttribute('aria-label',slot.name+': '+(item?item.name:'vazio'));
+   button.append(equipmentNode('span','equip-slot-icon',slot.icon),
+     equipmentNode('span','equip-slot-type',slot.name),
+     equipmentNode('span','equip-slot-name',item?item.name:'[ VAZIO ]'));
+   if(item?.bonuses?.length)button.appendChild(equipmentNode('span','equip-slot-buff',bonusSummary(item)));
+   button.addEventListener('click',()=>{selectedEquipmentSlot=slot.key;closeEquipmentEditor();renderEquipment()});
+   choices.appendChild(button);
+  }
+  section.appendChild(choices);grid.appendChild(section);
+ }
+ detail.replaceChildren();
+ const current=equipped(selectedEquipmentSlot);
+ detail.appendChild(equipmentNode('span','equip-small','✦ '+slotLabel(selectedEquipmentSlot)));
+ detail.appendChild(equipmentNode('h3','',current?.name||'ESPAÇO VAZIO'));
+ if(current){
+  const addLine=(label,value)=>{
+   const row=equipmentNode('div','equip-stat-line');
+   row.append(equipmentNode('span','',label),equipmentNode('strong','',value));detail.appendChild(row);
+  };
+  addLine('PESO',fmt(current.weight)+' kg');
+  addLine('ATRIBUTOS ADICIONAIS',bonusSummary(current));
+  if(current.isDamage)addLine('DADOS DE DANO',current.damageDice||'NÃO DEFINIDOS');
+ }else{
+  detail.appendChild(equipmentNode('p','','Nenhum item equipado. Selecione EQUIPAR para adicionar um novo.'));
+ }
+ const actions=equipmentNode('div','equip-action-row');
+ const edit=equipmentNode('button','library-btn',current?'✦ EDITAR':'＋ EQUIPAR');edit.type='button';
+ edit.addEventListener('click',()=>openEquipmentEditor(selectedEquipmentSlot));actions.appendChild(edit);
+ if(current){
+  const remove=equipmentNode('button','library-btn secondary','RETIRAR');remove.type='button';
+  remove.addEventListener('click',()=>{
+   if(!confirm('Retirar '+current.name+' deste espaço? O bônus será removido.'))return;
+   changeEquipment(selectedEquipmentSlot,null);closeEquipmentEditor();toast('Equipamento retirado.');
+  });actions.appendChild(remove);
+ }
+ detail.appendChild(actions);
+ const summary=$('equipmentSummary');summary.replaceChildren();
+ const all=Object.values(state.equipment||{}).filter(Boolean);
+ summary.append(equipmentNode('span','',all.length+' / 9 EQUIPADOS · PESO TOTAL: '),
+  equipmentNode('strong','',fmt(all.reduce((sum,e)=>sum+Number(e.weight||0),0))+' kg'));
+ const totals=EQUIP_STATS.map(s=>({label:s.label,points:equipmentBonus(s.key)})).filter(s=>s.points>0);
+ if(totals.length)summary.appendChild(equipmentNode('div','',totals.map(s=>'+'+fmt(s.points)+' '+s.label).join(' · ')));
+}
+function addEquipmentBonusRow(stat='defense',amount=1){
+ const container=$('equipmentBonusRows');
+ if(container.children.length>=8){toast('Máximo de 8 aumentos por item.');return}
+ const row=equipmentNode('div','equip-bonus-row');
+ const select=equipmentNode('select','equip-input');select.setAttribute('aria-label','Atributo adicional');
+ for(const type of EQUIP_STATS){const option=document.createElement('option');option.value=type.key;option.textContent=type.label;select.appendChild(option)}
+ select.value=EQUIP_STATS.some(s=>s.key===stat)?stat:'defense';
+ const points=equipmentNode('input','equip-input');points.type='number';points.min='1';points.max='999';points.step='1';
+ points.value=clamp(Math.trunc(amount),1,999);points.setAttribute('aria-label','Quantidade de pontos');
+ const remove=equipmentNode('button','equip-mini-action','×');remove.type='button';
+ remove.setAttribute('aria-label','Remover aumento de atributo');
+ remove.addEventListener('click',()=>{if(container.children.length<=1){toast('É necessário pelo menos um aumento.');return}row.remove()});
+ row.append(select,points,remove);container.appendChild(row);
+}
+function toggleEquipmentDamage(){
+ const isDamage=$('equipmentType').value==='damage';
+ $('equipmentDamageWrap').hidden=!isDamage;$('equipmentDamageDice').required=isDamage;
+}
+function closeEquipmentEditor(){
+ const editor=$('equipmentForm');if(editor)editor.hidden=true;
+}
+function openEquipmentEditor(slot=selectedEquipmentSlot){
+ selectedEquipmentSlot=EQUIP_SLOTS.some(s=>s.key===slot)?slot:'helmet';
+ const current=equipped(selectedEquipmentSlot),form=$('equipmentForm');form.hidden=false;
+ $('equipmentHeading').textContent=current?'✦ EDITAR EQUIPAMENTO':'✦ ADICIONAR EQUIPAMENTO';
+ $('equipmentSlot').value=selectedEquipmentSlot;
+ $('equipmentName').value=current?.name||'';
+ $('equipmentWeight').value=current?.weight??0;
+ $('equipmentType').value=current?.isDamage?'damage':selectedEquipmentSlot==='weapon'?'damage':'utility';
+ $('equipmentDamageDice').value=current?.damageDice||'';
+ toggleEquipmentDamage();
+ $('equipmentBonusRows').replaceChildren();
+ for(const bonus of (current?.bonuses?.length?current.bonuses:[{stat:'defense',value:1}]))
+   addEquipmentBonusRow(bonus.stat,bonus.value);
+ renderEquipment();
+ form.scrollIntoView({behavior:'smooth',block:'nearest'});
+ $('equipmentName').focus();
+}
+function changeEquipment(slot,item){
+ const missing=maxHp()-state.hp;
+ if(!state.equipment||typeof state.equipment!=='object')state.equipment={};
+ if(item)state.equipment[slot]=item;else delete state.equipment[slot];
+ state.hp=clamp(maxHp()-missing,0,maxHp());
+ renderStatus();renderEquipment();persist();
+}
+const slotSelect=$('equipmentSlot');
+for(const slot of EQUIP_SLOTS){const option=document.createElement('option');option.value=slot.key;option.textContent=slot.name;slotSelect.appendChild(option)}
+slotSelect.addEventListener('change',ev=>{
+ const oldSelected=selectedEquipmentSlot;
+ if(ev.target.value!==oldSelected && equipped(ev.target.value) && !confirm('Este espaço já possui equipamento. Deseja editar o item deste espaço?')){
+  slotSelect.value=oldSelected;return;
+ }
+ openEquipmentEditor(ev.target.value);
+});
+$('equipmentType').addEventListener('change',toggleEquipmentDamage);
+$('addEquipmentBtn').addEventListener('click',()=>openEquipmentEditor(selectedEquipmentSlot));
+$('addEquipmentBonusBtn').addEventListener('click',()=>addEquipmentBonusRow('defense',1));
+$('cancelEquipmentBtn').addEventListener('click',closeEquipmentEditor);
+$('equipmentForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const slot=$('equipmentSlot').value;
+ if(!EQUIP_SLOTS.some(s=>s.key===slot))return;
+ const name=$('equipmentName').value.trim().slice(0,65);
+ if(!name){toast('Digite o nome do equipamento.');return}
+ const bonuses=[];
+ $('equipmentBonusRows').querySelectorAll('.equip-bonus-row').forEach(row=>{
+  const sel=row.querySelector('select'),num=row.querySelector('input');
+  if(sel&&num&&EQUIP_STATS.some(s=>s.key===sel.value))
+   bonuses.push({stat:sel.value,value:clamp(Math.trunc(num.value),1,999)});
+ });
+ if(!bonuses.length){toast('Selecione pelo menos um aumento de atributo.');return}
+ const isDamage=$('equipmentType').value==='damage',dice=$('equipmentDamageDice').value.trim().slice(0,40);
+ if(isDamage&&!dice){toast('Informe os dados de dano da arma.');return}
+ const item={name,weight:clamp(Math.round(Number($('equipmentWeight').value)*10)/10,0,9999),
+  bonuses,isDamage,damageDice:isDamage?dice:''};
+ changeEquipment(slot,item);closeEquipmentEditor();toast('Equipamento salvo! Bônus aplicados à ficha.');
+});
+
 makePetals('soulPetals',13);
 loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
 
