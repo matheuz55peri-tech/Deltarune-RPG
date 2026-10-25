@@ -1,0 +1,110 @@
+/* DELTA RPG — Mundos, subtemas e áudio v9 */
+:root{--delta-motion:.24s}
+.theme-popover{width:min(516px,calc(100vw - 22px));max-height:min(83vh,780px)}
+.theme-option[data-theme-choice="cosmos"] .theme-thumb{background-image:url('./cosmos.webp')}
+.theme-option[data-theme-choice="city"] .theme-thumb{background-image:url('./balcony.gif')}
+.theme-option[data-theme-choice="garden"] .theme-thumb{background-image:url('./blue-garden.webp')}
+.theme-option[data-theme-choice="playground"] .theme-thumb{background-image:url('./playground.gif')}
+.theme-option[data-theme-choice="classic"]{grid-column:1/-1}
+.theme-option[data-theme-choice="cosmos"] .theme-thumb,.theme-option[data-theme-choice="city"] .theme-thumb,.theme-option[data-theme-choice="garden"] .theme-thumb,.theme-option[data-theme-choice="playground"] .theme-thumb{image-rendering:pixelated}
+.theme-panel-divider{margin:15px 0 12px;padding-top:13px;border-top:1px solid rgba(166,224,241,.24)}
+.theme-panel-divider[hidden]{display:none!important}
+.theme-panel-divider>strong{display:block;color:#d9f5ff;font:9px 'Press Start 2P',monospace;line-height:1.65;margin-bottom:11px}
+.theme-panel-divider>p{font-size:11px;color:#bed6dc;line-height:1.5;margin:0 0 11px}
+.theme-sub-scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.theme-scene-button{cursor:pointer;text-align:left;border:1px solid rgba(156,217,228,.3);color:#eef6ff;background:rgba(14,38,59,.47);border-radius:5px;padding:6px;display:flex;gap:9px;align-items:center;min-height:64px;transition:transform var(--delta-motion),background var(--delta-motion),border-color var(--delta-motion)}
+.theme-scene-button:hover{transform:translateY(-1px);border-color:#b9eefa;background:rgba(54,103,133,.35)}
+.theme-scene-button[aria-pressed="true"]{border-color:#9ceacc;background:rgba(57,115,110,.4);box-shadow:inset 0 0 0 1px rgba(150,255,223,.2)}
+.theme-scene-button .scene-thumb{flex:0 0 65px;height:52px;background-size:cover;background-position:center;image-rendering:pixelated;border:1px solid rgba(225,245,255,.15);border-radius:3px}
+.theme-scene-button strong{font-size:11px;line-height:1.4;display:block}
+.theme-scene-button small{font-size:10px;display:block;margin-top:4px;color:#b8d6dd;line-height:1.3}
+.theme-scene-button[data-scene-id="night"] .scene-thumb{background-image:var(--night-forest-scene)}
+.theme-scene-button[data-scene-id="waterfall"] .scene-thumb{background-image:url('./waterfall.webp')}
+.theme-scene-button[data-scene-id="balcony"] .scene-thumb{background-image:url('./balcony.gif')}
+.theme-scene-button[data-scene-id="subway"] .scene-thumb{background-image:url('./subway.webp')}
+.theme-scene-button[data-scene-id="room"] .scene-thumb{background-image:url('./cozy-room.webp')}
+.theme-scene-button[data-scene-id="street"] .scene-thumb{background-image:url('./night-street.gif')}
+.sound-toggle{display:inline-flex;align-items:center;gap:7px;border-color:rgba(176,213,245,.4);font-size:10px;min-height:41px;white-space:nowrap}
+.sound-toggle[aria-pressed="true"]{color:#bbfbdb;border-color:rgba(118,232,173,.45)}
+.sound-toggle[aria-pressed="false"]{color:#d2c2d3}
+.sound-toggle .sound-note{font-size:15px}
+.audio-settings{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:13px 3px 2px;margin-top:13px;border-top:1px solid rgba(166,224,241,.24)}
+.audio-settings label{color:#d5e6f9;font-size:11px;font-weight:700}
+.audio-settings input[type="range"]{flex:1;min-width:90px;accent-color:#88ecdb}
+.audio-settings .audio-caption{font-size:10px;color:#a6ced5}
+html[data-theme="cosmos"]{
+  --theme-backdrop:url('./cosmos.webp');
+  --theme-overlay-left:rgba(4,4,22,.80);--theme-overlay-center:rgba(12,6,39,.34);
+  --theme-overlay-right:rgba(3,3,23,.77);--theme-overlay-low:rgba(3,2,17,.68);--theme-overlay-high:rgba(7,2,26,.36);
+  --paper:#f3efff;--muted:#b7aee1;--purple:#c6a5ff;--cyan:#aab8ff;--yellow:#ffdb93;
+  --red:#ff779f;--green:#80e9d7;--panel:rgba(12,7,35,.86);--stroke:rgba(159,142,255,.46);
+  --corner:rgba(223,204,255,.96);--v6-edge:#bcb0ff;--v6-accent:#daaeff;--v6-glow:rgba(134,79,239,.22)
+}
+html[data-theme="city"]{
+  --theme-backdrop:url('./balcony.gif');
+  --theme-overlay-left:rgba(10,7,35,.83);--theme-overlay-center:rgba(16,15,59,.35);
+  --theme-overlay-right:rgba(8,6,36,.83);--theme-overlay-low:rgba(9,7,30,.70);--theme-overlay-high:rgba(16,10,57,.45);
+  --paper:#f6f0ff;--muted:#b4abd9;--purple:#b9a1fa;--cyan:#b5a8ff;--yellow:#fdd6aa;
+  --red:#ff8cb3;--green:#8ce1dd;--panel:rgba(14,11,40,.86);--stroke:rgba(166,151,246,.45);
+  --corner:rgba(221,204,255,.97);--v6-edge:#beacff;--v6-accent:#e6b5ff;--v6-glow:rgba(157,111,255,.20)
+}
+html[data-theme="city"][data-city-scene="subway"]{
+  --theme-backdrop:url('./subway.webp');
+  --theme-overlay-left:rgba(17,9,32,.83);--theme-overlay-center:rgba(35,17,42,.42);--theme-overlay-right:rgba(20,8,35,.81);
+  --paper:#fff0f6;--muted:#d6b3ce;--purple:#db9ecb;--cyan:#efacdb;--yellow:#ffd6bc;
+  --panel:rgba(23,11,35,.89);--stroke:rgba(242,146,186,.43);--corner:#ffd5ee;--v6-edge:#ffa6cf;--v6-glow:rgba(253,115,175,.24)
+}
+html[data-theme="city"][data-city-scene="room"]{
+  --theme-backdrop:url('./cozy-room.webp');
+  --theme-overlay-left:rgba(17,12,30,.83);--theme-overlay-center:rgba(27,20,36,.37);--theme-overlay-right:rgba(18,12,30,.84);
+  --paper:#fff4e9;--muted:#c9b9cc;--purple:#d0a1e2;--cyan:#d0cbff;--yellow:#ffd38b;
+  --panel:rgba(25,17,34,.88);--stroke:rgba(238,171,141,.43);--corner:#ffddb9;--v6-edge:#ffc998;--v6-glow:rgba(249,173,107,.17)
+}
+html[data-theme="city"][data-city-scene="street"]{
+  --theme-backdrop:url('./night-street.gif');
+  --theme-overlay-left:rgba(14,13,23,.82);--theme-overlay-center:rgba(30,26,25,.39);--theme-overlay-right:rgba(15,13,24,.84);
+  --paper:#f4ead7;--muted:#c7bca5;--purple:#ccb890;--cyan:#edce93;--yellow:#fce195;
+  --panel:rgba(24,23,25,.89);--stroke:rgba(217,184,104,.44);--corner:#f1d8a5;--v6-edge:#f1ce85;--v6-glow:rgba(225,172,85,.17)
+}
+html[data-theme="forest"][data-forest-scene="waterfall"]{
+  --theme-backdrop:url('./waterfall.webp');
+  --theme-overlay-left:rgba(4,22,22,.79);--theme-overlay-center:rgba(7,42,41,.33);
+  --theme-overlay-right:rgba(4,23,28,.78);--theme-overlay-low:rgba(3,15,20,.65);--theme-overlay-high:rgba(8,31,35,.3);
+  --paper:#f2fff8;--muted:#add4ca;--purple:#a9e4c6;--cyan:#a7faec;--yellow:#e2ffbd;
+  --red:#fca5ad;--green:#85f2b9;--panel:rgba(5,30,33,.85);--stroke:rgba(143,222,195,.52);
+  --corner:#d4ffeb;--v6-edge:#9eefd5;--v6-glow:rgba(74,208,159,.22)
+}
+html[data-theme="garden"]{
+  --theme-backdrop:url('./blue-garden.webp');
+  --theme-overlay-left:rgba(4,20,29,.85);--theme-overlay-center:rgba(8,45,54,.43);
+  --theme-overlay-right:rgba(5,20,33,.83);--theme-overlay-low:rgba(4,16,28,.72);--theme-overlay-high:rgba(10,36,46,.35);
+  --paper:#efffff;--muted:#9dcbd6;--purple:#9acdec;--cyan:#70f0e9;--yellow:#e8f7aa;
+  --red:#ffaab6;--green:#76efd4;--panel:rgba(2,25,35,.88);--stroke:rgba(102,212,207,.48);
+  --corner:#a0f1f1;--v6-edge:#76efeb;--v6-glow:rgba(61,201,210,.21)
+}
+html[data-theme="playground"]{
+  --theme-backdrop:url('./playground.gif');
+  --theme-overlay-left:rgba(13,9,3,.81);--theme-overlay-center:rgba(25,18,5,.35);
+  --theme-overlay-right:rgba(13,9,3,.81);--theme-overlay-low:rgba(13,10,4,.75);--theme-overlay-high:rgba(26,18,6,.42);
+  --paper:#fff0cd;--muted:#d5bd87;--purple:#e3c17b;--cyan:#f7c85e;--yellow:#ffde86;
+  --red:#ffc07e;--green:#cbe2a0;--panel:rgba(24,17,5,.88);--stroke:rgba(224,181,89,.43);
+  --corner:#ffe5a8;--v6-edge:#f7d279;--v6-glow:rgba(250,196,74,.16)
+}
+html[data-theme="cosmos"] body,html[data-theme="city"] body{background:#080419}
+html[data-theme="garden"] body{background:#041e26}
+html[data-theme="playground"] body{background:#140d04}
+html[data-theme="cosmos"] .rpg-box,html[data-theme="city"] .rpg-box,html[data-theme="garden"] .rpg-box,html[data-theme="playground"] .rpg-box,html[data-theme="forest"][data-forest-scene="waterfall"] .rpg-box{
+ border-color:var(--corner);box-shadow:0 10px 42px rgba(0,0,0,.38),inset 0 0 0 4px rgba(255,255,255,.025),0 0 14px var(--v6-glow)
+}
+html[data-theme="cosmos"] .theme-atmosphere{
+ opacity:.64;background-image:radial-gradient(1px 1px at 23px 31px,rgba(235,210,255,.95) 98%,transparent),radial-gradient(2px 2px at 71px 93px,rgba(176,208,255,.8) 98%,transparent),radial-gradient(1px 1px at 159px 61px,rgba(255,208,156,.84) 98%,transparent);
+ background-size:213px 191px,331px 277px,287px 335px;animation:deltaStarlight 12s ease-in-out infinite alternate
+}
+html[data-theme="city"] .theme-atmosphere{opacity:.18;background-image:radial-gradient(1px 1px at 40px 80px,rgba(244,202,255,.7) 90%,transparent);background-size:180px 250px;animation:deltaStarlight 10s infinite alternate}
+html[data-theme="forest"][data-forest-scene="waterfall"] .theme-atmosphere{opacity:.3;background-image:radial-gradient(4px 4px at 50px 180px,rgba(204,255,233,.3) 98%,transparent);background-size:220px 330px;animation:themeSnow 28s linear infinite}
+html[data-theme="garden"] .theme-atmosphere{opacity:.6;background-image:radial-gradient(2px 2px at 40px 50px,rgba(100,245,227,.74) 99%,transparent);background-size:190px 240px;animation:themeFireflies 11s infinite alternate}
+html[data-theme="playground"] .theme-atmosphere{opacity:.32;background-image:radial-gradient(1px 1px at 40px 80px,rgba(255,207,93,.88) 99%,transparent);background-size:160px 170px;animation:deltaStarlight 13s infinite alternate}
+html[data-theme="cosmos"] .portrait,html[data-theme="city"] .portrait,html[data-theme="garden"] .portrait,html[data-theme="playground"] .portrait{background:radial-gradient(circle at 50% 43%,var(--v6-glow),transparent 52%),rgba(5,7,21,.65);border-color:var(--stroke)}
+@keyframes deltaStarlight{from{opacity:.36;transform:translateY(0)}to{opacity:.8;transform:translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){html[data-theme] .theme-atmosphere{animation:none!important}.theme-scene-button{transition:none}}
+@media(max-width:500px){.theme-popover{padding:13px}.theme-sub-scenes{grid-template-columns:1fr}.theme-option .theme-thumb{height:75px}.sound-toggle{font-size:10px}}

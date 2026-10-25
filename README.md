@@ -50,3 +50,20 @@ A primeira aba do site é **FILES**. Cada slot contém uma ficha independente e 
 Os arquivos locais são mantidos automaticamente em `localStorage` com a chave `delta-rpg-save-files-v1`. Na primeira abertura, a ficha única das versões anteriores é convertida em **FILE 01 · ORIGINAL**, para preservar os dados existentes.
 
 **Importante:** os saves não são sincronizados entre dispositivos. Compartilhe ou faça backup exportando um arquivo `.deltarpg`, especialmente antes de limpar os dados do navegador.
+
+
+## Mundos e áudio (v9)
+
+Escolha um mundo pelo botão **TEMAS** no cabeçalho:
+
+- **Original**, **Neve** (Bosque e Jardim), **Floresta** (Noite e **Cachoeira**)
+- **Cosmos**, **Cidade** (Varanda, Metrô, Quarto, Rua Noturna)
+- **Jardim Azul** e **Playground Noturno**
+
+Os fundos são imagens e GIFs fornecidos para o projeto e estão em `assets/themes/`. Alguns GIFs foram convertidos para WebP animado, mantendo os quadros e reduzindo o peso das páginas. O fundo de cachoeira é estático porque a referência fornecida também era estática.
+
+### Sons de interface
+
+Dez pequenos efeitos foram recortados do áudio enviado para criar interações ao passar o mouse e selecionar botões, fichas e abas. Use o botão **♫ SOM ON/OFF** para desligar, ou o controle de volume no painel de temas. Os arquivos ficam em `assets/sfx/`. O navegador pode exigir um primeiro clique antes de permitir som ao passar o mouse.
+
+As preferências visuais e sonoras ficam em chaves separadas do sistema de FILES. Assim, mudar de tema ou desativar os sons não modifica nenhum personagem.
