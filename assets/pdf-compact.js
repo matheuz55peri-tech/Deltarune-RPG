@@ -106,6 +106,35 @@
       }
       y+=2;
     }
+
+    if(data.equipment?.length){
+      section('Equipamentos',accent);
+      const eq=data.equipment||[],columns=2,colGap=3,colW=(INNER-colGap)/2;
+      for(let i=0;i<eq.length;i+=columns){
+        const pair=eq.slice(i,i+columns).map(e=>{
+          const label=clean(e.slot||'EQUIPAMENTO')+' · '+clean(e.name||'SEM NOME');
+          const increases=(e.bonuses||[]).map(b=>'+'+num(b.value)+' '+({strength:'FOR',defense:'DEF',intelligence:'INT',agility:'AGI'}[b.stat]||b.stat)).join('  ·  ');
+          const top=small(label,colW-10,8.2),second=small(increases||'SEM AUMENTOS',colW-10,7.5);
+          const extras=(e.isDamage?[clean('DANO: '+(e.damageDice||'NÃO DEFINIDO'))]:[]).concat(['PESO: '+num(e.weight||0)+' kg']);
+          const extraLines=extras.flatMap(z=>small(z,colW-10,7.5));
+          return {e,top,second,extraLines,h:Math.max(21,7+top.length*3.5+second.length*3.25+extraLines.length*3.4)};
+        });
+        const h=Math.max(...pair.map(e=>e.h));
+        ensure(h+4);
+        pair.forEach((item,j)=>{
+          const x=M+j*(colW+colGap);panel(x,y,colW,h);
+          let yText=y+5.5;
+          item.top.forEach(line=>{text(line,x+4,yText,8.2,C.white,true);yText+=3.5});
+          yText+=.5;
+          item.second.forEach(line=>{text(line,x+4,yText,7.5,C.heal,true);yText+=3.25});
+          yText+=.6;
+          item.extraLines.forEach(line=>{text(line,x+4,yText,7.4,C.muted);yText+=3.4});
+        });
+        y+=h+3;
+      }
+      y+=3;
+    }
+
     section('Habilidades',C.gold);
     const groups=[
       ['DANO','damage',C.damage],
