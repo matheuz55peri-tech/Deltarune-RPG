@@ -756,7 +756,10 @@ function soulTarget(){
  // Pequena ampliação tonal progressiva à medida que a alma evolui.
  const progress=bounded(total/36,0,1);
  l+=progress*(frost*3-dusk*3+rose*2);
- return {empty:false,total,hue:h,sat:bounded(s,32,96),light:bounded(l,25,82)};
+ // Saturação vibrante: amplia misturas que antes ficavam cinzentas.
+ // Mantém distinções naturais entre tons terrosos, pastéis e cores intensas.
+ const vibrantSat=bounded(58+s*.48+rose*6+dusk*4-earth*8-frost*5,58,98);
+ return {empty:false,total,hue:h,sat:vibrantSat,light:bounded(l,25,82)};
 }
 function drawSoul(hue,sat,light,target){
  const h=((hue%360)+360)%360;
