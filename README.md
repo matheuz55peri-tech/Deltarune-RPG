@@ -67,3 +67,11 @@ Os fundos são imagens e GIFs fornecidos para o projeto e estão em `assets/them
 Dez pequenos efeitos foram recortados do áudio enviado para criar interações ao passar o mouse e selecionar botões, fichas e abas. Use o botão **♫ SOM ON/OFF** para desligar, ou o controle de volume no painel de temas. Os arquivos ficam em `assets/sfx/`. O navegador pode exigir um primeiro clique antes de permitir som ao passar o mouse.
 
 As preferências visuais e sonoras ficam em chaves separadas do sistema de FILES. Assim, mudar de tema ou desativar os sons não modifica nenhum personagem.
+
+## Equipamentos (v10)
+
+A aba **Equipamentos**, entre Inventário e Habilidades, oferece **nove espaços independentes**: Capacete, Peitoral, Calça, Botas, Colar, Anel I, Anel II, Arma e Escudo.
+
+Cada equipamento possui nome, peso em kg, categoria comum ou de dano, e até oito linhas de **aumentos de atributo**. Equipamentos de dano também têm campo de dados de dano (por exemplo, `2d6+3`). Os aumentos de Força, Defesa, Inteligência e Agilidade são **cumulativos**, apresentados na ficha como `+N`, separadamente dos pontos-base. Ao alterar a Defesa, HP máximo é recalculado mantendo a quantidade de vida que faltava; Inteligência e Agilidade também alteram o ganho de TP.
+
+Os equipamentos ficam salvos no **FILE ativo** e são mantidos ao duplicar, exportar e importar arquivos `.deltarpg`, sem afetar outros personagens. A exportação PDF A4 inclui uma seção de equipamentos, com bônus, peso e dados de dano.
