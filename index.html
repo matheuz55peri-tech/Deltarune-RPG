@@ -436,6 +436,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 </style>
 <link rel="stylesheet" href="./theme-colors.css?v=6">
 <link rel="stylesheet" href="./assets/themes/theme-expansion.css?v=9">
+<link rel="stylesheet" href="./assets/equipment.css?v=10">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="./assets/pdf-compact.js?v=7" defer></script>
@@ -515,6 +516,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <button type="button" class="rpg-tab active" data-tab="files" role="tab" aria-selected="true">▣ FILES</button>
         <button type="button" class="rpg-tab" data-tab="sheet" role="tab" aria-selected="false">♥ FICHA</button>
         <button type="button" class="rpg-tab" data-tab="inventory" role="tab" aria-selected="false">✧ INVENTÁRIO</button>
+        <button type="button" class="rpg-tab" data-tab="equipment" role="tab" aria-selected="false">⬡ EQUIPAMENTOS</button>
         <button type="button" class="rpg-tab" data-tab="skills" role="tab" aria-selected="false">⚔ HABILIDADES</button>
       </nav>
       <section class="tab-content files-tab" id="tab-files" aria-label="Arquivos de salvamento">
@@ -603,6 +605,31 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
     <p class="library-help">✦ Selecione um item para visualizar, editar ou remover. Os dados ficam salvos no navegador.</p>
   </div>
 </section>
+<section class="tab-content" id="tab-equipment" hidden aria-label="Equipamentos do personagem">
+<div class="rpg-box equip-shell">
+ <div class="equip-head">
+  <div><h2 class="box-title pixel">✦ EQUIPAMENTOS</h2><p class="equip-note">Escolha um espaço para equipar ou editar. Aumentos de atributos são aplicados automaticamente à ficha.</p></div>
+  <button type="button" class="library-btn" id="addEquipmentBtn">＋ ADICIONAR EQUIPAMENTO</button>
+ </div>
+ <div class="equip-layout">
+  <div class="equip-board" id="equipmentGrid" aria-label="Espaços de equipamento"></div>
+  <div class="equip-side"><aside class="equip-detail" id="equipmentDetails" aria-live="polite"></aside><div class="equip-weight-summary" id="equipmentSummary"></div></div>
+ </div>
+ <form id="equipmentForm" class="equip-editor" hidden>
+  <h3 id="equipmentHeading">✦ EQUIPAMENTO</h3>
+  <div class="equip-fields">
+   <label class="equip-field">ESPAÇO<select id="equipmentSlot" class="equip-input" required></select></label>
+   <label class="equip-field">NOME<input id="equipmentName" class="equip-input" maxlength="65" required placeholder="Ex.: Peitoral do Guardião" autocomplete="off"></label>
+   <label class="equip-field">PESO (kg)<input id="equipmentWeight" class="equip-input" type="number" value="0" min="0" max="9999" step="0.1"></label>
+   <label class="equip-field">TIPO<select id="equipmentType" class="equip-input"><option value="utility">COMUM</option><option value="damage">EQUIPAMENTO DE DANO</option></select></label>
+   <label class="equip-field wide equip-damage-settings" id="equipmentDamageWrap" hidden>DADOS DE DANO<input id="equipmentDamageDice" class="equip-input" maxlength="40" placeholder="Ex.: 2d6+3"></label>
+   <div class="equip-field wide"><span>AUMENTOS DE ATRIBUTO</span><p class="equip-message">Você pode adicionar vários aumentos ao mesmo equipamento.</p><div class="equip-bonus-list" id="equipmentBonusRows"></div>
+   <button type="button" class="library-btn secondary" id="addEquipmentBonusBtn">＋ ADICIONAR AUMENTO</button></div>
+  </div>
+  <div class="equip-footer"><button class="library-btn" type="submit">✦ SALVAR EQUIPAMENTO</button><button type="button" class="library-btn secondary" id="cancelEquipmentBtn">CANCELAR</button></div>
+ </form>
+ <p class="library-help">✦ A ficha mantém os pontos-base separados dos aumentos do equipamento. Retirar um item remove seu bônus.</p>
+</div></section>
 <section class="tab-content" id="tab-skills" hidden aria-label="Habilidades do personagem">
   <div class="rpg-box library-shell">
     <div class="library-head">
@@ -656,7 +683,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Nu
 const one=v=>Math.round(v*10)/10;
 const fmt=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const MAX_TP=100;
-const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],selectedItem:null,selectedSkill:null,activeBuffs:[]});
+const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[]});
 let state=baseState();
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -694,7 +721,8 @@ state.skills=state.skills.map(s=>({...s,category:['damage','heal','buff'].includ
 state.name=String(state.name||'').slice(0,32);
 if(!['sheet','inventory','skills'].includes(state.activeTab))state.activeTab='sheet';
 const attrBonus=key=>state.activeBuffs.filter(x=>x.target===key).reduce((sum,x)=>sum+x.amount,0);
-const effective=key=>state[key]+attrBonus(key);
+const equipmentBonus=key=>Object.values(state.equipment||{}).filter(Boolean).reduce((n,item)=>n+(item.bonuses||[]).filter(b=>b.stat===key).reduce((sum,b)=>sum+Number(b.value||0),0),0);
+const effective=key=>state[key]+attrBonus(key)+equipmentBonus(key);
 const maxHp=()=>20+4*effective('defense');
 const gain=()=>one(10*(1+effective('intelligence')*.05+effective('agility')*.02));
 const shieldHp=()=>state.activeBuffs.filter(x=>x.target==='hp').reduce((sum,x)=>sum+x.amount,0);
@@ -796,13 +824,13 @@ function updateSoul(animate=true){
  hueAnimation=requestAnimationFrame(frame);
 }
 
-function switchTab(tab){if(!['files','sheet','inventory','skills'].includes(tab))tab='files';state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['files','sheet','inventory','skills'])$('tab-'+key).hidden=(key!==tab);if(tab==='files'&&filesReady)renderFiles();persist()}
+function switchTab(tab){if(!['files','sheet','inventory','equipment','skills'].includes(tab))tab='files';state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['files','sheet','inventory','equipment','skills'])$('tab-'+key).hidden=(key!==tab);if(tab==='equipment')renderEquipment();if(tab==='files'&&filesReady)renderFiles();persist()}
 function renderStatus(animateSoul=false){
  $('characterName').value=state.name;$('level').value=state.level;
- for(const k of SOUL_KEYS){$(k).value=state[k];const bonus=attrBonus(k),tag=$('bonus-'+k);tag.hidden=bonus===0;tag.textContent='+'+fmt(bonus)}
+ for(const k of SOUL_KEYS){$(k).value=state[k];const buff=attrBonus(k),gear=equipmentBonus(k),bonus=buff+gear,tag=$('bonus-'+k);tag.hidden=bonus===0;tag.textContent='+'+fmt(bonus);tag.title='EQUIPAMENTOS +'+fmt(gear)+' | BUFFS +'+fmt(buff)}
  $('intBonus').textContent='+'+fmt(effective('intelligence')*5)+'%';$('agiBonus').textContent='+'+fmt(effective('agility')*2)+'%';
  $('gainChip').textContent=fmt(gain())+' TP';$('currentHp').value=state.hp;$('maxHp').textContent=maxHp();
- $('hpFormula').textContent=`20 + ${state.defense} × 4${attrBonus('defense')? ' (BUFF +'+attrBonus('defense')*4+')':''}`;
+ $('hpFormula').textContent='20 + ('+state.defense+(equipmentBonus('defense')?' +'+fmt(equipmentBonus('defense'))+' EQUIP':'')+(attrBonus('defense')?' +'+fmt(attrBonus('defense'))+' BUFF':'')+') × 4';
  $('currentTp').value=state.tp;$('tpPerAction').textContent='+'+fmt(gain())+' TP';
  const hpPct=100*state.hp/maxHp();$('hpFill').style.width=hpPct+'%';$('hpPercent').textContent=Math.round(hpPct)+'%';
  $('hpBar').setAttribute('aria-valuemax',String(maxHp()));$('hpBar').setAttribute('aria-valuenow',String(state.hp));
@@ -912,7 +940,7 @@ $('exportPdfBtn').addEventListener('click',async()=>{
      buffs:state.activeBuffs.map(b=>({...b,target:buffLabel[b.target]||b.target})),
      skills:state.skills.map(e=>({...e,category:skillCategory(e),
        target:buffLabel[e.target]||e.target})),
-     items:state.items.map(e=>({...e}))
+     items:state.items.map(e=>({...e})),equipment:EQUIP_SLOTS.filter(s=>state.equipment?.[s.key]).map(s=>({slot:s.name,...state.equipment[s.key]}))
    };
    await window.DeltaCompactPDF(payload);
    toast('Ficha compacta A4 exportada!');
@@ -944,8 +972,10 @@ function cleanCharacter(input){
   .filter(x=>x&&typeof x==='object'&&['hp','strength','defense','intelligence','agility'].includes(x.target))
   .map(x=>({id:short(x.id,80)||freshId(),skillId:short(x.skillId,80),name:short(x.name,55),
   target:x.target,amount:clamp(Math.trunc(x.amount),1,999),remaining:clamp(Math.trunc(x.remaining),1,99)}));
+ v.equipment=normalizeEquipment(input.equipment);
+ const equippedDef=Object.values(v.equipment).filter(Boolean).reduce((n,item)=>n+(item.bonuses||[]).filter(b=>b.stat==='defense').reduce((sum,b)=>sum+b.value,0),0);
  const db=v.activeBuffs.filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0);
- v.hp=clamp(Math.round(input.hp),0,20+4*(v.defense+db));
+ v.hp=clamp(Math.round(input.hp),0,20+4*(v.defense+db+equippedDef));
  v.selectedSkill=v.skills.some(x=>x.id===input.selectedSkill)?input.selectedSkill:null;
  v.selectedItem=v.items.some(x=>x.id===input.selectedItem)?input.selectedItem:null;
  v.activeTab='sheet';return v;
@@ -1013,8 +1043,8 @@ function renderFiles(){
   if(slot.id===activeSaveId){const badge=document.createElement('span');badge.className='file-active';badge.textContent='✦ ATIVO';head.appendChild(badge)}
   const title=document.createElement('h3');title.className='file-character';title.textContent=charLabel(slot);
   const meta=document.createElement('div');meta.className='file-meta';
-  const max=20+4*(slot.data.defense+(slot.data.activeBuffs||[]).filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0));
-  for(const entry of ['LV '+slot.data.level,'♥ '+slot.data.hp+'/'+max+' HP','✦ '+Math.round(slot.data.tp)+'% TP','⚔ '+slot.data.skills.length+' HABILIDADES','◈ '+slot.data.items.length+' ITENS']){
+  const max=20+4*(slot.data.defense+(slot.data.activeBuffs||[]).filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0)+Object.values(slot.data.equipment||{}).filter(Boolean).reduce((n,item)=>n+(item.bonuses||[]).filter(b=>b.stat==='defense').reduce((sum,b)=>sum+b.value,0),0));
+  for(const entry of ['LV '+slot.data.level,'♥ '+slot.data.hp+'/'+max+' HP','✦ '+Math.round(slot.data.tp)+'% TP','⚔ '+slot.data.skills.length+' HABILIDADES','◈ '+slot.data.items.length+' ITENS','⬡ '+Object.values(slot.data.equipment||{}).filter(Boolean).length+' EQUIPS']){
    const span=document.createElement('span');span.textContent=entry;meta.appendChild(span)}
   const bars=document.createElement('div');bars.className='file-bars';
   for(const [kind,value] of [['hp',slot.data.hp/Math.max(1,max)],['tp',slot.data.tp/100]]){
@@ -1032,7 +1062,7 @@ function renderFiles(){
  });
 }
 function activateFile(slot){
- activeSaveId=slot.id;state=cleanCharacter(slot.data);
+ activeSaveId=slot.id;state=cleanCharacter(slot.data);closeEquipmentEditor();
  closeEditor('skills');closeEditor('inventory');setSkillFilter('all');
  renderStatus();renderLibrary('skills');renderLibrary('inventory');
  switchTab('sheet');persist();renderFiles();
@@ -1065,7 +1095,7 @@ function deleteFile(id){
  if(!confirm('Excluir '+slot.label+' ('+charLabel(slot)+') DESTE NAVEGADOR? Esta ação não pode ser desfeita. Exporte antes se quiser um backup.'))return;
  fileSlots=fileSlots.filter(x=>x.id!==id);
  if(activeSaveId===id){
-  activeSaveId=fileSlots[0].id;state=cleanCharacter(fileSlots[0].data);
+  activeSaveId=fileSlots[0].id;state=cleanCharacter(fileSlots[0].data);closeEquipmentEditor();
   closeEditor('skills');closeEditor('inventory');setSkillFilter('all');
   renderStatus();renderLibrary('skills');renderLibrary('inventory');
  }
@@ -1107,6 +1137,7 @@ $('importFileBtn').addEventListener('click',()=>$('importFileInput').click());
 $('importFileInput').addEventListener('change',importFile);
 $('exportActiveFileBtn').addEventListener('click',()=>exportFile(activeSaveId));
 
+// EQUIPMENT_JAVASCRIPT_INSERT_POINT
 makePetals('soulPetals',13);
 loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
 
