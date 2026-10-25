@@ -1,29 +1,32 @@
 # DELTA RPG — Ficha de Personagem
 
-Ficha interativa de RPG, inspirada na estética de Deltarune.
+Site de fichas de RPG com estética de pixel art inspirada nos menus de Deltarune.
 
-## Funcionalidades
+## Interface
+- Organização original: personagem à esquerda, quatro atributos à direita, HP/TP logo abaixo.
+- **Força**, **Defesa**, **Inteligência** e **Agilidade** começam em **1**.
+- Alma vazia no início e gradualmente colorida conforme pontos adicionais; mistura tonalidades no círculo cromático (vermelho, verde, azul e amarelo).
+- Animação pixel art de pétalas ao redor da alma.
+- Nome e nível editáveis, sem campo de classe/título/raça.
 
-- Fundo animado incluído dentro do `index.html` (dispensa arquivos de imagem externos).
-- Nome, título, nível e atributos editáveis.
-- **HP máximo:** `20 + Defesa × 4`.
-- **TP máximo:** `100`.
-- **TP por ação:** `10 × (1 + Inteligência × 0,05 + Agilidade × 0,02)`.
-- Botões para receber dano, restaurar HP, acumular TP e gastar TP.
-- Salvamento da ficha no navegador usando `localStorage`.
-- Interface responsiva para computadores e celulares.
+## Cálculos
+- HP máximo: `20 + (Defesa × 4)`
+- TP máximo: `100`
+- TP ganho por ação: `10 × [1 + (Inteligência × 0,05) + (Agilidade × 0,02)]`
 
-## Executar
+## Habilidades e Inventário
+- Aba **Habilidades**: lista de técnicas personalizadas no estilo de menu de batalha, custo em **% de TP máximo**, nome, ícone e descrição. Botões Adicionar, Editar, Remover e Utilizar (desconta TP atual).
+- Aba **Inventário**: itens individuais com nome, categoria, quantidade e descrição. Botões Adicionar, Editar e Remover.
+- Seus registros são salvos no navegador usando `localStorage` e preservados ao reabrir o site no mesmo navegador.
+- A primeira abertura tenta importar dados anteriores das versões v1/v2.
 
-Abra `index.html` diretamente no navegador. Não é necessário instalar dependências.
+## Exportar
+- Botões para exportar a ficha para imagem PNG e PDF, incluindo as abas e as descrições.
+- A exportação utiliza html2canvas e jsPDF carregados via CDN e requer acesso à internet para essas bibliotecas.
 
-## Publicar via GitHub Pages
+## Publicação
+O repositório utiliza GitHub Actions para publicar o `index.html` na branch `main` pelo GitHub Pages.
 
-O repositório contém `.github/workflows/pages.yml`. Em **Settings → Pages**, escolha **GitHub Actions** como origem da publicação (caso ainda não esteja habilitado). Depois, a cada atualização da branch `main`, o workflow tenta republicar o site.
+**Site:** https://matheuz55peri-tech.github.io/Deltarune-RPG/
 
-Endereço esperado após o primeiro deploy bem-sucedido:
-https://matheuz55peri-tech.github.io/Deltarune-RPG/
-
-## Dados dos jogadores
-
-As informações ficam gravadas **somente no navegador e dispositivo de cada jogador**. O site não sincroniza fichas pela internet e não possui servidor de contas.
+Os dados são individuais de cada navegador/dispositivo. Ainda não existe sincronização entre jogadores, login nem servidor compartilhado.
