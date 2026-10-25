@@ -34,3 +34,19 @@ Crie itens com nome, tipo, quantidade e descrição nas abas de inventário.
 O workflow em `.github/workflows/pages.yml` publica automaticamente a branch `main` no GitHub Pages.
 
 Este site **não** sincroniza dados entre dispositivos nem tem contas ou servidor multiplayer.
+
+## FILES — arquivos de salvamento (v8)
+
+A primeira aba do site é **FILES**. Cada slot contém uma ficha independente e completa:
+
+- **NOVO FILE:** cria um personagem com todos os atributos em 1, mantendo as outras fichas.
+- **ABRIR:** seleciona um arquivo e recupera os dados de HP, TP, atributos, inventário, habilidades e Buffs ativos.
+- **DUPLICAR:** cria uma cópia independente do personagem escolhido.
+- **RENOMEAR:** altera apenas o nome do slot (não o nome do personagem).
+- **EXCLUIR:** pede confirmação e remove o arquivo somente deste navegador; não é possível excluir o único slot restante.
+- **EXPORTAR:** gera um único arquivo `.deltarpg` (JSON estruturado).
+- **IMPORTAR:** recebe um `.deltarpg` compatível e cria um **novo slot**, sem sobrescrever os anteriores.
+
+Os arquivos locais são mantidos automaticamente em `localStorage` com a chave `delta-rpg-save-files-v1`. Na primeira abertura, a ficha única das versões anteriores é convertida em **FILE 01 · ORIGINAL**, para preservar os dados existentes.
+
+**Importante:** os saves não são sincronizados entre dispositivos. Compartilhe ou faça backup exportando um arquivo `.deltarpg`, especialmente antes de limpar os dados do navegador.
