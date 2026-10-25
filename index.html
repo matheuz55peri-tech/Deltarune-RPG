@@ -649,9 +649,9 @@ function soulTarget(){
  const dusk=bounded(intersection('strength','agility','intelligence')*Math.min(1,total/12),0,1);
  const frost=bounded(intersection('defense','agility','intelligence')*Math.min(1,total/12),0,1);
  // Vermelho + verde cria tons terrosos, não simplesmente um matiz intermediário.
- l-=earth*18;s=s*(1-earth*.38)+earth*9;
+ l-=earth*18;s=s*(1-earth*.28)+earth*21;
  // Combinações com vermelho podem gerar rosa, salmão e coral.
- l+=rose*9+warm*4;s+=rose*8+warm*4;
+ l+=rose*9+warm*4;s+=rose*33+warm*4;
  // Força + agilidade + inteligência: tonalidade profunda.
  l-=dusk*24;s+=dusk*10;
  // Defesa + inteligência + agilidade: luminosidade de gelo/pastel.
