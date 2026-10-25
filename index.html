@@ -392,6 +392,47 @@ body .bar{box-shadow:inset 0 2px 6px rgba(0,0,0,.3)}
 body .fill.hp{background:linear-gradient(90deg,#ff4975,#ff7599,#ffb4c3)}
 body .fill.tp{background:linear-gradient(90deg,#378ff2,#57c9fa,#a1f4f0)}
 @media(prefers-reduced-motion:reduce){body button{transition:none!important}}
+
+/* V8 · Menu FILES, inspirado em saves de jogos pixel RPG */
+.files-shell{padding:clamp(18px,3.2vw,35px);--file-accent:#9bddff;--file-border:rgba(173,206,252,.31);--file-back:rgba(9,15,33,.86)}
+html[data-theme="snow"] .files-shell{--file-accent:#b0ebff;--file-border:rgba(177,228,255,.5);--file-back:rgba(7,40,64,.87)}
+html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(90,211,175,.46);--file-back:rgba(2,28,35,.89)}
+.files-heading-row{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid var(--file-border);padding-bottom:20px}
+.files-overline{font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--file-accent)}
+.files-heading{font-size:clamp(17px,2.35vw,25px);line-height:1.5;margin:13px 0 10px;color:white;text-shadow:0 0 20px rgba(150,190,255,.29)}
+.files-summary{color:#bdcbe5;font-size:13px;max-width:660px;line-height:1.65;margin:0}
+.files-counter{font:10px 'Press Start 2P',monospace;padding:14px;border:1px solid var(--file-border);background:rgba(0,0,0,.22);border-radius:5px;color:var(--file-accent);white-space:nowrap}
+.files-tools{display:flex;flex-wrap:wrap;gap:10px;padding:20px 0}
+.files-button,.file-btn{cursor:pointer;border:1px solid var(--file-border);background:rgba(9,13,32,.8);color:#eef4ff;border-radius:5px;font-weight:800;letter-spacing:.05em;transition:background .2s,border-color .2s,transform .2s}
+.files-button{padding:11px 15px;min-height:44px;font-size:11px}
+.files-button.primary{background:linear-gradient(110deg,rgba(79,132,217,.34),rgba(110,79,179,.19));border-color:var(--file-accent)}
+.files-button:hover,.file-btn:hover{border-color:var(--file-accent);background:rgba(90,124,170,.26);transform:translateY(-1px)}
+.files-button:focus-visible,.file-btn:focus-visible{outline:2px solid var(--file-accent);outline-offset:3px}
+.files-list{display:grid;gap:13px}
+.file-card{display:grid;grid-template-columns:71px minmax(0,1fr) auto;gap:16px;align-items:center;border-radius:7px;border:1px solid var(--file-border);background:linear-gradient(115deg,rgba(50,86,138,.18),transparent 75%),var(--file-back);padding:17px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 9px 27px rgba(0,0,0,.2)}
+.file-card.active{border-color:var(--file-accent);box-shadow:inset 3px 0 0 var(--file-accent),0 0 22px rgba(122,181,237,.12)}
+.file-soul{width:66px;height:66px;display:grid;place-items:center;border:1px solid var(--file-border);border-radius:6px;background:radial-gradient(circle,rgba(112,125,210,.17),rgba(2,5,17,.76))}
+.file-soul svg{width:42px;height:42px;image-rendering:pixelated;filter:drop-shadow(0 0 7px var(--preview-color,rgba(190,220,255,.5)))}
+.file-soul path{fill:var(--preview-color,transparent);stroke:var(--preview-stroke,#eaf5ff);stroke-width:.55;stroke-linejoin:round}
+.file-info{min-width:0}.file-head{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+.file-id{font:10px 'Press Start 2P',monospace;color:var(--file-accent)}
+.file-label{font-weight:800;color:#bfcde8;font-size:11px}
+.file-active{font-size:10px;color:#b5f5d4;background:rgba(30,136,100,.19);border:1px solid rgba(120,232,170,.36);padding:4px 7px;border-radius:4px;font-weight:800}
+.file-character{font:clamp(11px,1.55vw,16px) 'Press Start 2P',monospace;color:#fff;margin:0 0 9px;line-height:1.65;overflow-wrap:anywhere}
+.file-meta{color:#bdcbe5;display:flex;gap:8px 17px;flex-wrap:wrap;font-weight:700;font-size:11px}
+.file-bars{display:flex;gap:8px;max-width:330px;margin-top:10px}
+.file-track{flex:1;height:6px;border:1px solid rgba(228,245,255,.15);border-radius:30px;overflow:hidden;background:rgba(255,255,255,.07)}
+.file-track span{display:block;height:100%}
+.file-track.hp span{background:linear-gradient(90deg,#ff5681,#ff9dad)}
+.file-track.tp span{background:linear-gradient(90deg,#4c9bf0,#81efe4)}
+.file-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;max-width:260px}
+.file-btn{padding:9px 10px;min-height:36px;font-size:10px}
+.file-btn.open{color:var(--file-accent);border-color:var(--file-accent)}
+.file-btn.remove{color:#ffadb8;border-color:rgba(255,146,157,.4)}
+.files-help{border:1px dashed var(--file-border);border-radius:6px;margin-top:20px;padding:14px 15px;color:#bed1e8;font-size:12px;line-height:1.6;background:rgba(2,8,19,.44)}
+.files-help b,.files-help strong{color:white}
+@media(max-width:850px){.file-card{grid-template-columns:70px minmax(0,1fr)}.file-actions{grid-column:1/-1;justify-content:flex-start;max-width:none}}
+@media(max-width:550px){.files-heading-row{flex-direction:column;align-items:flex-start}.files-tools .files-button{flex:1;min-width:130px}.file-card{grid-template-columns:1fr}.file-actions{grid-column:auto}.files-shell{padding:16px}.file-character{font-size:12px}}
 </style>
 <link rel="stylesheet" href="./theme-colors.css?v=6">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
@@ -438,12 +479,33 @@ body .fill.tp{background:linear-gradient(90deg,#378ff2,#57c9fa,#a1f4f0)}
         <div class="chapter">ARQUIVO DE STATUS<strong>FILE 01</strong></div>
       </div>
       <nav class="rpg-tabs" role="tablist" aria-label="Seções da ficha">
-        <button type="button" class="rpg-tab active" data-tab="sheet" role="tab" aria-selected="true">♥ FICHA</button>
+        <button type="button" class="rpg-tab active" data-tab="files" role="tab" aria-selected="true">▣ FILES</button>
+        <button type="button" class="rpg-tab" data-tab="sheet" role="tab" aria-selected="false">♥ FICHA</button>
         <button type="button" class="rpg-tab" data-tab="inventory" role="tab" aria-selected="false">✧ INVENTÁRIO</button>
         <button type="button" class="rpg-tab" data-tab="skills" role="tab" aria-selected="false">⚔ HABILIDADES</button>
       </nav>
-      <div id="exportTarget">
-      <div id="tab-sheet" class="tab-content">
+      <section class="tab-content files-tab" id="tab-files" aria-label="Arquivos de salvamento">
+  <div class="rpg-box files-shell">
+    <div class="files-heading-row">
+      <div>
+        <span class="files-overline">✦ DELTA RPG / ARQUIVO DE MEMÓRIAS</span>
+        <h2 class="files-heading pixel">SELECT A FILE</h2>
+        <p class="files-summary">Crie, abra, duplique e compartilhe fichas completas. Cada arquivo guarda todos os atributos, HP, TP, inventário, habilidades e Buffs.</p>
+      </div>
+      <span class="files-counter" id="filesCount">01 FILE</span>
+    </div>
+    <div class="files-tools">
+      <button class="files-button primary" type="button" id="newFileBtn">＋ NOVO FILE</button>
+      <button class="files-button" type="button" id="importFileBtn">⇩ IMPORTAR FILE</button>
+      <button class="files-button" type="button" id="exportActiveFileBtn">⇧ EXPORTAR ATUAL</button>
+      <input type="file" id="importFileInput" accept=".deltarpg,.json,application/json" hidden aria-label="Importar arquivo de personagem">
+    </div>
+    <div class="files-list" id="filesList" aria-live="polite"></div>
+    <div class="files-help"><b>✦ SALVAMENTO AUTOMÁTICO</b> — Os FILES ficam separados neste navegador. Exporte o arquivo <strong>.deltarpg</strong> para enviar a um amigo; a importação cria um novo slot, sem apagar nenhum outro.</div>
+  </div>
+</section>
+<div id="exportTarget">
+      <div id="tab-sheet" class="tab-content" hidden>
       <section class="main-grid" aria-label="Ficha de personagem e atributos">
         <article class="rpg-box profile">
           <div class="box-head"><h2 class="box-title pixel">✦ PERSONAGEM</h2><span class="box-code">[ 01 / 02 ]</span></div>
@@ -610,7 +672,9 @@ function renderBuffs(){const el=$('activeBuffs');el.replaceChildren();if(!state.
 function removeBuff(id){const old=maxHp(),missing=old-state.hp;state.activeBuffs=state.activeBuffs.filter(x=>x.id!==id);state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist()}
 function nextTurn(){if(!state.activeBuffs.length){toast('Nenhum buff ativo.');return}const old=maxHp(),missing=old-state.hp;for(const b of state.activeBuffs)b.remaining--;state.activeBuffs=state.activeBuffs.filter(b=>b.remaining>0);state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist();toast('Turno avançado; buffs atualizados.')}
 const extraPoints=key=>Math.max(0,state[key]-1);
-const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='SALVO NO NAVEGADOR';}catch(e){$('saveStatus').textContent='FALHA AO SALVAR'}};
+const FILE_STORE_KEY='delta-rpg-save-files-v1';
+let fileSlots=[],activeSaveId=null,filesReady=false;
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));if(filesReady)storeActiveFile();$('saveStatus').textContent='SALVO NO NAVEGADOR'}catch(e){console.warn('Erro ao salvar FILE',e);$('saveStatus').textContent='FALHA AO SALVAR'}};
 let toastTimeout;
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2300)}
 const SOUL_PALETTE={strength:[255,48,105],defense:[52,213,118],intelligence:[57,127,249],agility:[255,216,73]};
@@ -696,7 +760,7 @@ function updateSoul(animate=true){
  hueAnimation=requestAnimationFrame(frame);
 }
 
-function switchTab(tab){state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['sheet','inventory','skills'])$(key==='sheet'?'tab-sheet':'tab-'+key).hidden=(key!==tab);persist()}
+function switchTab(tab){if(!['files','sheet','inventory','skills'].includes(tab))tab='files';state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['files','sheet','inventory','skills'])$('tab-'+key).hidden=(key!==tab);if(tab==='files'&&filesReady)renderFiles();persist()}
 function renderStatus(animateSoul=false){
  $('characterName').value=state.name;$('level').value=state.level;
  for(const k of SOUL_KEYS){$(k).value=state[k];const bonus=attrBonus(k),tag=$('bonus-'+k);tag.hidden=bonus===0;tag.textContent='+'+fmt(bonus)}
@@ -792,7 +856,7 @@ $('cancelSkillBtn').addEventListener('click',()=>closeEditor('skills'));
 $('cancelItemBtn').addEventListener('click',()=>closeEditor('inventory'));
 $('skillForm').addEventListener('submit',e=>saveEntry('skills',e));
 $('itemForm').addEventListener('submit',e=>saveEntry('inventory',e));
-$('resetBtn').addEventListener('click',()=>{if(!confirm('Reiniciar a ficha, removendo os atributos, inventário e habilidades?'))return;state=baseState();setSkillFilter('all');renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('sheet');persist();toast('Ficha reiniciada.')});
+$('resetBtn').addEventListener('click',()=>{if(!confirm('Reiniciar SOMENTE o FILE ativo? Os demais salvamentos não serão alterados.'))return;state=baseState();setSkillFilter('all');renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('sheet');persist();toast('Ficha reiniciada.')});
 
 /* Exporta as três seções, inclusive descrições de TODAS as entradas, mesmo que apenas uma esteja selecionada na interface. */
 function fillExportExtra(doc){const sheet=doc.querySelector('#tab-skills');if(!sheet)return;let appendix=doc.querySelector('#exportAppend');if(!appendix){appendix=doc.createElement('div');appendix.id='exportAppend';sheet.appendChild(appendix)}
@@ -819,8 +883,195 @@ $('exportPdfBtn').addEventListener('click',async()=>{
  }catch(err){console.error(err);toast('Falha ao exportar PDF. Confira sua conexão e tente novamente.')}
 });
 
+
+/* V8 — gestão de FILES. Não mistura dados entre personagens. */
+const FILE_FORMAT='delta-rpg-save',FILE_VERSION=1,MAX_FILES=64;
+const short=(val,max=200)=>String(typeof val==='string'?val:(val??'')).slice(0,max);
+const freshId=()=>makeId();
+const stamp=()=>new Date().toISOString();
+function cleanCharacter(input){
+ if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Personagem inválido');
+ const v=baseState();v.name=short(input.name,32);v.level=clamp(Math.trunc(input.level),1,99);
+ for(const key of ['strength','defense','intelligence','agility'])v[key]=clamp(Math.trunc(input[key]),1,99);
+ v.tp=clamp(one(input.tp),0,100);
+ v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
+  id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
+  type:short(x.type||'◆',12),quantity:clamp(Math.trunc(x.quantity),1,9999)}));
+ v.skills=(Array.isArray(input.skills)?input.skills:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
+  id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
+  icon:short(x.icon||'✦',12),cost:clamp(Math.trunc(x.cost),0,100),
+  category:['damage','heal','buff'].includes(x.category)?x.category:'damage',
+  power:clamp(Math.trunc(x.power),0,9999),
+  target:['hp','strength','defense','intelligence','agility'].includes(x.target)?x.target:'strength',
+  amount:clamp(Math.trunc(x.amount),1,999),turns:clamp(Math.trunc(x.turns),1,99)}));
+ v.activeBuffs=(Array.isArray(input.activeBuffs)?input.activeBuffs:[]).slice(0,60)
+  .filter(x=>x&&typeof x==='object'&&['hp','strength','defense','intelligence','agility'].includes(x.target))
+  .map(x=>({id:short(x.id,80)||freshId(),skillId:short(x.skillId,80),name:short(x.name,55),
+  target:x.target,amount:clamp(Math.trunc(x.amount),1,999),remaining:clamp(Math.trunc(x.remaining),1,99)}));
+ const db=v.activeBuffs.filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0);
+ v.hp=clamp(Math.round(input.hp),0,20+4*(v.defense+db));
+ v.selectedSkill=v.skills.some(x=>x.id===input.selectedSkill)?input.selectedSkill:null;
+ v.selectedItem=v.items.some(x=>x.id===input.selectedItem)?input.selectedItem:null;
+ v.activeTab='sheet';return v;
+}
+function createFile(data,label){
+ const time=stamp();
+ return{id:freshId(),label:short(label||'ARQUIVO DE SALVAMENTO',36),createdAt:time,updatedAt:time,data:cleanCharacter(data)};
+}
+function commitFiles(){
+ localStorage.setItem(FILE_STORE_KEY,JSON.stringify({version:FILE_VERSION,activeId:activeSaveId,slots:fileSlots}));
+}
+function storeActiveFile(){
+ const slot=fileSlots.find(x=>x.id===activeSaveId);
+ if(!slot)return;
+ slot.data=cleanCharacter(state);slot.updatedAt=stamp();commitFiles();
+}
+function loadFileSystem(){
+ let archive=null;
+ try{archive=JSON.parse(localStorage.getItem(FILE_STORE_KEY)||'null')}catch(err){console.warn('FILES ilegíveis',err)}
+ if(archive&&archive.version===FILE_VERSION&&Array.isArray(archive.slots)){
+  fileSlots=archive.slots.slice(0,MAX_FILES).map(x=>{
+   try{if(!x||!x.data)return null;
+    return{id:short(x.id,100)||freshId(),label:short(x.label||'FILE',36),
+     createdAt:short(x.createdAt,32)||stamp(),updatedAt:short(x.updatedAt,32)||stamp(),data:cleanCharacter(x.data)};
+   }catch(err){return null}
+  }).filter(Boolean);
+  activeSaveId=archive.activeId;
+ }
+ if(!fileSlots.length){
+  // Importa automaticamente a ficha única do sistema anterior para o primeiro slot.
+  const legacy=createFile(state,'FILE 01 · ORIGINAL');fileSlots=[legacy];activeSaveId=legacy.id;
+ }
+ const current=fileSlots.find(x=>x.id===activeSaveId)||fileSlots[0];
+ activeSaveId=current.id;state=cleanCharacter(current.data);state.activeTab='files';filesReady=true;
+ try{commitFiles()}catch(err){console.warn('Falha ao gravar FILES',err)}
+}
+function filePreview(data){
+ let total=0,rgb=[0,0,0];
+ for(const k of SOUL_KEYS){const points=Math.max(0,(data[k]||1)-1);total+=points;
+  for(let i=0;i<3;i++)rgb[i]+=SOUL_PALETTE[k][i]*points}
+ return total?'rgb('+rgb.map(x=>Math.round(x/total)).join(',')+')':null;
+}
+const charLabel=slot=>short(slot.data.name,32).trim()||'PERSONAGEM SEM NOME';
+function fileAction(el,caption,cls,click){
+ const b=document.createElement('button');b.type='button';b.className='file-btn '+(cls||'');
+ b.textContent=caption;b.addEventListener('click',click);el.appendChild(b);
+}
+function renderFiles(){
+ const host=$('filesList');if(!host)return;
+ host.replaceChildren();
+ $('filesCount').textContent=String(fileSlots.length).padStart(2,'0')+' FILE'+(fileSlots.length===1?'':'S');
+ const heart='M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z';
+ fileSlots.forEach((slot,index)=>{
+  const card=document.createElement('article');card.className='file-card'+(slot.id===activeSaveId?' active':'');
+  const soul=document.createElement('div');soul.className='file-soul';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','-1 -1 10 9');
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',heart);
+  svg.appendChild(path);soul.appendChild(svg);
+  const tone=filePreview(slot.data);if(tone){soul.style.setProperty('--preview-color',tone);soul.style.setProperty('--preview-stroke',tone)}
+  const info=document.createElement('div');info.className='file-info';
+  const head=document.createElement('div');head.className='file-head';
+  const id=document.createElement('span');id.className='file-id';id.textContent='FILE '+String(index+1).padStart(2,'0');head.appendChild(id);
+  const label=document.createElement('span');label.className='file-label';label.textContent=slot.label;head.appendChild(label);
+  if(slot.id===activeSaveId){const badge=document.createElement('span');badge.className='file-active';badge.textContent='✦ ATIVO';head.appendChild(badge)}
+  const title=document.createElement('h3');title.className='file-character';title.textContent=charLabel(slot);
+  const meta=document.createElement('div');meta.className='file-meta';
+  const max=20+4*(slot.data.defense+(slot.data.activeBuffs||[]).filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0));
+  for(const entry of ['LV '+slot.data.level,'♥ '+slot.data.hp+'/'+max+' HP','✦ '+Math.round(slot.data.tp)+'% TP','⚔ '+slot.data.skills.length+' HABILIDADES','◈ '+slot.data.items.length+' ITENS']){
+   const span=document.createElement('span');span.textContent=entry;meta.appendChild(span)}
+  const bars=document.createElement('div');bars.className='file-bars';
+  for(const [kind,value] of [['hp',slot.data.hp/Math.max(1,max)],['tp',slot.data.tp/100]]){
+   const track=document.createElement('div');track.className='file-track '+kind;
+   const bar=document.createElement('span');bar.style.width=Math.max(0,Math.min(100,value*100))+'%';
+   track.appendChild(bar);bars.appendChild(track)}
+  info.append(head,title,meta,bars);
+  const actions=document.createElement('div');actions.className='file-actions';
+  fileAction(actions,slot.id===activeSaveId?'CONTINUAR':'ABRIR','open',()=>openFile(slot.id));
+  fileAction(actions,'EXPORTAR','',()=>exportFile(slot.id));
+  fileAction(actions,'DUPLICAR','',()=>duplicateFile(slot.id));
+  fileAction(actions,'RENOMEAR','',()=>renameFile(slot.id));
+  fileAction(actions,'EXCLUIR','remove',()=>deleteFile(slot.id));
+  card.append(soul,info,actions);host.appendChild(card);
+ });
+}
+function activateFile(slot){
+ activeSaveId=slot.id;state=cleanCharacter(slot.data);
+ closeEditor('skills');closeEditor('inventory');setSkillFilter('all');
+ renderStatus();renderLibrary('skills');renderLibrary('inventory');
+ switchTab('sheet');persist();renderFiles();
+}
+function openFile(id){
+ persist();const slot=fileSlots.find(x=>x.id===id);if(!slot)return;
+ activateFile(slot);toast('FILE aberto: '+charLabel(slot));
+}
+function newFile(){
+ if(fileSlots.length>=MAX_FILES){toast('Limite de 64 FILES.');return}
+ persist();const slot=createFile(baseState(),'FILE '+String(fileSlots.length+1).padStart(2,'0'));
+ fileSlots.push(slot);activateFile(slot);toast('Novo personagem criado sem apagar os anteriores!');
+}
+function duplicateFile(id){
+ if(fileSlots.length>=MAX_FILES){toast('Limite de 64 FILES.');return}
+ persist();const original=fileSlots.find(x=>x.id===id);if(!original)return;
+ const clone=createFile(original.data,short(original.label,26)+' · CÓPIA');
+ fileSlots.push(clone);activateFile(clone);toast('FILE duplicado de forma independente.');
+}
+function renameFile(id){
+ const slot=fileSlots.find(x=>x.id===id);if(!slot)return;
+ const title=prompt('Nome do arquivo de salvamento:',slot.label);if(title===null)return;
+ const cleaned=title.trim().slice(0,36);if(!cleaned){toast('Nome inválido.');return}
+ slot.label=cleaned;slot.updatedAt=stamp();
+ try{commitFiles();renderFiles();toast('FILE renomeado.')}catch(err){toast('Falha ao salvar nome.')}
+}
+function deleteFile(id){
+ const slot=fileSlots.find(x=>x.id===id);if(!slot)return;
+ if(fileSlots.length===1){toast('Mantenha ao menos um FILE no navegador.');return}
+ if(!confirm('Excluir '+slot.label+' ('+charLabel(slot)+') DESTE NAVEGADOR? Esta ação não pode ser desfeita. Exporte antes se quiser um backup.'))return;
+ fileSlots=fileSlots.filter(x=>x.id!==id);
+ if(activeSaveId===id){
+  activeSaveId=fileSlots[0].id;state=cleanCharacter(fileSlots[0].data);
+  closeEditor('skills');closeEditor('inventory');setSkillFilter('all');
+  renderStatus();renderLibrary('skills');renderLibrary('inventory');
+ }
+ try{commitFiles();localStorage.setItem(KEY,JSON.stringify(state));renderFiles();toast('FILE excluído.')}
+ catch(err){console.warn(err);toast('Falha ao salvar exclusão.')}
+}
+function exportFile(id){
+ try{
+  persist();const slot=fileSlots.find(x=>x.id===id);if(!slot)throw Error('FILE não encontrado');
+  const bundle={format:FILE_FORMAT,version:FILE_VERSION,app:'DELTA RPG',
+   exportedAt:stamp(),file:{label:slot.label,createdAt:slot.createdAt},character:cleanCharacter(slot.data)};
+  const blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const title=charLabel(slot).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+   .replace(/[^A-Za-z0-9_-]/g,'_').slice(0,42)||'personagem';
+  const a=document.createElement('a');a.href=url;a.download=title+'_DELTA_RPG.deltarpg';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2500);
+  toast('Arquivo .deltarpg exportado!');
+ }catch(err){console.error(err);toast('Falha ao exportar FILE.')}
+}
+async function importFile(ev){
+ const input=ev.currentTarget,file=input.files?.[0];input.value='';
+ if(!file)return;
+ if(file.size>2000000){toast('O arquivo é maior que 2 MB.');return}
+ if(fileSlots.length>=MAX_FILES){toast('Limite de 64 FILES.');return}
+ try{
+  const data=JSON.parse(await file.text());
+  if(!data||data.format!==FILE_FORMAT||data.version!==FILE_VERSION||!data.character)
+   throw Error('Formato de arquivo incompatível');
+  const character=cleanCharacter(data.character);
+  persist();
+  const slot=createFile(character,short(data.file?.label||'FILE IMPORTADO',36));
+  fileSlots.push(slot);activateFile(slot);
+  toast('Personagem importado em um NOVO FILE!');
+ }catch(err){console.warn('Importação rejeitada',err);toast('Não foi possível importar: FILE inválido ou incompatível.')}
+}
+$('newFileBtn').addEventListener('click',newFile);
+$('importFileBtn').addEventListener('click',()=>$('importFileInput').click());
+$('importFileInput').addEventListener('change',importFile);
+$('exportActiveFileBtn').addEventListener('click',()=>exportFile(activeSaveId));
+
 makePetals('soulPetals',13);
-renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab(state.activeTab);persist();
+loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
 
 /* DELTA v5 — preferência estética independente do estado do personagem. */
 const THEME_STORAGE_KEY = 'delta-rpg-appearance-v1';
