@@ -68,7 +68,7 @@
       y+=12;
     };
     const panel=(x,top,w,h)=>{bg(C.panel);pdf.roundedRect(x,top,w,h,2.7,2.7,'F');stroke(C.line);pdf.setLineWidth(.2);pdf.roundedRect(x,top,w,h,2.7,2.7,'S')};
-    const small=(s,w,size=8.3)=>pdf.splitTextToSize(clean(s),w);
+    const small=(s,w,size=8.3)=>{pdf.setFont('helvetica','normal');pdf.setFontSize(size);return pdf.splitTextToSize(clean(s),w)};
     const line=(x,yy,w,col=C.line)=>{stroke(col);pdf.setLineWidth(.24);pdf.line(x,yy,x+w,yy)};
     basePage();
     section('Identidade e atributos');
@@ -92,7 +92,7 @@
     for(const v of vitals){
       text(v.title,v.x+4,y+7,8,C.muted,true);text(v.value,v.x+4,y+14.4,11.4,C.white,true);
       bg(C.line);pdf.roundedRect(v.x+4,y+17,(INNER-3)/2-8,2.6,1,1,'F');
-      bg(v.color);pdf.roundedRect(v.x+4,y+17,Math.max(0,Math.min(1,v.pct))*((INNER-3)/2-8),2.6,1,1,'F');
+      const filled=Math.max(0,Math.min(1,v.pct))*((INNER-3)/2-8);if(filled>0){bg(v.color);pdf.roundedRect(v.x+4,y+17,filled,2.6,1,1,'F')}
       text(v.sub,v.x+4,y+25.1,7,C.muted,false);
     }
     y+=32;
