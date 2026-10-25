@@ -439,7 +439,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/equipment.css?v=10">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-<script src="./assets/pdf-compact.js?v=7" defer></script>
+<script src="./assets/pdf-compact.js?v=10" defer></script>
 <script src="./assets/themes/theme-expansion.js?v=9" defer></script>
 <link rel="stylesheet" href="./assets/themes-v9.css?v=9">
 <link rel="stylesheet" href="./assets/theme-cosmos.css?v=9">
@@ -1280,11 +1280,13 @@ function changeEquipment(slot,item){
 const slotSelect=$('equipmentSlot');
 for(const slot of EQUIP_SLOTS){const option=document.createElement('option');option.value=slot.key;option.textContent=slot.name;slotSelect.appendChild(option)}
 slotSelect.addEventListener('change',ev=>{
- const oldSelected=selectedEquipmentSlot;
- if(ev.target.value!==oldSelected && equipped(ev.target.value) && !confirm('Este espaço já possui equipamento. Deseja editar o item deste espaço?')){
-  slotSelect.value=oldSelected;return;
+ const previous=selectedEquipmentSlot,next=ev.target.value;
+ if(next!==previous && equipped(next) && !confirm('Esse espaço já possui equipamento. Deseja substituir ou editar esse item?')){
+  slotSelect.value=previous;return;
  }
- openEquipmentEditor(ev.target.value);
+ selectedEquipmentSlot=next;
+ $('equipmentHeading').textContent=equipped(next)?'✦ EDITAR / SUBSTITUIR EQUIPAMENTO':'✦ ADICIONAR EQUIPAMENTO';
+ renderEquipment();
 });
 $('equipmentType').addEventListener('change',toggleEquipmentDamage);
 $('addEquipmentBtn').addEventListener('click',()=>openEquipmentEditor(selectedEquipmentSlot));
