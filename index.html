@@ -189,6 +189,42 @@ main{padding-top:46px}
 @media(max-width:550px){.rpg-tab{flex:1;padding:11px 9px;font-size:8px;justify-content:center}.editor-fields{grid-template-columns:1fr 1fr}.editor-fields .first-input{grid-column:1 / -1}.library-shell{padding:17px 12px}.entry-name{font-size:10px}.entry-cost{font-size:10px}.entry-row{grid-template-columns:60px 1fr}.list-caption{grid-template-columns:60px 1fr}.entry-row.inventory-row{grid-template-columns:45px 1fr 45px}.list-caption.inventory-caption{grid-template-columns:45px 1fr 45px}.chapter{display:none}}
 @media(prefers-reduced-motion:reduce){.soul-svg,.petal{animation:none!important}}
 
+
+/* V4 - habilidades com categorias e cura, buffs mantendo o layout */
+.stat-buff{color:#d0a3ff;margin-left:8px;font:10px 'Press Start 2P',monospace;text-shadow:0 0 7px #a97aff}
+.stat-buff[hidden]{display:none}
+.shield-row[hidden]{display:none!important}
+.shield-row{margin-top:10px}
+.shield-top{display:flex;justify-content:space-between;color:#d3bfff;font-size:10px;font-weight:bold;margin-bottom:5px}
+.shield-bar{height:7px;border:1px solid #84719c;background:rgba(0,0,0,.55)}
+.shield-fill{height:100%;width:0%;background:var(--shield-color,#f5f6ff);box-shadow:0 0 12px var(--shield-color,#f5f6ff);transition:width .2s}
+.action-btn.heal-v4{background:rgba(13,69,37,.62);border-color:rgba(78,247,139,.58);color:#92ffbb}
+.buff-strip{margin:18px 0 4px;padding:13px 16px;border:1px solid rgba(204,147,255,.4);background:rgba(41,18,66,.36)}
+.buff-strip-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;color:#deb5ff;font:10px 'Press Start 2P',monospace}
+.buff-strip-head .action-btn{font-size:9px;min-height:36px;padding:9px}
+.buff-items{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
+.buff-pill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid rgba(213,157,255,.43);background:rgba(59,27,101,.5);padding:9px 11px;color:#eed9ff;font-size:12px}
+.buff-pill strong{color:#e4b4ff}
+.buff-pill button{border:1px solid rgba(245,142,181,.5);background:#2b1028;color:#ffbdd2;cursor:pointer}
+.buff-empty{font-size:12px;color:#a99fbe}
+.skill-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.skill-filter{min-height:39px;padding:10px 13px;background:rgba(12,10,26,.87);border:1px solid rgba(194,184,229,.3);color:#c1b6d2;font:10px 'Press Start 2P',monospace;cursor:pointer}
+.skill-filter.active{color:#fff;border-color:#dcbdff;background:rgba(93,43,133,.55)}
+.skill-filter[data-filter=damage].active{border-color:#ff5279;background:rgba(117,23,49,.6)}
+.skill-filter[data-filter=heal].active{border-color:#64ffa1;background:rgba(16,91,47,.55)}
+.skill-filter[data-filter=buff].active{border-color:#cc87ff;background:rgba(98,32,156,.55)}
+.entry-row.category-damage{--category:#ff5478}.entry-row.category-heal{--category:#62ff9e}.entry-row.category-buff{--category:#c98cff}
+.entry-row[class*=category-] .entry-cost,.entry-row[class*=category-] .entry-icon{color:var(--category)}
+.entry-row.category-heal.selected{background:rgba(18,104,52,.32);border-color:rgba(100,255,162,.64)}
+.entry-row.category-buff.selected{background:rgba(94,34,142,.35);border-color:rgba(211,146,255,.62)}
+.entry-detail.category-damage .detail-title,.entry-detail.category-damage .detail-cost,.entry-detail.category-damage .detail-icon{color:#ff7b96}
+.entry-detail.category-heal .detail-title,.entry-detail.category-heal .detail-cost,.entry-detail.category-heal .detail-icon{color:#77ffb3}
+.entry-detail.category-buff .detail-title,.entry-detail.category-buff .detail-cost,.entry-detail.category-buff .detail-icon{color:#d1a2ff}
+.skill-tag{display:inline-block;border:1px solid currentColor;padding:5px 8px;font:9px 'Press Start 2P',monospace}
+.skill-tag.category-damage{color:#ff7892}.skill-tag.category-heal{color:#83ffbd}.skill-tag.category-buff{color:#d2a1ff}
+.skill-buff-field[hidden],.skill-power-field[hidden]{display:none!important}
+@media(max-width:570px){.skill-filter{font-size:8px;padding:10px}.stat-buff{font-size:8px}}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
@@ -230,10 +266,10 @@ main{padding-top:46px}
           <div class="box-head"><h2 class="box-title pixel">✦ ATRIBUTOS</h2><span class="box-code">[ 02 / 02 ]</span></div>
           <p class="attrs-subtitle">Ajuste os valores digitando ou usando os botões.</p>
           <div class="stat-grid">
-            <div class="stat"><label class="stat-head atk" for="strength"><span class="glyph">⚔</span><span class="pixel">FORÇA</span></label><div class="stat-row"><input id="strength" aria-label="Pontos de Força" class="stat-number" type="number" min="1" max="99" value="1"><div class="stepper"><button type="button" data-stat="strength" data-delta="-1" aria-label="Diminuir Força">−</button><button type="button" data-stat="strength" data-delta="1" aria-label="Aumentar Força">+</button></div></div><p class="stat-help">Aumenta a influência vermelha na alma.</p></div>
-            <div class="stat"><label class="stat-head def" for="defense"><span class="glyph">⬡</span><span class="pixel">DEFESA</span></label><div class="stat-row"><input id="defense" aria-label="Pontos de Defesa" class="stat-number" type="number" min="1" max="99" value="1"><div class="stepper"><button type="button" data-stat="defense" data-delta="-1" aria-label="Diminuir Defesa">−</button><button type="button" data-stat="defense" data-delta="1" aria-label="Aumentar Defesa">+</button></div></div><p class="stat-help">+4 pontos de HP máximo por ponto.</p></div>
-            <div class="stat"><label class="stat-head int" for="intelligence"><span class="glyph">✧</span><span class="pixel">INTELIGÊNCIA</span></label><div class="stat-row"><input id="intelligence" aria-label="Pontos de Inteligência" class="stat-number" type="number" min="1" max="99" value="1"><div class="stepper"><button type="button" data-stat="intelligence" data-delta="-1" aria-label="Diminuir Inteligência">−</button><button type="button" data-stat="intelligence" data-delta="1" aria-label="Aumentar Inteligência">+</button></div></div><p class="stat-help">+5% sobre o ganho base de TP por ação.</p></div>
-            <div class="stat"><label class="stat-head agi" for="agility"><span class="glyph">➤</span><span class="pixel">AGILIDADE</span></label><div class="stat-row"><input id="agility" aria-label="Pontos de Agilidade" class="stat-number" type="number" min="1" max="99" value="1"><div class="stepper"><button type="button" data-stat="agility" data-delta="-1" aria-label="Diminuir Agilidade">−</button><button type="button" data-stat="agility" data-delta="1" aria-label="Aumentar Agilidade">+</button></div></div><p class="stat-help">+2% sobre o ganho base de TP por ação.</p></div>
+            <div class="stat"><label class="stat-head atk" for="strength"><span class="glyph">⚔</span><span class="pixel">FORÇA</span></label><div class="stat-row"><input id="strength" aria-label="Pontos de Força" class="stat-number" type="number" min="1" max="99" value="1"><span class="stat-buff" id="bonus-strength" hidden>+0</span><div class="stepper"><button type="button" data-stat="strength" data-delta="-1" aria-label="Diminuir Força">−</button><button type="button" data-stat="strength" data-delta="1" aria-label="Aumentar Força">+</button></div></div><p class="stat-help">Aumenta a influência vermelha na alma.</p></div>
+            <div class="stat"><label class="stat-head def" for="defense"><span class="glyph">⬡</span><span class="pixel">DEFESA</span></label><div class="stat-row"><input id="defense" aria-label="Pontos de Defesa" class="stat-number" type="number" min="1" max="99" value="1"><span class="stat-buff" id="bonus-defense" hidden>+0</span><div class="stepper"><button type="button" data-stat="defense" data-delta="-1" aria-label="Diminuir Defesa">−</button><button type="button" data-stat="defense" data-delta="1" aria-label="Aumentar Defesa">+</button></div></div><p class="stat-help">+4 pontos de HP máximo por ponto.</p></div>
+            <div class="stat"><label class="stat-head int" for="intelligence"><span class="glyph">✧</span><span class="pixel">INTELIGÊNCIA</span></label><div class="stat-row"><input id="intelligence" aria-label="Pontos de Inteligência" class="stat-number" type="number" min="1" max="99" value="1"><span class="stat-buff" id="bonus-intelligence" hidden>+0</span><div class="stepper"><button type="button" data-stat="intelligence" data-delta="-1" aria-label="Diminuir Inteligência">−</button><button type="button" data-stat="intelligence" data-delta="1" aria-label="Aumentar Inteligência">+</button></div></div><p class="stat-help">+5% sobre o ganho base de TP por ação.</p></div>
+            <div class="stat"><label class="stat-head agi" for="agility"><span class="glyph">➤</span><span class="pixel">AGILIDADE</span></label><div class="stat-row"><input id="agility" aria-label="Pontos de Agilidade" class="stat-number" type="number" min="1" max="99" value="1"><span class="stat-buff" id="bonus-agility" hidden>+0</span><div class="stepper"><button type="button" data-stat="agility" data-delta="-1" aria-label="Diminuir Agilidade">−</button><button type="button" data-stat="agility" data-delta="1" aria-label="Aumentar Agilidade">+</button></div></div><p class="stat-help">+2% sobre o ganho base de TP por ação.</p></div>
           </div>
           <div class="derived"><div class="chip">BÔNUS DE INT <strong id="intBonus">+5%</strong></div><div class="chip">BÔNUS DE AGI <strong id="agiBonus">+2%</strong></div><div class="chip">GANHO POR AÇÃO <strong id="gainChip">10,7 TP</strong></div></div>
         </article>
@@ -242,14 +278,15 @@ main{padding-top:46px}
         <div class="box-head"><h2 class="box-title pixel">✦ STATUS & ENERGIA</h2><span class="box-code">BATALHA // HUD</span></div>
         <p class="resource-intro">As barras atualizam automaticamente quando você muda os atributos ou usa os recursos.</p>
         <div class="meter-grid">
-          <article class="meter-panel"><div class="meter-head"><h3 class="meter-title pixel"><span style="color:#ff6c91">♥</span> HP</h3><div class="meter-current"><input id="currentHp" aria-label="HP atual" type="number" min="0" step="1"> <span>/ <output id="maxHp">24</output></span></div></div><div class="bar" role="progressbar" id="hpBar" aria-label="Pontos de vida" aria-valuemin="0" aria-valuemax="24" aria-valuenow="24"><div class="bar-fill hp-fill" id="hpFill"></div></div><div class="bar-foot"><span>VIDA MÁXIMA <strong id="hpFormula">20 + 1 × 4</strong></span><span id="hpPercent">100%</span></div></article>
+          <article class="meter-panel"><div class="meter-head"><h3 class="meter-title pixel"><span style="color:#ff6c91">♥</span> HP</h3><div class="meter-current"><input id="currentHp" aria-label="HP atual" type="number" min="0" step="1"> <span>/ <output id="maxHp">24</output></span></div></div><div class="bar" role="progressbar" id="hpBar" aria-label="Pontos de vida" aria-valuemin="0" aria-valuemax="24" aria-valuenow="24"><div class="bar-fill hp-fill" id="hpFill"></div></div><div class="shield-row" id="shieldRow" hidden><div class="shield-top"><span>✦ HP TEMPORÁRIO · COR DA ALMA</span><b id="shieldValue">+0 HP</b></div><div class="shield-bar" id="shieldBar" role="progressbar" aria-label="HP temporário" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="shield-fill" id="shieldFill"></div></div></div><div class="bar-foot"><span>VIDA MÁXIMA <strong id="hpFormula">20 + 1 × 4</strong></span><span id="hpPercent">100%</span></div></article>
           <article class="meter-panel"><div class="meter-head"><h3 class="meter-title pixel"><span style="color:#ffe07e">✦</span> TP</h3><div class="meter-current"><input id="currentTp" aria-label="TP atual" type="number" min="0" max="100" step="0.1"> <span>/ <output id="maxTp">100</output></span></div></div><div class="bar" role="progressbar" id="tpBar" aria-label="Pontos de energia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar-fill tp-fill" id="tpFill" style="width:0%"></div></div><div class="bar-foot"><span>RECARGA POR AÇÃO <strong id="tpPerAction">+10,7 TP</strong></span><span id="tpPercent">0%</span></div></article>
         </div>
         <div class="controls">
-          <div><div class="controls-label">GERENCIAR HP</div><div class="action-row"><input id="damageAmount" class="small-input" type="number" min="1" max="999" value="5" aria-label="Dano a receber"><button type="button" class="action-btn" id="damageBtn">− RECEBER DANO</button><button type="button" class="action-btn subtle" id="healBtn">+ CURAR HP TOTAL</button></div></div>
+          <div><div class="controls-label">GERENCIAR HP</div><div class="action-row"><input id="damageAmount" class="small-input" type="number" min="1" max="999" value="5" aria-label="Dano a receber"><button type="button" class="action-btn" id="damageBtn">− RECEBER DANO</button><input id="healAmount" class="small-input" type="number" min="1" max="9999" value="10" aria-label="Quantidade de HP a curar"><button type="button" class="action-btn heal-v4" id="healAmountBtn">♥ CURAR HP</button><button type="button" class="action-btn subtle" id="healBtn">+ CURAR HP TOTAL</button><button type="button" class="action-btn heal-v4" id="healSkillsBtn">♥ HABILIDADES DE CURA</button></div></div>
           <div><div class="controls-label">GERENCIAR TP</div><div class="action-row"><button type="button" class="action-btn gold" id="actionBtn">✦ EXECUTAR AÇÃO (+TP)</button><input id="tpCost" class="small-input" type="number" min="1" max="100" value="20" aria-label="Custo de TP"><button type="button" class="action-btn subtle" id="spendBtn">− GASTAR TP</button></div></div>
         </div>
-        <div class="foot-grid"><p class="formula"><strong>FÓRMULAS:</strong> HP máx. = 20 + (Defesa × 4). TP máx. = 100. Ganho de TP por ação = 10 × [1 + (Inteligência × 5%) + (Agilidade × 2%)]. Os bônus se somam; nenhuma outra estatística altera o HP ou o TP.</p><span class="save-status" id="saveStatus" aria-live="polite">SALVO NO NAVEGADOR</span></div>
+        <div class="buff-strip"><div class="buff-strip-head"><span>✦ BUFFS ATIVOS</span><button id="passTurnBtn" type="button" class="action-btn subtle">⏳ PASSAR TURNO</button></div><div id="activeBuffs" class="buff-items"><span class="buff-empty">Nenhum buff ativo.</span></div></div>
+        <div class="foot-grid"><p class="formula"><strong>FÓRMULAS:</strong> HP máx. = 20 + (Defesa × 4). TP máx. = 100. Ganho de TP por ação = 10 × [1 + (Inteligência × 5%) + (Agilidade × 2%)]. Os bônus se somam. Buffs temporários podem modificar atributos e seus efeitos, ou fornecer HP extra.</p><span class="save-status" id="saveStatus" aria-live="polite">SALVO NO NAVEGADOR</span></div>
       </section>
       </div>
       <section class="tab-content" id="tab-inventory" hidden aria-label="Inventário do personagem">
@@ -284,7 +321,12 @@ main{padding-top:46px}
       <div><div class="box-title pixel">✦ HABILIDADES / MAGIAS</div><p class="library-meta">Estilo de batalha DELTA · custo em % de TP · habilidades totalmente personalizadas.</p></div>
       <button class="library-btn" id="addSkillBtn" type="button">＋ ADICIONAR HABILIDADE</button>
     </div>
-    <div class="library-layout">
+    <div class="skill-filters" role="group" aria-label="Filtrar habilidades">
+<button type="button" class="skill-filter active" data-filter="all">TODAS</button>
+<button type="button" class="skill-filter" data-filter="damage">⚔ DANO</button>
+<button type="button" class="skill-filter" data-filter="heal">♥ CURA</button>
+<button type="button" class="skill-filter" data-filter="buff">✦ BUFF</button></div>
+<div class="library-layout">
       <div class="library-list">
         <div class="list-caption"><span>TP</span><span>MAGIA / HABILIDADE</span></div>
         <div id="skillsList" aria-label="Lista de habilidades"></div>
@@ -296,8 +338,13 @@ main{padding-top:46px}
       <div class="editor-fields">
         <label class="editor-label first-input">NOME DA HABILIDADE<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Rude Buster" autocomplete="off"></label>
         <label class="editor-label">CUSTO DE TP (%)<input required class="editor-input" name="cost" type="number" min="0" max="100" step="1" value="20"></label>
-        <label class="editor-label">ÍCONE<select class="editor-input" name="icon"><option value="⚔">⚔ Golpe</option><option value="✦">✦ Magia</option><option value="♥">♥ Cura</option><option value="☼">☼ Luz</option><option value="❖">❖ Especial</option><option value="✿">✿ Natureza</option><option value="◆">◆ Outro</option></select></label>
-        <label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Ex.: Causa dano mágico a um inimigo e depende da Força e Inteligência."></textarea></label>
+        <label class="editor-label">CATEGORIA<select class="editor-input" id="skillCategory" name="category"><option value="damage">⚔ Dano</option><option value="heal">♥ Cura</option><option value="buff">✦ Buff</option></select></label><label class="editor-label">ÍCONE<select class="editor-input" name="icon"><option value="⚔">⚔ Golpe</option><option value="✦">✦ Magia</option><option value="♥">♥ Cura</option><option value="☼">☼ Luz</option><option value="❖">❖ Especial</option><option value="✿">✿ Natureza</option><option value="◆">◆ Outro</option></select></label>
+        
+<label class="editor-label skill-power-field" id="skillPowerWrap">VALOR DO EFEITO (HP OU DANO)<input class="editor-input" name="power" type="number" min="0" max="9999" value="10"></label>
+<label class="editor-label skill-buff-field" id="skillBuffTargetWrap" hidden>BUFF EM<select class="editor-input" name="target"><option value="strength">Força</option><option value="defense">Defesa</option><option value="intelligence">Inteligência</option><option value="agility">Agilidade</option><option value="hp">HP temporário</option></select></label>
+<label class="editor-label skill-buff-field" id="skillBuffAmountWrap" hidden>BÔNUS (+)<input class="editor-input" type="number" min="1" max="999" name="amount" value="2"></label>
+<label class="editor-label skill-buff-field" id="skillBuffTurnsWrap" hidden>DURAÇÃO (TURNOS)<input class="editor-input" type="number" min="1" max="99" name="turns" value="3"></label>
+<label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Ex.: Causa dano mágico a um inimigo e depende da Força e Inteligência."></textarea></label>
       </div>
       <div class="editor-actions"><button class="library-btn" type="submit">✦ SALVAR HABILIDADE</button><button class="library-btn secondary" id="cancelSkillBtn" type="button">CANCELAR</button></div>
     </form>
@@ -354,8 +401,8 @@ state.items=Array.isArray(state.items)?state.items:[];
 state.skills=Array.isArray(state.skills)?state.skills:[];
 state.name=String(state.name||'').slice(0,32);
 if(!['sheet','inventory','skills'].includes(state.activeTab))state.activeTab='sheet';
-const maxHp=()=>20+4*state.defense;
-const gain=()=>one(10*(1+state.intelligence*.05+state.agility*.02));
+const maxHp=()=>20+4*(state.defense+(state.activeBuffs||[]).filter(b=>b.target==="defense").reduce((n,b)=>n+b.amount,0));
+const gain=()=>one(10*(1+(state.intelligence+(state.activeBuffs||[]).filter(b=>b.target==="intelligence").reduce((n,b)=>n+b.amount,0))*.05+(state.agility+(state.activeBuffs||[]).filter(b=>b.target==="agility").reduce((n,b)=>n+b.amount,0))*.02));
 const extraPoints=key=>Math.max(0,state[key]-1);
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='SALVO NO NAVEGADOR';}catch(e){$('saveStatus').textContent='FALHA AO SALVAR'}};
 let toastTimeout;
@@ -427,6 +474,148 @@ function exportFileName(ext){return ((state.name||'personagem').normalize('NFD')
 $('exportPngBtn').addEventListener('click',async()=>{try{toast('Preparando imagem...');const canvas=await captureSheet();const a=document.createElement('a');a.download=exportFileName('png');a.href=canvas.toDataURL('image/png');document.body.append(a);a.click();a.remove();toast('Ficha exportada em PNG.')}catch(err){console.error(err);toast('Falha na imagem. Verifique conexão com a biblioteca de exportação.')}});
 $('exportPdfBtn').addEventListener('click',async()=>{try{if(!window.jspdf?.jsPDF)throw new Error('Biblioteca PDF indisponível');toast('Preparando PDF...');const canvas=await captureSheet();const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});const pageW=210,pageH=297,margin=9,printW=pageW-2*margin,printH=pageH-2*margin;const pxPerPage=Math.floor(canvas.width*printH/printW);let position=0,page=0;while(position<canvas.height){const h=Math.min(pxPerPage,canvas.height-position);const slice=document.createElement('canvas');slice.width=canvas.width;slice.height=h;const context=slice.getContext('2d');context.fillStyle='#090818';context.fillRect(0,0,slice.width,slice.height);context.drawImage(canvas,0,position,canvas.width,h,0,0,canvas.width,h);if(page++)pdf.addPage();pdf.addImage(slice.toDataURL('image/jpeg',.9),'JPEG',margin,margin,printW,h*printW/canvas.width);position+=h}pdf.save(exportFileName('pdf'));toast('Ficha exportada em PDF.')}catch(err){console.error(err);toast('Falha no PDF. Verifique conexão com a biblioteca de exportação.')}});
 
+;(function installV4(){
+  state.activeBuffs=Array.isArray(state.activeBuffs)?state.activeBuffs.filter(b=>b&&typeof b==="object").map(b=>({...b,amount:clamp(Math.floor(b.amount),0,999),remaining:clamp(Math.floor(b.remaining),1,99)})).filter(b=>b.amount>0):[];
+  try{const prev=JSON.parse(localStorage.getItem(KEY)||'null');if(prev?.hp!=null)state.hp=clamp(Math.floor(prev.hp),0,maxHp());}catch(_){}
+  state.skills=state.skills.map(s=>({...s,category:["damage","heal","buff"].includes(s.category)?s.category:(s.icon==="♥"?"heal":"damage"),power:clamp(Math.floor(s.power||0),0,9999),target:s.target||"strength",amount:clamp(Math.floor(s.amount??2),1,999),turns:clamp(Math.floor(s.turns??3),1,99)}));
+  let currentFilter="all";
+  const categoryOf=s=>["damage","heal","buff"].includes(s.category)?s.category:(s.icon==="♥"?"heal":"damage");
+  const statBuff=k=>state.activeBuffs.filter(b=>b.target===k).reduce((n,b)=>n+b.amount,0);
+  const shield=()=>state.activeBuffs.filter(b=>b.target==="hp").reduce((n,b)=>n+b.amount,0);
+  const statTitle={strength:"FORÇA",defense:"DEFESA",intelligence:"INTELIGÊNCIA",agility:"AGILIDADE",hp:"HP EXTRA"};
+  const sayKind={damage:"DANO",heal:"CURA",buff:"BUFF"};
+  function updateShield(){
+    const points=shield();$("shieldRow").hidden=points<=0;
+    if(points>0){$("shieldValue").textContent="+"+fmt(points)+" HP";$("shieldFill").style.width=Math.min(100,100*points/maxHp())+"%";$("shieldBar").setAttribute("aria-valuemax",String(Math.max(points,maxHp())));$("shieldBar").setAttribute("aria-valuenow",String(points));}
+    const soulColor=soulTarget().empty?"#f6f7ff":getComputedStyle(document.documentElement).getPropertyValue("--soul-color").trim();
+    document.documentElement.style.setProperty("--shield-color",soulColor);
+  }
+  function renderBuffs(){
+    const host=$("activeBuffs");host.replaceChildren();
+    if(!state.activeBuffs.length){host.append(makeEl("span","buff-empty","Nenhum buff ativo."));return;}
+    for(const b of state.activeBuffs){
+      const pill=makeEl("div","buff-pill"),title=makeEl("span","",b.name+" · "),power=makeEl("strong","",`+${fmt(b.amount)} ${statTitle[b.target]||"BÔNUS"}`),rounds=makeEl("span","",`· ${b.remaining} turno${b.remaining===1?"":"s"}`),end=makeEl("button","","ENCERRAR");
+      end.type="button";end.addEventListener("click",()=>removeBuff(b.id));pill.append(title,power,rounds,end);host.append(pill);
+    }
+  }
+  function updateBuffHud(){
+    for(const stat of ["strength","defense","intelligence","agility"]){const amount=statBuff(stat),tag=$("bonus-"+stat);tag.hidden=!amount;tag.textContent="+"+fmt(amount);}
+    const bonus=statBuff("defense");if(bonus)$("hpFormula").textContent+=` (+${bonus*4} buff)`;
+    $("intBonus").textContent="+"+fmt((state.intelligence+statBuff("intelligence"))*5)+"%";
+    $("agiBonus").textContent="+"+fmt((state.agility+statBuff("agility"))*2)+"%";
+    updateShield();renderBuffs();
+  }
+  const beforeStatus=renderStatus;
+  renderStatus=function(animateSoul=false){beforeStatus(animateSoul);updateBuffHud();};
+  function preserveMissing(update){
+    const old=maxHp(),missing=old-state.hp;update();state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist();
+  }
+  function removeBuff(id){preserveMissing(()=>{state.activeBuffs=state.activeBuffs.filter(b=>b.id!==id)});toast("Buff encerrado.");}
+  $("passTurnBtn").addEventListener("click",()=>{
+    if(!state.activeBuffs.length){toast("Nenhum buff ativo.");return;}
+    preserveMissing(()=>{state.activeBuffs=state.activeBuffs.map(b=>({...b,remaining:b.remaining-1})).filter(b=>b.remaining>0)});
+    toast("Turno avançado: buffs atualizados.");
+  });
+  function heal(amount){const old=state.hp;state.hp=clamp(state.hp+clamp(Math.floor(amount),0,99999),0,maxHp());renderStatus();persist();return state.hp-old;}
+  $("healAmountBtn").addEventListener("click",()=>toast("+"+fmt(heal($("healAmount").value))+" HP recuperado."));
+  function dmg(amount){
+    let remaining=clamp(Math.floor(amount),0,99999),absorbed=0;
+    for(const b of state.activeBuffs){if(b.target!=="hp"||!remaining)continue;const used=Math.min(remaining,b.amount);b.amount-=used;remaining-=used;absorbed+=used;}
+    state.activeBuffs=state.activeBuffs.filter(b=>b.amount>0);state.hp=clamp(state.hp-remaining,0,maxHp());renderStatus();persist();
+    toast(`Dano: ${absorbed} absorvido, −${remaining} HP`);
+  }
+  $("damageBtn").addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();dmg($("damageAmount").value);},true);
+  function setFilter(filter){
+    currentFilter=filter;
+    document.querySelectorAll(".skill-filter").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter));
+    renderLibrary("skills");
+  }
+  document.querySelectorAll(".skill-filter").forEach(b=>b.addEventListener("click",()=>setFilter(b.dataset.filter)));
+  $("healSkillsBtn").addEventListener("click",()=>{setFilter("heal");switchTab("skills");toast("Habilidades de cura filtradas.");});
+  const priorLibrary=renderLibrary;
+  renderLibrary=function(type){
+    if(type==="skills"&&currentFilter!=="all"){
+      const matches=state.skills.filter(s=>categoryOf(s)===currentFilter);
+      if(!matches.some(s=>s.id===state.selectedSkill))state.selectedSkill=matches[0]?.id||null;
+    }
+    priorLibrary(type);
+    if(type!=="skills")return;
+    const root=$("skillsList"),rows=Array.from(root.querySelectorAll(".entry-row"));
+    state.skills.forEach((skill,i)=>{
+      const row=rows[i];if(!row)return;
+      row.classList.add("category-"+categoryOf(skill));
+      if(currentFilter!=="all"&&categoryOf(skill)!==currentFilter)row.remove();
+    });
+    if(!root.querySelector(".entry-row"))root.append(makeEl("div","empty-state",currentFilter==="all"?"Adicione sua primeira habilidade.":"Nenhuma habilidade nesta categoria."));
+  };
+  function useSkill(entry){
+    const cost=clamp(one(entry.cost),0,100);
+    if(state.tp<cost){toast("TP insuficiente.");return;}
+    state.tp=one(state.tp-cost);
+    const category=categoryOf(entry);
+    if(category==="heal"){const restored=heal(entry.power);toast(`${entry.name}: +${fmt(restored)} HP · −${fmt(cost)} TP`);}
+    else if(category==="buff"){
+      preserveMissing(()=>{
+        state.activeBuffs=state.activeBuffs.filter(b=>b.skillId!==entry.id);
+        state.activeBuffs.push({id:makeId(),skillId:entry.id,name:entry.name,target:entry.target,amount:entry.amount,remaining:entry.turns});
+      });
+      toast(`${entry.name}: buff aplicado!`);
+    }else {renderStatus();persist();toast(`${entry.name}: ${fmt(entry.power)} dano · −${fmt(cost)} TP`);}
+  }
+  const priorDetails=renderDetails;
+  renderDetails=function(type){
+    priorDetails(type);
+    if(type!=="skills")return;
+    const box=$("skillDetail");box.classList.remove("category-damage","category-heal","category-buff");
+    const entry=state.skills.find(s=>s.id===state.selectedSkill);
+    if(!entry||(currentFilter!=="all"&&categoryOf(entry)!==currentFilter)){box.replaceChildren(makeEl("div","empty-state","Nenhuma habilidade selecionada."));return;}
+    const category=categoryOf(entry);box.classList.add("category-"+category);
+    const cost=box.querySelector(".detail-cost");
+    if(cost){
+      cost.after(makeEl("span","skill-tag category-"+category,sayKind[category]));
+      const message=category==="heal"?`♥ Cura ${fmt(entry.power)} HP.`:category==="buff"?`✦ +${fmt(entry.amount)} ${statTitle[entry.target]||"BÔNUS"} por ${entry.turns} turno(s).`:`⚔ Dano informado: ${fmt(entry.power)}.`;
+      cost.after(makeEl("div","library-meta",message));
+    }
+    const cast=box.querySelector(".detail-actions .library-btn");
+    if(cast){
+      const replacement=cast.cloneNode(true);replacement.textContent=category==="heal"?"♥ CURAR":category==="buff"?"✦ ATIVAR BUFF":"⚔ UTILIZAR";
+      replacement.disabled=state.tp<entry.cost;cast.replaceWith(replacement);replacement.addEventListener("click",()=>useSkill(entry));
+    }
+  };
+  const form=$("skillForm");
+  function changeSkillFields(){
+    const cat=form.elements.namedItem("category").value,isBuff=cat==="buff";
+    $("skillPowerWrap").hidden=isBuff;$("skillBuffTargetWrap").hidden=!isBuff;$("skillBuffAmountWrap").hidden=!isBuff;$("skillBuffTurnsWrap").hidden=!isBuff;
+  }
+  $("skillCategory").addEventListener("change",()=>{changeSkillFields();form.elements.namedItem("icon").value=({damage:"⚔",heal:"♥",buff:"✦"})[form.elements.namedItem("category").value]});
+  const priorOpen=openEditor;
+  openEditor=function(type,id=null){
+    priorOpen(type,id);
+    if(type!=="skills")return;
+    const skill=state.skills.find(x=>x.id===id);
+    form.elements.namedItem("category").value=skill?categoryOf(skill):(currentFilter==="all"?"damage":currentFilter);
+    form.elements.namedItem("power").value=skill?.power??10;
+    form.elements.namedItem("target").value=skill?.target??"strength";
+    form.elements.namedItem("amount").value=skill?.amount??2;
+    form.elements.namedItem("turns").value=skill?.turns??3;
+    if(!skill)form.elements.namedItem("icon").value=({damage:"⚔",heal:"♥",buff:"✦"})[form.elements.namedItem("category").value];
+    changeSkillFields();
+  };
+  const priorSave=saveEntry;
+  saveEntry=function(type,e){
+    if(type!=="skills")return priorSave(type,e);
+    const category=form.elements.namedItem("category").value,power=clamp(Math.floor(form.elements.namedItem("power").value),0,9999),target=form.elements.namedItem("target").value,amount=clamp(Math.floor(form.elements.namedItem("amount").value),1,999),turns=clamp(Math.floor(form.elements.namedItem("turns").value),1,99);
+    priorSave(type,e);
+    const entry=state.skills.find(s=>s.id===state.selectedSkill);
+    if(entry){Object.assign(entry,{category,power,target,amount,turns});if(currentFilter!=="all"&&currentFilter!==category)currentFilter=category;}
+    document.querySelectorAll(".skill-filter").forEach(b=>b.classList.toggle("active",b.dataset.filter===currentFilter));
+    renderLibrary("skills");persist();
+  };
+  const oldReset=baseState;
+  baseState=()=>({...oldReset(),activeBuffs:[]});
+  const statusOnce=renderStatus;
+  statusOnce();
+})();
 makePetals('soulPetals',13);
 renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab(state.activeTab);persist();
 })();
