@@ -396,6 +396,7 @@ body .fill.tp{background:linear-gradient(90deg,#378ff2,#57c9fa,#a1f4f0)}
 <link rel="stylesheet" href="./theme-colors.css?v=6">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="./assets/pdf-compact.js?v=7" defer></script>
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -612,15 +613,88 @@ const extraPoints=key=>Math.max(0,state[key]-1);
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='SALVO NO NAVEGADOR';}catch(e){$('saveStatus').textContent='FALHA AO SALVAR'}};
 let toastTimeout;
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2300)}
-const SOUL_HUES={strength:0,defense:125,intelligence:230,agility:55};
-const SOUL_KEYS=Object.keys(SOUL_HUES);
+const SOUL_PALETTE={strength:[255,48,105],defense:[52,213,118],intelligence:[57,127,249],agility:[255,216,73]};
+const SOUL_KEYS=Object.keys(SOUL_PALETTE);
 const petalSvg=encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff6eb8" d="M5 1h5v1h2v2h1v4h-1v2h-2v1H8v1H6v-1H4v-1H3V9H2V6h1V4h1V3h1z"/><path fill="#ffd0e8" d="M7 2h2v1h1v1h1v3h-1v1H9v1H7V8H6V7H5V5h1V4h1z"/></svg>');
 function makePetals(targetId,count){const host=$(targetId);host.replaceChildren();for(let i=0;i<count;i++){const el=document.createElement('span');el.className='petal';el.style.backgroundImage=`url("data:image/svg+xml,${petalSvg}")`;el.style.left=(12+Math.random()*110)+'px';el.style.top=(-12+Math.random()*24)+'px';el.style.animationDuration=(3.5+Math.random()*2.3)+'s';el.style.animationDelay=(-Math.random()*5)+'s';el.style.setProperty('--drift',(-26+Math.random()*52)+'px');host.appendChild(el)}}
-// Mistura circular dos matizes: vermelho + azul = violeta, com pesos proporcionais aos pontos extras.
-let displayedHue=0,displayedSat=95,soulHasColor=false,hueAnimation=0;
-function soulTarget(){let x=0,y=0,total=0;for(const k of SOUL_KEYS){const weight=extraPoints(k);const rad=SOUL_HUES[k]*Math.PI/180;x+=weight*Math.cos(rad);y+=weight*Math.sin(rad);total+=weight}if(total===0)return {empty:true,total:0,hue:0,sat:0};const hue=(Math.atan2(y,x)*180/Math.PI+360)%360;const concentration=Math.hypot(x,y)/total;return {empty:false,total,hue,sat:Math.round(52+44*concentration)}}
-function drawSoul(hue,sat,target){const adjusted=((hue%360)+360)%360;const color=`hsl(${adjusted.toFixed(1)} ${sat.toFixed(1)}% 55%)`;const glow=`hsla(${adjusted.toFixed(1)},100%,62%,.5)`;document.documentElement.style.setProperty('--soul-color',color);document.documentElement.style.setProperty('--shield-color',target.empty?'#f6f7ff':color);document.documentElement.style.setProperty('--soul-glow',target.empty?'rgba(255,255,255,.18)':glow);$('soulStroke').style.stroke=target.empty?'#f6f7ff':color;const fill=$('soulFill');const fraction=Math.min(1,target.total/16);fill.setAttribute('y',String(7-7*fraction));fill.setAttribute('height',String(7*fraction));fill.style.opacity=target.empty?'0':'1';$('soulSvg').setAttribute('aria-label',target.empty?'Alma vazia: contorno sem cor':'Alma preenchida '+Math.round(fraction*100)+'%, matiz '+Math.round(adjusted)+' graus')}
-function updateSoul(animate=true){const target=soulTarget();cancelAnimationFrame(hueAnimation);if(target.empty){soulHasColor=false;drawSoul(0,0,target);return}if(!soulHasColor||!animate||window.matchMedia('(prefers-reduced-motion: reduce)').matches){displayedHue=target.hue;displayedSat=target.sat;soulHasColor=true;drawSoul(displayedHue,displayedSat,target);return}const startHue=displayedHue,startSat=displayedSat,diff=((target.hue-startHue+540)%360)-180,started=performance.now();function frame(now){const t=Math.min(1,(now-started)/780),e=1-(1-t)**3;displayedHue=(startHue+diff*e+360)%360;displayedSat=startSat+(target.sat-startSat)*e;drawSoul(displayedHue,displayedSat,target);if(t<1)hueAnimation=requestAnimationFrame(frame)}hueAnimation=requestAnimationFrame(frame)}
+// Mistura de pigmentos RGB: quatro cores-base; combinações criam rosa, ocre,
+ // marrom, turquesa e pastéis, com brilho também afetado pela distribuição.
+let displayedHue=0,displayedSat=90,displayedLight=55,soulHasColor=false,hueAnimation=0;
+const bounded=(v,min,max)=>Math.max(min,Math.min(max,v));
+function pigmentHsl(rgb){
+ const [rr,gg,bb]=rgb.map(x=>x/255),hi=Math.max(rr,gg,bb),lo=Math.min(rr,gg,bb),d=hi-lo;
+ let h=0,s=0,l=(hi+lo)/2;
+ if(d>0.00001){
+   s=d/(1-Math.abs(2*l-1));
+   switch(hi){
+     case rr:h=((gg-bb)/d)%6;break;
+     case gg:h=(bb-rr)/d+2;break;
+     default:h=(rr-gg)/d+4;
+   }
+   h=(h*60+360)%360;
+ }
+ return {h,s:s*100,l:l*100};
+}
+function soulTarget(){
+ const n=Object.fromEntries(SOUL_KEYS.map(k=>[k,extraPoints(k)]));
+ const total=SOUL_KEYS.reduce((acc,k)=>acc+n[k],0);
+ if(total===0)return {empty:true,total:0,hue:0,sat:0,light:55};
+ const rgb=[0,1,2].map(channel=>SOUL_KEYS.reduce((acc,k)=>acc+SOUL_PALETTE[k][channel]*n[k],0)/total);
+ let {h,s,l}=pigmentHsl(rgb);
+ const share=k=>n[k]/total;
+ const intersection=(...keys)=>Math.min(...keys.map(k=>share(k)))*keys.length;
+ const earth=bounded(Math.min(share('strength'),share('defense'))*2,0,1);
+ const warm=bounded(Math.min(share('strength'),share('agility'))*2,0,1);
+ const rose=bounded(Math.min(share('strength'),share('intelligence'))*2,0,1);
+ const dusk=bounded(intersection('strength','agility','intelligence')*Math.min(1,total/12),0,1);
+ const frost=bounded(intersection('defense','agility','intelligence')*Math.min(1,total/12),0,1);
+ // Vermelho + verde cria tons terrosos, não simplesmente um matiz intermediário.
+ l-=earth*18;s=s*(1-earth*.38)+earth*9;
+ // Combinações com vermelho podem gerar rosa, salmão e coral.
+ l+=rose*9+warm*4;s+=rose*8+warm*4;
+ // Força + agilidade + inteligência: tonalidade profunda.
+ l-=dusk*24;s+=dusk*10;
+ // Defesa + inteligência + agilidade: luminosidade de gelo/pastel.
+ l+=frost*25;s-=frost*12;
+ // Pequena ampliação tonal progressiva à medida que a alma evolui.
+ const progress=bounded(total/36,0,1);
+ l+=progress*(frost*3-dusk*3+rose*2);
+ return {empty:false,total,hue:h,sat:bounded(s,32,96),light:bounded(l,25,82)};
+}
+function drawSoul(hue,sat,light,target){
+ const h=((hue%360)+360)%360;
+ const color='hsl('+h.toFixed(1)+' '+sat.toFixed(1)+'% '+light.toFixed(1)+'%)';
+ const glow='hsla('+h.toFixed(1)+','+Math.max(55,sat).toFixed(1)+'%,'+Math.min(82,light+14).toFixed(1)+'%,.52)';
+ document.documentElement.style.setProperty('--soul-color',color);
+ document.documentElement.style.setProperty('--shield-color',target.empty?'#f6f7ff':color);
+ document.documentElement.style.setProperty('--soul-glow',target.empty?'rgba(255,255,255,.18)':glow);
+ $('soulStroke').style.stroke=target.empty?'#f6f7ff':color;
+ const fill=$('soulFill'),fraction=Math.min(1,target.total/16);
+ fill.setAttribute('y',String(7-7*fraction));
+ fill.setAttribute('height',String(7*fraction));
+ fill.style.opacity=target.empty?'0':'1';
+ $('soulSvg').setAttribute('aria-label',target.empty?'Alma vazia: contorno sem cor':
+ 'Alma '+Math.round(fraction*100)+'% preenchida, tom '+Math.round(h)+' graus, brilho '+Math.round(light)+'%');
+}
+function updateSoul(animate=true){
+ const target=soulTarget();cancelAnimationFrame(hueAnimation);
+ if(target.empty){soulHasColor=false;drawSoul(0,0,55,target);return}
+ if(!soulHasColor||!animate||window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+   displayedHue=target.hue;displayedSat=target.sat;displayedLight=target.light;
+   soulHasColor=true;drawSoul(displayedHue,displayedSat,displayedLight,target);return;
+ }
+ const h0=displayedHue,s0=displayedSat,l0=displayedLight;
+ const delta=((target.hue-h0+540)%360)-180,started=performance.now();
+ function frame(now){
+   const t=Math.min(1,(now-started)/780),ease=1-(1-t)**3;
+   displayedHue=(h0+delta*ease+360)%360;
+   displayedSat=s0+(target.sat-s0)*ease;
+   displayedLight=l0+(target.light-l0)*ease;
+   drawSoul(displayedHue,displayedSat,displayedLight,target);
+   if(t<1)hueAnimation=requestAnimationFrame(frame);
+ }
+ hueAnimation=requestAnimationFrame(frame);
+}
 
 function switchTab(tab){state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['sheet','inventory','skills'])$(key==='sheet'?'tab-sheet':'tab-'+key).hidden=(key!==tab);persist()}
 function renderStatus(animateSoul=false){
@@ -726,7 +800,24 @@ function fillExportExtra(doc){const sheet=doc.querySelector('#tab-skills');if(!s
 async function captureSheet(){if(typeof html2canvas!=='function')throw new Error('Biblioteca de imagem indisponível. Verifique sua conexão.');await document.fonts.ready;return await html2canvas($('exportTarget'),{backgroundColor:'#090818',scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),useCORS:true,scrollY:-window.scrollY,onclone:doc=>{doc.querySelectorAll('.rpg-tabs,.export-actions,.editor-wrap,.entry-editor,.detail-actions,.footer,.controls,.skill-filters,.turn-btn,.buff-end').forEach(el=>el.style.display='none');doc.querySelectorAll('.tab-content').forEach(el=>{el.hidden=false;el.style.display='block';el.style.margin='24px 0'});doc.querySelectorAll('.petal').forEach(el=>el.style.animation='none');doc.querySelectorAll('.soul-svg').forEach(el=>el.style.animation='none');fillExportExtra(doc)}})}
 function exportFileName(ext){return ((state.name||'personagem').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,45)||'personagem')+'_DELTA_RPG.'+ext}
 $('exportPngBtn').addEventListener('click',async()=>{try{toast('Preparando imagem...');const canvas=await captureSheet();const a=document.createElement('a');a.download=exportFileName('png');a.href=canvas.toDataURL('image/png');document.body.append(a);a.click();a.remove();toast('Ficha exportada em PNG.')}catch(err){console.error(err);toast('Falha na imagem. Verifique conexão com a biblioteca de exportação.')}});
-$('exportPdfBtn').addEventListener('click',async()=>{try{if(!window.jspdf?.jsPDF)throw new Error('Biblioteca PDF indisponível');toast('Preparando PDF...');const canvas=await captureSheet();const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});const pageW=210,pageH=297,margin=9,printW=pageW-2*margin,printH=pageH-2*margin;const pxPerPage=Math.floor(canvas.width*printH/printW);let position=0,page=0;while(position<canvas.height){const h=Math.min(pxPerPage,canvas.height-position);const slice=document.createElement('canvas');slice.width=canvas.width;slice.height=h;const context=slice.getContext('2d');context.fillStyle='#090818';context.fillRect(0,0,slice.width,slice.height);context.drawImage(canvas,0,position,canvas.width,h,0,0,canvas.width,h);if(page++)pdf.addPage();pdf.addImage(slice.toDataURL('image/jpeg',.9),'JPEG',margin,margin,printW,h*printW/canvas.width);position+=h}pdf.save(exportFileName('pdf'));toast('Ficha exportada em PDF.')}catch(err){console.error(err);toast('Falha no PDF. Verifique conexão com a biblioteca de exportação.')}});
+$('exportPdfBtn').addEventListener('click',async()=>{
+ try{
+   if(typeof window.DeltaCompactPDF!=='function')throw new Error('Gerador compacto indisponível');
+   toast('Preparando ficha compacta para o mestre...');
+   const stats=SOUL_KEYS.map(key=>({key,label:{strength:'Força',defense:'Defesa',intelligence:'Inteligência',agility:'Agilidade'}[key],base:state[key],bonus:attrBonus(key)}));
+   const payload={
+     name:state.name,level:state.level,stats,hp:state.hp,maxHp:maxHp(),
+     tp:state.tp,gain:gain(),shield:shieldHp(),
+     color:document.documentElement.style.getPropertyValue('--soul-color').trim(),
+     buffs:state.activeBuffs.map(b=>({...b,target:buffLabel[b.target]||b.target})),
+     skills:state.skills.map(e=>({...e,category:skillCategory(e),
+       target:buffLabel[e.target]||e.target})),
+     items:state.items.map(e=>({...e}))
+   };
+   await window.DeltaCompactPDF(payload);
+   toast('Ficha compacta A4 exportada!');
+ }catch(err){console.error(err);toast('Falha ao exportar PDF. Confira sua conexão e tente novamente.')}
+});
 
 makePetals('soulPetals',13);
 renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab(state.activeTab);persist();
