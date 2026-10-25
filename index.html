@@ -367,7 +367,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Nu
 const one=v=>Math.round(v*10)/10;
 const fmt=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const MAX_TP=100;
-const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],selectedItem:null,selectedSkill:null});
+const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],selectedItem:null,selectedSkill:null,activeBuffs:[]});
 let state=baseState();
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -605,16 +605,14 @@ $('exportPdfBtn').addEventListener('click',async()=>{try{if(!window.jspdf?.jsPDF
   saveEntry=function(type,e){
     if(type!=="skills")return priorSave(type,e);
     const category=form.elements.namedItem("category").value,power=clamp(Math.floor(form.elements.namedItem("power").value),0,9999),target=form.elements.namedItem("target").value,amount=clamp(Math.floor(form.elements.namedItem("amount").value),1,999),turns=clamp(Math.floor(form.elements.namedItem("turns").value),1,99);
+    const wasEditing=skillEditId,existingIds=new Set(state.skills.map(s=>s.id));
     priorSave(type,e);
-    const entry=state.skills.find(s=>s.id===state.selectedSkill);
-    if(entry){Object.assign(entry,{category,power,target,amount,turns});if(currentFilter!=="all"&&currentFilter!==category)currentFilter=category;}
+    const entry=state.skills.find(s=>s.id===(wasEditing||"")||!existingIds.has(s.id));
+    if(entry){Object.assign(entry,{category,power,target,amount,turns});state.selectedSkill=entry.id;if(currentFilter!=="all"&&currentFilter!==category)currentFilter=category;}
     document.querySelectorAll(".skill-filter").forEach(b=>b.classList.toggle("active",b.dataset.filter===currentFilter));
     renderLibrary("skills");persist();
   };
-  const oldReset=baseState;
-  baseState=()=>({...oldReset(),activeBuffs:[]});
-  const statusOnce=renderStatus;
-  statusOnce();
+  renderStatus();
 })();
 makePetals('soulPetals',13);
 renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab(state.activeTab);persist();
