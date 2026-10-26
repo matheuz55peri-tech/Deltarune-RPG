@@ -24,6 +24,8 @@
    '<h1>✧ O OUTRO LADO</h1><button id="deltaBackToNormal" type="button">',
    '↩ VOLTAR AO NORMAL</button></header>',
    '<p class="loot-description">Cinco baús. Cinco mundos. Escolha um para revelar seu selo.</p>',
+   '<p class="loot-description" style="margin-top:-18px;font-size:10px">Desenhos originais: ',
+   '<a href="https://laurabevon.com/chest-designs/" target="_blank" rel="noopener noreferrer" style="color:#e0cfa7">Laura Bevon — Chest Designs</a></p>',
    '<div id="deltaLootGrid" class="loot-grid"></div>',
    '<div id="deltaLootSelected" class="loot-selected" hidden>',
    '<h2 id="deltaLootName"></h2><p id="deltaLootText"></p>',
