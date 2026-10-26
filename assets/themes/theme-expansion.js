@@ -279,7 +279,7 @@
   if (document.getElementById('deltaGardenRainScript')) return;
   const script = document.createElement('script');
   script.id = 'deltaGardenRainScript';
-  script.src = './assets/themes/garden-rain.js?v=1';
+  script.src = './assets/themes/garden-rain.js?v=2';
   script.defer = true;
   document.head.appendChild(script);
 })();
