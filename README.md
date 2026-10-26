@@ -85,3 +85,19 @@ Os equipamentos ficam salvos no **FILE ativo** e são mantidos ao duplicar, expo
 - Três novos espaços: **ARTEFATO I**, **ARTEFATO II** e **ARTEFATO III** (12 slots no total).
 - Armas, armaduras e artefatos podem ter peso, descrição, dados de dano e bônus de atributos personalizados; são mantidos ao guardar no FILE, duplicar, exportar e importar.
 - Pontos extras de Defesa e demais atributos são aplicados apenas enquanto o item estiver equipado.
+
+## Atributos opcionais nos itens (v12)
+
+Em **Inventário → ADICIONAR ITEM** ou **EDITAR**, a seção **ATRIBUTOS AO EQUIPAR (OPCIONAL)**
+permite acrescentar até 8 bônus de **Força, Defesa, Inteligência e Agilidade**.
+A mochila mostra quais itens possuem bônus, mas não altera a ficha enquanto estiverem guardados.
+
+Ao equipar uma unidade em **Equipamentos**, os bônus daquele item são aplicados
+automaticamente ao personagem, separadamente dos atributos-base e dos buffs temporários.
+Ao desequipar, o bônus deixa de contar e o item retorna à mochila com as mesmas propriedades.
+Vários itens equipados acumulam seus bônus; a Defesa atualiza o HP máximo, e a Inteligência
+e a Agilidade atualizam o ganho de TP.
+
+Os bônus são opcionais (um item pode ter zero) e seguem o item nos FILES, ao importar/exportar
+um arquivo `.deltarpg` e no PDF da ficha (bônus de itens guardados aparecem como
+*ao equipar*, sem serem somados aos atributos do personagem).
