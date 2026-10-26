@@ -9,7 +9,7 @@
   const gif=document.createElement('img');gif.src='./assets/secret/eye.gif';
   gif.alt='';gif.onerror=()=>{gif.hidden=true;};
   const fallback=document.createElement('span');fallback.className='delta-eye-fallback';
-  fallback.textContent='◉';eye.append(gif,fallback);
+  fallback.innerHTML='<img alt="" src="./assets/secret/eye.svg">';eye.append(gif,fallback);
   document.body.append(eye);
   const warp=document.createElement('div');
   warp.id='deltaPortalTransition';warp.setAttribute('aria-hidden','true');
