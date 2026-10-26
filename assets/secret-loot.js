@@ -25,7 +25,7 @@
    '<img id="deltaSecretEyeGif" src="./assets/secret/eye.gif" alt="Um olho animado observa você">',
    '</button><span class="delta-secret-eye-hint">O olho observa. Toque a pupila.</span></div>',
    '<div id="deltaSecretFlowers" class="delta-secret-flowers" aria-hidden="true">',
-   '<img src="./assets/secret/flowers.gif" alt="">',
+   '<img src="./assets/secret/08aa907e7871bf74f4585b3a76eb75d5.gif" alt="Livro animado aberto">',
    '<div class="delta-secret-flower-shade"></div>',
    '<div class="delta-secret-message" role="status">Este lugar foi feito para você</div></div>',
    '<div id="deltaSecretZoom" aria-hidden="true"></div>'
