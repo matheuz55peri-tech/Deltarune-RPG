@@ -997,7 +997,7 @@ $('exportPdfBtn').addEventListener('click',async()=>{
  try{
    if(typeof window.DeltaCompactPDF!=='function')throw new Error('Gerador compacto indisponível');
    toast('Preparando ficha compacta para o mestre...');
-   const stats=SOUL_KEYS.map(key=>({key,label:{strength:'Força',defense:'Defesa',intelligence:'Inteligência',agility:'Agilidade'}[key],base:state[key],bonus:attrBonus(key)}));
+   const stats=SOUL_KEYS.map(key=>({key,label:{strength:'Força',defense:'Defesa',intelligence:'Inteligência',agility:'Agilidade'}[key],base:state[key],bonus:attrBonus(key)+equipmentBonus(key)}));
    const payload={
      name:state.name,level:state.level,stats,hp:state.hp,maxHp:maxHp(),
      tp:state.tp,gain:gain(),shield:shieldHp(),
