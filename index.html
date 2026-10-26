@@ -438,6 +438,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/themes/theme-expansion.css?v=9">
 <link rel="stylesheet" href="./assets/equipment.css?v=10">
 <link rel="stylesheet" href="./assets/equipment-bridge.css?v=11">
+  <link rel="stylesheet" href="./assets/live-sync.css?v=13">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="./assets/pdf-compact.js?v=10" defer></script>
@@ -743,7 +744,13 @@ function nextTurn(){if(!state.activeBuffs.length){toast('Nenhum buff ativo.');re
 const extraPoints=key=>Math.max(0,state[key]-1);
 const FILE_STORE_KEY='delta-rpg-save-files-v1';
 let fileSlots=[],activeSaveId=null,filesReady=false;
-const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));if(filesReady)storeActiveFile();$('saveStatus').textContent='SALVO NO NAVEGADOR'}catch(e){console.warn('Erro ao salvar FILE',e);$('saveStatus').textContent='FALHA AO SALVAR'}};
+const persist=()=>{try{
+  localStorage.setItem(KEY,JSON.stringify(state));
+  if(filesReady)storeActiveFile();
+  $('saveStatus').textContent='SALVO NO NAVEGADOR';
+  if(filesReady)window.dispatchEvent(new CustomEvent('delta-rpg:save',
+    {detail:{fileId:activeSaveId}}));
+ }catch(e){console.warn('Erro ao salvar FILE',e);$('saveStatus').textContent='FALHA AO SALVAR'}};
 let toastTimeout;
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2300)}
 const SOUL_PALETTE={strength:[255,48,105],defense:[52,213,118],intelligence:[57,127,249],agility:[255,216,73]};
@@ -1490,6 +1497,47 @@ $('equipmentForm').addEventListener('submit',event=>{
  changeEquipment(slot,item);closeEquipmentEditor();renderLibrary('inventory');toast('Equipamento salvo! Bônus atualizados.');
 });
 
+/* v13: ponte segura e opcional entre FILES locais e sessões WebRTC.
+   Somente a ficha selecionada é compartilhada; outras fichas ficam intocadas. */
+window.DeltaRpgLiveBridge=Object.freeze({
+ activeFileId(){return filesReady?activeSaveId:null},
+ readFile(id){
+  if(!filesReady)return null;
+  const slot=fileSlots.find(x=>x.id===id);
+  return slot?{label:slot.label,character:cleanCharacter(slot.data)}:null;
+ },
+ createSharedFile(character,label){
+  if(!filesReady||fileSlots.length>=MAX_FILES)return null;
+  const normalized=cleanCharacter(character);
+  persist();
+  const title='AO VIVO · '+short(label||normalized.name||'FICHA',24);
+  const slot=createFile(normalized,title);
+  fileSlots.push(slot);
+  activateFile(slot);
+  toast('✦ Ficha recebida! Cópia criada em seus FILES.');
+  return slot.id;
+ },
+ writeRemoteFile(id,character){
+  if(!filesReady)return false;
+  const slot=fileSlots.find(x=>x.id===id);
+  if(!slot)return false;
+  const received=cleanCharacter(character);
+  slot.data=received;slot.updatedAt=stamp();
+  if(activeSaveId===id){
+   const tab=state.activeTab;
+   state=cleanCharacter(received);
+   state.activeTab=tab;
+   closeEditor('skills');closeEditor('inventory');closeEquipmentEditor();
+   renderStatus();
+   renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+   localStorage.setItem(KEY,JSON.stringify(state));
+  }
+  commitFiles();
+  renderFiles();
+  return true;
+ }
+});
+
 makePetals('soulPetals',13);
 loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
 
@@ -1563,5 +1611,6 @@ applyAppearance();
 
 </script>
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
+<script src="./assets/live-sync.js?v=13" defer></script>
 </body>
 </html>
