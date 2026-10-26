@@ -108,3 +108,26 @@ html[data-theme="cosmos"] .portrait,html[data-theme="city"] .portrait,html[data-
 @keyframes deltaStarlight{from{opacity:.36;transform:translateY(0)}to{opacity:.8;transform:translateY(-8px)}}
 @media(prefers-reduced-motion:reduce){html[data-theme] .theme-atmosphere{animation:none!important}.theme-scene-button{transition:none}}
 @media(max-width:500px){.theme-popover{padding:13px}.theme-sub-scenes{grid-template-columns:1fr}.theme-option .theme-thumb{height:75px}.sound-toggle{font-size:10px}}
+
+/* v10: seletores únicos de tema e subtema.
+   Reaproveita os sete botões originais sem perder as paisagens adicionais. */
+html.delta-worlds-deduplicated #forestOptions,
+html.delta-worlds-deduplicated #cityOptions,
+html.delta-worlds-deduplicated #gardenOptions{display:none!important}
+
+/* A miniatura do Jardim Azul aponta para o jardim chuvoso, não para a
+   antiga miniatura de Hortênsias (que agora é um subtema). */
+html.delta-worlds-deduplicated .theme-options .theme-option[data-theme-choice="garden"] .theme-thumb{
+  background-image:url('./blue-garden.webp')!important;
+  image-rendering:pixelated
+}
+.theme-scene-button[data-scene-id="blue"] .scene-thumb{
+  background-image:url('./blue-garden.webp')
+}
+.theme-scene-button[data-scene-id="hydrangea"] .scene-thumb{
+  background-image:var(--preview-hydrangea)
+}
+/* O seletor original de fundos utiliza --scene-image; suportar Rua Noturna. */
+html[data-theme="city"][data-city-scene="street"]{
+  --scene-image:url('./night-street.gif')
+}
