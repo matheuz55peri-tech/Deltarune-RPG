@@ -207,3 +207,14 @@
     playFX('select');
   },true);
 })();
+
+
+/* Camada de chuva pixelart exclusiva do tema Jardim Azul. */
+(() => {
+  if (document.getElementById('deltaGardenRainScript')) return;
+  const script = document.createElement('script');
+  script.id = 'deltaGardenRainScript';
+  script.src = './assets/themes/garden-rain.js?v=1';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
