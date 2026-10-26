@@ -136,3 +136,26 @@ disponibilidade do serviço de sinalização externo não é garantida.
 Compartilhe-o somente com pessoas confiáveis, evite informações pessoais
 e exporte backups dos arquivos. Para sincronização permanente entre acessos,
 é necessário um backend próprio com autenticação e banco de dados.
+
+## Portal oculto e baús (v14)
+
+O botão com o **olho** fica discretamente no canto inferior do site. Ao clicar,
+o olho amplia e a interface oculta `O OUTRO LADO` cobre a ficha, com a ação
+**VOLTAR AO NORMAL** (ou Esc) para voltar às abas do personagem.
+
+Há cinco categorias de baús: **Taràrê** (cidade do ouro), **Rubi**
+(floresta avermelhada), **Carpas** (floresta das escamóides),
+**Desértico** (terras áridas) e **Deslocado** (todos os mundos sombrios).
+
+O **Baú de Taràrê** possui uma primeira animação de tampa abrindo ao acionar
+**ABRIR BAÚ**. Os demais baús estão visíveis e podem ser selecionados, mas
+não têm abertura implementada ainda. **Não existe tabela de loot nesta versão**,
+portanto nenhuma recompensa é gerada ou distribuída.
+
+A interface referencia **assets/secret/eye.gif** (olho original animado, fundo
+removido) e **assets/secret/realm.mp4** (vídeo de fundo fornecido), que são
+arquivos de mídia binários. Se esses arquivos ainda não estiverem publicados,
+o site utiliza o fallback **assets/secret/eye.svg** para o olho e o fundo
+escuro do portal; a navegação e a seleção de baús continuam funcionando.
+O pacote de mídia disponibilizado separadamente contém os dois arquivos
+prontos para colocar na pasta `assets/secret/` do repositório.
