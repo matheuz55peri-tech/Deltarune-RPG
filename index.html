@@ -600,6 +600,13 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <label class="editor-label">CATEGORIA<select class="editor-input" name="type"><option value="⚔">Arma</option><option value="✦">Artefato</option><option value="♥">Consumível</option><option value="⬡">Equipamento</option><option value="◆">Material</option><option value="✿">Outro</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
         <label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Efeito, origem, regras de utilização..."></textarea></label>
+        <div class="editor-label editor-wide inventory-attributes">
+          <div class="inventory-attributes-title">✦ ATRIBUTOS AO EQUIPAR <span>OPCIONAL</span></div>
+          <p class="inventory-equip-hint">Configure os bônus deste item. Eles só aumentam os atributos do personagem enquanto uma unidade estiver equipada.</p>
+          <div id="inventoryBonusRows" class="equip-bonus-list inventory-bonus-list" aria-label="Bônus de atributos do item"></div>
+          <button type="button" class="library-btn secondary inventory-add-bonus" id="addInventoryBonusBtn">＋ ADICIONAR ATRIBUTO</button>
+          <p class="inventory-equip-hint">Até 8 atributos por item · Força, Defesa, Inteligência e Agilidade. Item na mochila = nenhum bônus ativo.</p>
+        </div>
       </div>
       <div class="editor-actions"><button class="library-btn" type="submit">✦ SALVAR ITEM</button><button class="library-btn secondary" id="cancelItemBtn" type="button">CANCELAR</button></div>
     </form>
@@ -874,7 +881,10 @@ function renderLibrary(type){
  if(rows.length===0){const note=makeEl('div','empty-state');note.append(makeEl('strong','',type==='skills'?'✦ SEM HABILIDADES':'✦ MOCHILA VAZIA'),makeEl('span','',type==='skills'?(skillFilter==='all'?'Clique em ADICIONAR HABILIDADE para criar uma técnica.':'Nenhuma habilidade nesta categoria. Você pode adicionar uma nova ou trocar o filtro.'):'Clique em ADICIONAR ITEM para montar seu inventário.'));list.append(note)}
  for(const entry of rows){const category=type==='skills'?skillCategory(entry):null;const selected=entry.id===state[config.selected];const button=makeEl('button','entry-row '+(type==='inventory'?'inventory-row ':'')+(category?'category-'+category+' ':'')+(selected?'selected':''));button.type='button';button.setAttribute('aria-pressed',String(selected));
   if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(makeEl('span','entry-icon',entry.type||'◆'));
-  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));button.append(name);if(type==='inventory')button.append(makeEl('span','entry-quantity','x'+entry.quantity));button.addEventListener('click',()=>selectEntry(type,entry.id));
+  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));button.append(name);if(type==='inventory'){
+    if(entry.equipmentData?.bonuses?.length)name.append(makeEl('span','inventory-item-bonus-mark','✦ '+entry.equipmentData.bonuses.length+' bônus'));
+    button.append(makeEl('span','entry-quantity','x'+entry.quantity));
+  }button.addEventListener('click',()=>selectEntry(type,entry.id));
   if(type==='inventory'){
    const wrapper=makeEl('div','inventory-line');
    const quick=makeEl('button','inventory-quick-equip','✦');
@@ -909,7 +919,14 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
   if(category==='damage')area.append(makeEl('div','library-meta',`⚔ Dano informado: ${fmt(entry.power||0)}. Aplique o dano ao alvo no seu RPG.`));
   if(category==='buff')area.append(makeEl('div','library-meta',`✦ +${fmt(entry.amount||0)} ${buffLabel[entry.target]||'atributo'} · duração ${entry.turns||3} turno(s).`));
   if(state.tp<entry.cost)area.append(makeEl('div','library-meta','TP insuficiente para usar agora.'))
- }else area.append(makeEl('div','detail-cost',`QUANTIDADE: ${entry.quantity}`));
+ }else{
+  area.append(makeEl('div','detail-cost',`QUANTIDADE: ${entry.quantity}`));
+  const configured=normalizeGearSnapshot(entry.equipmentData).bonuses;
+  area.append(makeEl('div','inventory-bonus-detail',configured.length?
+   '✦ BÔNUS AO EQUIPAR: '+bonusSummary({bonuses:configured}):
+   '✦ SEM BÔNUS · Adicione atributos na edição do item.'));
+  area.append(makeEl('div','inventory-bonus-standby','Os atributos acima não são aplicados enquanto o item estiver na mochila.'));
+ }
  area.append(makeEl('div','detail-description',entry.description?.trim()||'Nenhuma descrição adicionada.'));
  if(type==='inventory'){
   const free=EQUIP_SLOTS.filter(slot=>!equipped(slot.key));
@@ -927,7 +944,7 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
    const equip=makeEl('button','library-btn','✦ EQUIPAR');equip.type='button';
    equip.addEventListener('click',()=>equipFromBag(entry.id,select.value));
    bar.append(select,equip);panel.append(bar);
-   panel.append(makeEl('div','inventory-equip-hint','Transfere uma unidade para o espaço escolhido. Você poderá editar os bônus na aba EQUIPAMENTOS.'));
+   panel.append(makeEl('div','inventory-equip-hint','Transfere uma unidade para o espaço escolhido e ativa os bônus cadastrados. Os atributos também podem ser editados em EQUIPAMENTOS.'));
   }else panel.append(makeEl('div','inventory-equip-hint','Todos os espaços estão ocupados. Desequipe um item antes de equipar outro.'));
   area.append(panel);
  }
@@ -936,13 +953,30 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
 }
 function openEditor(type,id=null){const conf=kind[type],form=$(conf.form),entry=state[conf.collection].find(x=>x.id===id);form.hidden=false;form.reset();if(type==='skills'){skillEditId=id;$('skillFormHeading').textContent=id?'✦ EDITAR HABILIDADE':'✦ ADICIONAR HABILIDADE'}else{itemEditId=id;$('itemFormHeading').textContent=id?'✦ EDITAR ITEM':'✦ ADICIONAR ITEM'}
  if(entry){for(const [key,val] of Object.entries(entry)){if(form.elements.namedItem(key))form.elements.namedItem(key).value=val}}
+ if(type==='inventory'){
+   $('inventoryBonusRows').replaceChildren();
+   for(const bonus of normalizeGearSnapshot(entry?.equipmentData).bonuses)
+     addEquipmentBonusRow(bonus.stat,bonus.value,'inventoryBonusRows');
+ }
  if(type==='skills'){if(!entry){form.elements.namedItem('cost').value='20';form.elements.namedItem('power').value='10';form.elements.namedItem('amount').value='2';form.elements.namedItem('turns').value='3';form.elements.namedItem('category').value=skillFilter==='all'?'damage':skillFilter;}updateSkillFields()}if(!entry&&type==='inventory')form.elements.namedItem('quantity').value='1';form.scrollIntoView({behavior:'smooth',block:'nearest'});form.elements.namedItem('name').focus()}
 function updateSkillFields(){const v=$('skillCategory').value,isBuff=v==='buff';$('skillPowerWrap').hidden=isBuff;$('skillBuffTargetWrap').hidden=!isBuff;$('skillBuffAmountWrap').hidden=!isBuff;$('skillBuffTurnsWrap').hidden=!isBuff}
 $('skillCategory').addEventListener('change',()=>{updateSkillFields();$('skillForm').elements.namedItem('icon').value=({damage:'⚔',heal:'♥',buff:'✦'}[$('skillCategory').value]||'✦')});
 document.querySelectorAll('.skill-filter').forEach(btn=>btn.addEventListener('click',()=>setSkillFilter(btn.dataset.filter)));
 function closeEditor(type){$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
 function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.form),id=type==='skills'?skillEditId:itemEditId,name=String(form.elements.namedItem('name').value||'').trim().slice(0,55),description=String(form.elements.namedItem('description').value||'').slice(0,3000);if(!name){toast('Digite o nome.');return}
- let record;if(type==='skills')record={id:id||makeId(),name,description,icon:form.elements.namedItem('icon').value,cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),...(state.items.find(x=>x.id===id)?.equipmentData?{equipmentData:state.items.find(x=>x.id===id).equipmentData}:{})};
+ let record;if(type==='skills')record={id:id||makeId(),name,description,icon:form.elements.namedItem('icon').value,cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else{
+  const previous=state.items.find(x=>x.id===id);
+  const data=normalizeGearSnapshot(previous?.equipmentData);
+  data.bonuses=[...$('inventoryBonusRows').querySelectorAll('.equip-bonus-row')].slice(0,8).map(row=>{
+    const sel=row.querySelector('select'),num=row.querySelector('input');
+    if(!sel||!num||!EQUIP_STATS.some(stat=>stat.key===sel.value))return null;
+    const value=Math.trunc(Number(num.value));
+    return Number.isFinite(value)&&value>=1&&value<=999?{stat:sel.value,value}:null;
+  }).filter(Boolean);
+  record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,
+    quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
+    equipmentData:data};
+ }
  const items=state[conf.collection];const idx=items.findIndex(x=>x.id===record.id);if(idx>=0)items[idx]=record;else items.push(record);state[conf.selected]=record.id;if(type==='skills'&&skillFilter!=='all'&&skillFilter!==record.category)setSkillFilter(record.category);closeEditor(type);renderLibrary(type);persist();toast(type==='skills'?'Habilidade salva!':'Item salvo!')}
 function removeEntry(type,id){const conf=kind[type],entry=state[conf.collection].find(x=>x.id===id);if(!entry||!confirm(`Remover "${entry.name}"?`))return;state[conf.collection]=state[conf.collection].filter(x=>x.id!==id);renderLibrary(type);persist();toast('Removido com sucesso')}
 $('addSkillBtn').addEventListener('click',()=>openEditor('skills'));
@@ -1273,8 +1307,8 @@ function renderEquipment(){
  const totals=EQUIP_STATS.map(s=>({label:s.label,points:equipmentBonus(s.key)})).filter(s=>s.points>0);
  if(totals.length)summary.appendChild(equipmentNode('div','',totals.map(s=>'+'+fmt(s.points)+' '+s.label).join(' · ')));
 }
-function addEquipmentBonusRow(stat='defense',amount=1){
- const container=$('equipmentBonusRows');
+function addEquipmentBonusRow(stat='defense',amount=1,containerId='equipmentBonusRows'){
+ const container=$(containerId);
  if(container.children.length>=8){toast('Máximo de 8 aumentos por item.');return}
  const row=equipmentNode('div','equip-bonus-row');
  const select=equipmentNode('select','equip-input');select.setAttribute('aria-label','Atributo adicional');
@@ -1284,7 +1318,7 @@ function addEquipmentBonusRow(stat='defense',amount=1){
  points.value=clamp(Math.trunc(amount),1,999);points.setAttribute('aria-label','Quantidade de pontos');
  const remove=equipmentNode('button','equip-mini-action','×');remove.type='button';
  remove.setAttribute('aria-label','Remover aumento de atributo');
- remove.addEventListener('click',()=>{if(container.children.length<=1){toast('É necessário pelo menos um aumento.');return}row.remove()});
+ remove.addEventListener('click',()=>row.remove());
  row.append(select,points,remove);container.appendChild(row);
 }
 function toggleEquipmentDamage(){
@@ -1431,6 +1465,7 @@ slotSelect.addEventListener('change',ev=>{
 $('equipmentType').addEventListener('change',toggleEquipmentDamage);
 $('addEquipmentBtn').addEventListener('click',()=>openEquipmentEditor(selectedEquipmentSlot));
 $('addEquipmentBonusBtn').addEventListener('click',()=>addEquipmentBonusRow('defense',1));
+$('addInventoryBonusBtn').addEventListener('click',()=>addEquipmentBonusRow('strength',1,'inventoryBonusRows'));
 $('cancelEquipmentBtn').addEventListener('click',closeEquipmentEditor);
 $('equipmentForm').addEventListener('submit',event=>{
  event.preventDefault();
