@@ -1,11 +1,10 @@
-/* DELTA RPG — chuva pixelart do Jardim Azul.
-   Camada transparente sobre menus e fichas; não interfere nos cliques. */
+/* DELTA RPG | Jardim Azul: chuva no vidro + ondinhas pixelart.
+   Efeito visual global sobre menus, sem interceptar cliques. */
 (() => {
   'use strict';
 
-  function mountGardenRain() {
+  function init() {
     if (document.getElementById('delta-garden-rain')) return;
-
     const canvas = document.createElement('canvas');
     canvas.id = 'delta-garden-rain';
     canvas.className = 'delta-garden-rain';
@@ -14,149 +13,162 @@
     if (!ctx) return;
 
     const style = document.createElement('style');
-    style.id = 'delta-garden-rain-style';
-    style.textContent =
-      '.delta-garden-rain{' +
-      'position:fixed;inset:0;width:100%;height:100%;display:none;' +
-      'pointer-events:none!important;user-select:none;' +
-      'image-rendering:pixelated;opacity:.83;' +
-      'z-index:2147483646;contain:strict;' +
-      '}' +
-      'html[data-theme="garden"] .delta-garden-rain{display:block}';
-    document.head.appendChild(style);
-    document.body.appendChild(canvas);
-    ctx.imageSmoothingEnabled = false;
+    style.textContent = [
+      '#delta-garden-rain{position:fixed;inset:0;width:100%;height:100%;',
+      'z-index:2147483646;pointer-events:none!important;user-select:none;',
+      'image-rendering:pixelated;opacity:.91;display:none;contain:strict}',
+      'html[data-theme="garden"] #delta-garden-rain{display:block}'
+    ].join('');
+    document.head.append(style);
+    document.body.append(canvas);
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const rand = (min, max) => min + Math.random() * (max - min);
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const drops = [];
-    const splashes = [];
-    let width = 0;
-    let height = 0;
-    let running = false;
-    let frameId = 0;
-    let previousTime = 0;
+    const ripples = [];
+    let w = 1, h = 1, active = false, raf = 0, last = 0;
+    const rand = (min, max) => min + Math.random() * (max - min);
+    const isGarden = () => document.documentElement.dataset.theme === 'garden';
+    const bounded = (v,lo,hi) => Math.max(lo,Math.min(v,hi));
 
-    function makeDrop(initial) {
-      const front = Math.random() < 0.31;
+    function drop(initial = false) {
+      const near = Math.random() < .30;
+      const y = initial ? rand(-h*.2, h) : rand(-h*.33-15,-6);
+      const hit = rand(h*.14, h*.97); // As gotas atingem o "vidro" em qualquer altura.
       return {
-        x: rand(-8, width + 8),
-        y: initial ? rand(0, height) : rand(-height * 0.2 - 15, -5),
-        length: front ? Math.floor(rand(4, 8)) : Math.floor(rand(2, 5)),
-        speed: front ? rand(62, 104) : rand(32, 66),
-        drift: rand(-5, -1.1),
-        alpha: front ? rand(.37, .66) : rand(.14, .36),
-        front
+        x: rand(3,w+12), y,
+        hit: initial ? Math.max(hit, y + rand(5,h*.22)) : hit,
+        near, alpha: near ? rand(.32,.65) : rand(.13,.33),
+        speed: near ? rand(86,135) : rand(51,89),
+        length: near ? rand(4,8)|0 : rand(2,5)|0,
+        drift: rand(-3.4,-.6)
       };
     }
 
-    function resize() {
-      // Renderização em baixa resolução para manter pixels nítidos.
-      width = Math.max(1, Math.ceil(window.innerWidth / 3));
-      height = Math.max(1, Math.ceil(window.innerHeight / 3));
-      canvas.width = width;
-      canvas.height = height;
-      ctx.imageSmoothingEnabled = false;
-      const amount = Math.max(24, Math.min(170, Math.round(width * height / 1550)));
-      drops.length = 0;
-      splashes.length = 0;
-      for (let i = 0; i < amount; i++) drops.push(makeDrop(true));
-      paint(0);
+    function makeRipple(x,y,force = 1,clicked = false) {
+      if (ripples.length >= 56) ripples.shift();
+      ripples.push({
+        x: bounded(x,1,w-1),y:bounded(y,1,h-1),
+        age:0, duration: clicked ? .83 : rand(.48,.8),
+        max:clicked ? 19 : rand(7,12)*force,
+        bright:clicked ? .86 : rand(.35,.62),
+        clicked
+      });
     }
 
-    function paint(dt) {
-      ctx.clearRect(0, 0, width, height);
+    function resize() {
+      w = Math.max(1,Math.ceil(innerWidth/3));
+      h = Math.max(1,Math.ceil(innerHeight/3));
+      canvas.width=w;canvas.height=h;
+      ctx.imageSmoothingEnabled=false;
+      const count=bounded(Math.round(w*h/1800),38,155);
+      drops.length=0; ripples.length=0;
+      for(let i=0;i<count;i++)drops.push(drop(true));
+      draw(0);
+    }
 
-      for (let i = 0; i < drops.length; i++) {
-        let d = drops[i];
-        if (dt) {
-          d.x += d.drift * dt;
-          d.y += d.speed * dt;
-          if (d.y > height + d.length || d.x < -12) {
-            if (d.y > height && d.front && Math.random() < .48 &&
-                splashes.length < 25) {
-              splashes.push({ x: d.x, y: height - 2, age: 0, duration: rand(.15, .30) });
+    // Círculos formados por pequenos quadrados, sem blur nem linhas suaves.
+    function dottedOval(x,y,rx,ry,alpha,color) {
+      if(rx < 1) return;
+      ctx.globalAlpha=alpha;
+      ctx.fillStyle=color;
+      const samples=Math.max(16,Math.ceil(rx*5));
+      for(let j=0;j<samples;j++){
+        const a=j/samples*Math.PI*2;
+        // Pequenas falhas entre pixels imitam reflexos na água.
+        if((j%17===13)&&(rx>9))continue;
+        const px=Math.round(x+Math.cos(a)*rx);
+        const py=Math.round(y+Math.sin(a)*ry);
+        ctx.fillRect(px,py,rx>12&&j%7===0?2:1,1);
+      }
+    }
+
+    function draw(dt) {
+      ctx.clearRect(0,0,w,h);
+      for(let i=0;i<drops.length;i++){
+        let d=drops[i];
+        if(dt){
+          d.y+=d.speed*dt;
+          d.x+=d.drift*dt;
+          if(d.y>=d.hit || d.x<0){
+            if(d.x>0 && d.x<w && d.y>=d.hit && Math.random()<.92){
+              makeRipple(d.x,d.hit,d.near?1.1:.85);
             }
-            d = drops[i] = makeDrop(false);
+            d=drops[i]=drop();
           }
         }
-
-        const x = Math.round(d.x);
-        const y = Math.round(d.y);
-        // Rastro fino, ponta luminosa e fragmento lateral: gota de pixelart.
-        ctx.globalAlpha = d.alpha;
-        ctx.fillStyle = d.front ? '#a3f7ff' : '#68c8db';
-        ctx.fillRect(x, y, 1, d.length);
-        ctx.globalAlpha = d.alpha * .68;
-        ctx.fillStyle = '#e3feff';
-        ctx.fillRect(x, y + d.length - 1, d.front ? 2 : 1, 1);
-        if (d.front && d.length > 5) {
-          ctx.globalAlpha = d.alpha * .23;
-          ctx.fillStyle = '#73dce5';
-          ctx.fillRect(x - 1, y + 1, 1, 2);
-        }
+        const x=Math.round(d.x),y=Math.round(d.y);
+        ctx.globalAlpha=d.alpha;
+        ctx.fillStyle=d.near?'#98f3ff':'#6cbccc';
+        ctx.fillRect(x,y,1,d.length);
+        ctx.globalAlpha=d.alpha*.72;
+        ctx.fillStyle='#e3fdff';
+        ctx.fillRect(x,y+d.length-1,d.near?2:1,1);
       }
 
-      // Pequenos respingos pixelados na base da tela.
-      for (let i = splashes.length - 1; i >= 0; i--) {
-        const s = splashes[i];
-        if (dt) s.age += dt;
-        if (s.age >= s.duration) {
-          splashes.splice(i, 1);
-          continue;
+      for(let i=ripples.length-1;i>=0;i--){
+        const r=ripples[i];
+        if(dt)r.age+=dt;
+        if(r.age>=r.duration){ripples.splice(i,1);continue;}
+        const p=r.age/r.duration;
+        const ease=1-Math.pow(1-p,2);
+        const size=1+r.max*ease;
+        const fade=Math.pow(1-p,1.25)*r.bright;
+        const x=Math.round(r.x), y=Math.round(r.y);
+        // Duas ou três ondinhas concêntricas, alongadas como numa poça.
+        dottedOval(x,y,size,Math.max(1,size*.42),fade*.85,'#c3faff');
+        if(p>.12)dottedOval(x,y,size*.69,Math.max(1,size*.69*.46),
+          fade*.36,'#57d6eb');
+        if(r.clicked && p>.2)dottedOval(x,y,size*.40,Math.max(1,size*.18),
+          fade*.58,'#e1ffff');
+        if(p<.22){
+          ctx.globalAlpha=fade*.9;
+          ctx.fillStyle='#f4ffff';
+          ctx.fillRect(x,y,2,1);
+          ctx.fillRect(x-1,y-2,1,1);
         }
-        const progress = s.age / s.duration;
-        const spread = Math.round(1 + progress * 3);
-        const x = Math.round(s.x);
-        ctx.globalAlpha = .42 * (1 - progress);
-        ctx.fillStyle = '#a7f9ff';
-        ctx.fillRect(x - spread - 1, s.y - 1, 2, 1);
-        ctx.fillRect(x + spread, s.y - 1, 2, 1);
-        ctx.fillRect(x, s.y - 2 - Math.round(progress * 2), 1, 1);
       }
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha=1;
     }
 
-    function loop(time) {
-      if (!running) return;
-      frameId = requestAnimationFrame(loop);
-      // Aproximadamente 30 FPS deixam o movimento levemente retrô.
-      if (previousTime && time - previousTime < 30) return;
-      const dt = previousTime ? Math.min((time - previousTime) / 1000, .06) : 0;
-      previousTime = time;
-      paint(dt);
+    function tick(now) {
+      if(!active)return;
+      raf=requestAnimationFrame(tick);
+      if(last && now-last<30)return; // Pixel-art: ~30 quadros/seg.
+      const dt=last?Math.min((now-last)/1000,.055):0;
+      last=now;
+      draw(dt);
     }
 
     function sync() {
-      const enabled = document.documentElement.dataset.theme === 'garden';
-      const animate = enabled && !document.hidden && !reducedMotion.matches;
-      if (animate && !running) {
-        running = true;
-        previousTime = 0;
-        frameId = requestAnimationFrame(loop);
-      } else if (!animate && running) {
-        running = false;
-        cancelAnimationFrame(frameId);
-        previousTime = 0;
+      const enabled=isGarden()&&!document.hidden&&!reduced.matches;
+      if(enabled&&!active){
+        active=true;last=0;raf=requestAnimationFrame(tick);
+      }else if(!enabled&&active){
+        active=false;cancelAnimationFrame(raf);last=0;
       }
-      if (enabled && !animate) paint(0);
+      if(reduced.matches && isGarden())draw(0);
     }
 
+    // Pointerdown é acionado no celular e em botões/menus também.
+    document.addEventListener('pointerdown',event=>{
+      if(!isGarden()||reduced.matches||event.button>0)return;
+      makeRipple(event.clientX/3,event.clientY/3,1.5,true);
+      // Primeiro quadro imediato, inclusive se a guia já estava em repouso.
+      if(!active)draw(0);
+    },{capture:true,passive:true});
+
     resize();
-    new MutationObserver(sync).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme']
+    new MutationObserver(sync).observe(document.documentElement,{
+      attributes:true,attributeFilter:['data-theme']
     });
-    window.addEventListener('resize', resize, { passive: true });
-    document.addEventListener('visibilitychange', sync);
-    if (reducedMotion.addEventListener) reducedMotion.addEventListener('change', sync);
-    else if (reducedMotion.addListener) reducedMotion.addListener(sync);
+    addEventListener('resize',resize,{passive:true});
+    document.addEventListener('visibilitychange',sync);
+    if(reduced.addEventListener)reduced.addEventListener('change',sync);
+    else if(reduced.addListener)reduced.addListener(sync);
     sync();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountGardenRain, { once: true });
-  } else {
-    mountGardenRain();
-  }
+  if(document.readyState==='loading')
+    document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
 })();
