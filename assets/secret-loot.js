@@ -67,8 +67,8 @@
    };
    const position=originalPositions[c.id];
    art.classList.add('loot-chest-original');
-   art.style.setProperty('--sheet-col',position[0]);
-   art.style.setProperty('--sheet-row',position[1]);
+   art.style.setProperty('--sheet-x',(-position[0]*185)+'px');
+   art.style.setProperty('--sheet-y',([0,-158,-417,-583,-754][position[1]])+'px');
    art.innerHTML='<span class="loot-original-paint" aria-hidden="true"></span>';
    const title=document.createElement('strong');title.textContent=c.name;
    const subtitle=document.createElement('small');subtitle.textContent=c.description;
