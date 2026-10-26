@@ -437,6 +437,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./theme-colors.css?v=6">
 <link rel="stylesheet" href="./assets/themes/theme-expansion.css?v=9">
 <link rel="stylesheet" href="./assets/equipment.css?v=10">
+<link rel="stylesheet" href="./assets/equipment-bridge.css?v=11">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="./assets/pdf-compact.js?v=10" defer></script>
@@ -583,12 +584,12 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
   <div class="rpg-box library-shell">
     <div class="library-head">
       <div><div class="box-title pixel">✦ INVENTÁRIO</div><p class="library-meta">Itens pessoais, armas, consumíveis e equipamentos. Cada jogador cria os próprios.</p></div>
-      <button class="library-btn" id="addItemBtn" type="button">＋ ADICIONAR ITEM</button>
+      <div class="inventory-top-actions"><button class="library-btn" id="addItemBtn" type="button">＋ ADICIONAR ITEM</button><button class="library-btn inventory-add-equip" id="addEquipmentFromInventoryBtn" type="button">✦ ADICIONAR EQUIPAMENTO</button></div>
     </div>
     <div class="library-layout">
       <div class="library-list inventory-list">
         <div class="list-caption inventory-caption"><span>TIPO</span><span>ITEM</span><span>QTDE.</span></div>
-        <div id="inventoryList" aria-label="Lista de itens"></div>
+        <div id="inventoryList" aria-label="Lista de itens"></div><div id="inventoryEquippedPreview" class="inventory-equipped-pocket" aria-label="Itens que estão equipados"></div>
       </div>
       <aside class="entry-detail" id="itemDetail" aria-live="polite"></aside>
     </div>
@@ -602,7 +603,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       </div>
       <div class="editor-actions"><button class="library-btn" type="submit">✦ SALVAR ITEM</button><button class="library-btn secondary" id="cancelItemBtn" type="button">CANCELAR</button></div>
     </form>
-    <p class="library-help">✦ Selecione um item para visualizar, editar ou remover. Os dados ficam salvos no navegador.</p>
+    <p class="library-help">✦ Clique em ✦ ao lado de um item para equipá-lo automaticamente, ou selecione o item para escolher um espaço específico. Desequipar devolve o item à mochila.</p>
   </div>
 </section>
 <section class="tab-content" id="tab-equipment" hidden aria-label="Equipamentos do personagem">
@@ -873,7 +874,17 @@ function renderLibrary(type){
  if(rows.length===0){const note=makeEl('div','empty-state');note.append(makeEl('strong','',type==='skills'?'✦ SEM HABILIDADES':'✦ MOCHILA VAZIA'),makeEl('span','',type==='skills'?(skillFilter==='all'?'Clique em ADICIONAR HABILIDADE para criar uma técnica.':'Nenhuma habilidade nesta categoria. Você pode adicionar uma nova ou trocar o filtro.'):'Clique em ADICIONAR ITEM para montar seu inventário.'));list.append(note)}
  for(const entry of rows){const category=type==='skills'?skillCategory(entry):null;const selected=entry.id===state[config.selected];const button=makeEl('button','entry-row '+(type==='inventory'?'inventory-row ':'')+(category?'category-'+category+' ':'')+(selected?'selected':''));button.type='button';button.setAttribute('aria-pressed',String(selected));
   if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(makeEl('span','entry-icon',entry.type||'◆'));
-  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));button.append(name);if(type==='inventory')button.append(makeEl('span','entry-quantity','x'+entry.quantity));button.addEventListener('click',()=>selectEntry(type,entry.id));list.append(button)}renderDetails(type)
+  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));button.append(name);if(type==='inventory')button.append(makeEl('span','entry-quantity','x'+entry.quantity));button.addEventListener('click',()=>selectEntry(type,entry.id));
+  if(type==='inventory'){
+   const wrapper=makeEl('div','inventory-line');
+   const quick=makeEl('button','inventory-quick-equip','✦');
+   quick.type='button';
+   quick.setAttribute('aria-label','Equipar '+entry.name+' no primeiro espaço apropriado disponível');
+   quick.title='Equipar '+entry.name;
+   quick.addEventListener('click',()=>equipFromBag(entry.id,firstAvailableSlot(entry)));
+   wrapper.append(button,quick);list.append(wrapper);
+  }else list.append(button)
+ }renderDetails(type);if(type==='inventory')renderEquippedPreview()
 }
 function useSkill(entry){
  const cost=clamp(one(entry.cost),0,MAX_TP);if(state.tp<cost){toast('TP insuficiente.');return}
@@ -900,6 +911,26 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
   if(state.tp<entry.cost)area.append(makeEl('div','library-meta','TP insuficiente para usar agora.'))
  }else area.append(makeEl('div','detail-cost',`QUANTIDADE: ${entry.quantity}`));
  area.append(makeEl('div','detail-description',entry.description?.trim()||'Nenhuma descrição adicionada.'));
+ if(type==='inventory'){
+  const free=EQUIP_SLOTS.filter(slot=>!equipped(slot.key));
+  const panel=makeEl('div','inventory-equip-panel');
+  panel.append(makeEl('div','inventory-equip-title','✦ ENVIAR PARA EQUIPAMENTOS'));
+  if(free.length){
+   const select=makeEl('select','inventory-equip-select');
+   select.setAttribute('aria-label','Escolha o espaço de equipamento');
+   for(const slot of free){
+    const option=document.createElement('option');option.value=slot.key;option.textContent=slot.name;
+    select.append(option);
+   }
+   const preference=firstAvailableSlot(entry);if(preference)select.value=preference;
+   const bar=makeEl('div','inventory-equip-control');
+   const equip=makeEl('button','library-btn','✦ EQUIPAR');equip.type='button';
+   equip.addEventListener('click',()=>equipFromBag(entry.id,select.value));
+   bar.append(select,equip);panel.append(bar);
+   panel.append(makeEl('div','inventory-equip-hint','Transfere uma unidade para o espaço escolhido. Você poderá editar os bônus na aba EQUIPAMENTOS.'));
+  }else panel.append(makeEl('div','inventory-equip-hint','Todos os espaços estão ocupados. Desequipe um item antes de equipar outro.'));
+  area.append(panel);
+ }
  const actions=makeEl('div','detail-actions');if(type==='skills'){const cast=makeEl('button','library-btn',category==='heal'?'♥ CURAR':category==='buff'?'✦ ATIVAR BUFF':'⚔ UTILIZAR');cast.type='button';cast.disabled=state.tp<entry.cost;cast.addEventListener('click',()=>useSkill(entry));actions.append(cast)}
  const edit=makeEl('button','library-btn secondary','EDITAR');edit.type='button';edit.addEventListener('click',()=>openEditor(type,entry.id));const del=makeEl('button','library-btn danger','REMOVER');del.type='button';del.addEventListener('click',()=>removeEntry(type,entry.id));actions.append(edit,del);area.append(actions)
 }
@@ -911,7 +942,7 @@ $('skillCategory').addEventListener('change',()=>{updateSkillFields();$('skillFo
 document.querySelectorAll('.skill-filter').forEach(btn=>btn.addEventListener('click',()=>setSkillFilter(btn.dataset.filter)));
 function closeEditor(type){$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
 function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.form),id=type==='skills'?skillEditId:itemEditId,name=String(form.elements.namedItem('name').value||'').trim().slice(0,55),description=String(form.elements.namedItem('description').value||'').slice(0,3000);if(!name){toast('Digite o nome.');return}
- let record;if(type==='skills')record={id:id||makeId(),name,description,icon:form.elements.namedItem('icon').value,cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999)};
+ let record;if(type==='skills')record={id:id||makeId(),name,description,icon:form.elements.namedItem('icon').value,cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),...(state.items.find(x=>x.id===id)?.equipmentData?{equipmentData:state.items.find(x=>x.id===id).equipmentData}:{})};
  const items=state[conf.collection];const idx=items.findIndex(x=>x.id===record.id);if(idx>=0)items[idx]=record;else items.push(record);state[conf.selected]=record.id;if(type==='skills'&&skillFilter!=='all'&&skillFilter!==record.category)setSkillFilter(record.category);closeEditor(type);renderLibrary(type);persist();toast(type==='skills'?'Habilidade salva!':'Item salvo!')}
 function removeEntry(type,id){const conf=kind[type],entry=state[conf.collection].find(x=>x.id===id);if(!entry||!confirm(`Remover "${entry.name}"?`))return;state[conf.collection]=state[conf.collection].filter(x=>x.id!==id);renderLibrary(type);persist();toast('Removido com sucesso')}
 $('addSkillBtn').addEventListener('click',()=>openEditor('skills'));
@@ -960,7 +991,8 @@ function cleanCharacter(input){
  v.tp=clamp(one(input.tp),0,100);
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
-  type:short(x.type||'◆',12),quantity:clamp(Math.trunc(x.quantity),1,9999)}));
+  type:short(x.type||'◆',12),quantity:clamp(Math.trunc(x.quantity),1,9999),
+  ...(x.equipmentData&&typeof x.equipmentData==='object'?{equipmentData:normalizeGearSnapshot(x.equipmentData)}:{})}));
  v.skills=(Array.isArray(input.skills)?input.skills:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
   icon:short(x.icon||'✦',12),cost:clamp(Math.trunc(x.cost),0,100),
@@ -1148,7 +1180,10 @@ const EQUIP_SLOTS=[
  {key:'ring1',name:'ANEL I',icon:'◉',group:'ACESSÓRIOS'},
  {key:'ring2',name:'ANEL II',icon:'◎',group:'ACESSÓRIOS'},
  {key:'weapon',name:'ARMA',icon:'⚔',group:'MÃOS'},
- {key:'shield',name:'ESCUDO',icon:'⛨',group:'MÃOS'}
+ {key:'shield',name:'ESCUDO',icon:'⛨',group:'MÃOS'},
+ {key:'artifact1',name:'ARTEFATO I',icon:'✧',group:'ARTEFATOS'},
+ {key:'artifact2',name:'ARTEFATO II',icon:'✦',group:'ARTEFATOS'},
+ {key:'artifact3',name:'ARTEFATO III',icon:'✵',group:'ARTEFATOS'}
 ];
 const EQUIP_STATS=[{key:'strength',label:'FORÇA'},{key:'defense',label:'DEFESA'},
  {key:'intelligence',label:'INTELIGÊNCIA'},{key:'agility',label:'AGILIDADE'}];
@@ -1162,7 +1197,12 @@ function normalizeEquipment(source){
   output[slot.key]={
    name:String(entry.name||'').slice(0,65),
    weight:clamp(Math.round(Number(entry.weight||0)*10)/10,0,9999),
-   bonuses,isDamage:entry.isDamage===true,damageDice:String(entry.damageDice||'').slice(0,40)
+   bonuses,isDamage:entry.isDamage===true,damageDice:String(entry.damageDice||'').slice(0,40),
+   inventoryId:String(entry.inventoryId||'').slice(0,80),
+   inventoryType:String(entry.inventoryType||(
+     slot.group==='ARTEFATOS'?'✦':slot.key==='weapon'?'⚔':'⬡'
+   )).slice(0,12),
+   description:String(entry.description||'').slice(0,3000)
   };
  }
  return output;
@@ -1181,7 +1221,7 @@ function equipmentNode(tag,cls,label){
 function renderEquipment(){
  const grid=$('equipmentGrid'),detail=$('equipmentDetails');if(!grid||!detail)return;
  grid.replaceChildren();
- for(const grp of [{name:'ARMADURA',cls:'armor'},{name:'ACESSÓRIOS',cls:'trinkets'},{name:'MÃOS',cls:'hands'}]){
+ for(const grp of [{name:'ARMADURA',cls:'armor'},{name:'ACESSÓRIOS',cls:'trinkets'},{name:'MÃOS',cls:'hands'},{name:'ARTEFATOS',cls:'artifacts'}]){
   const section=equipmentNode('section','equip-section '+grp.cls);
   section.appendChild(equipmentNode('h3','',grp.name));
   const choices=equipmentNode('div','equip-slots');
@@ -1211,23 +1251,24 @@ function renderEquipment(){
   addLine('PESO',fmt(current.weight)+' kg');
   addLine('ATRIBUTOS ADICIONAIS',bonusSummary(current));
   if(current.isDamage)addLine('DADOS DE DANO',current.damageDice||'NÃO DEFINIDOS');
+  if(current.description)detail.appendChild(equipmentNode('p','equip-description',current.description));
+  detail.appendChild(equipmentNode('div','equip-slot-state','✦ EQUIPADO · PODE RETORNAR À MOCHILA'));
  }else{
-  detail.appendChild(equipmentNode('p','','Nenhum item equipado. Selecione EQUIPAR para adicionar um novo.'));
+  detail.appendChild(equipmentNode('p','','Nenhum item equipado. Você pode equipar diretamente do inventário ou criar um novo equipamento.'));
  }
  const actions=equipmentNode('div','equip-action-row');
  const edit=equipmentNode('button','library-btn',current?'✦ EDITAR':'＋ EQUIPAR');edit.type='button';
  edit.addEventListener('click',()=>openEquipmentEditor(selectedEquipmentSlot));actions.appendChild(edit);
  if(current){
-  const remove=equipmentNode('button','library-btn secondary','RETIRAR');remove.type='button';
+  const remove=equipmentNode('button','library-btn secondary','⇦ DESEQUIPAR');remove.type='button';
   remove.addEventListener('click',()=>{
-   if(!confirm('Retirar '+current.name+' deste espaço? O bônus será removido.'))return;
-   changeEquipment(selectedEquipmentSlot,null);closeEquipmentEditor();toast('Equipamento retirado.');
+   unequipToBag(selectedEquipmentSlot);closeEquipmentEditor();
   });actions.appendChild(remove);
  }
  detail.appendChild(actions);
  const summary=$('equipmentSummary');summary.replaceChildren();
  const all=Object.values(state.equipment||{}).filter(Boolean);
- summary.append(equipmentNode('span','',all.length+' / 9 EQUIPADOS · PESO TOTAL: '),
+ summary.append(equipmentNode('span','',all.length+' / '+EQUIP_SLOTS.length+' EQUIPADOS · PESO TOTAL: '),
   equipmentNode('strong','',fmt(all.reduce((sum,e)=>sum+Number(e.weight||0),0))+' kg'));
  const totals=EQUIP_STATS.map(s=>({label:s.label,points:equipmentBonus(s.key)})).filter(s=>s.points>0);
  if(totals.length)summary.appendChild(equipmentNode('div','',totals.map(s=>'+'+fmt(s.points)+' '+s.label).join(' · ')));
@@ -1264,18 +1305,117 @@ function openEquipmentEditor(slot=selectedEquipmentSlot){
  $('equipmentDamageDice').value=current?.damageDice||'';
  toggleEquipmentDamage();
  $('equipmentBonusRows').replaceChildren();
- for(const bonus of (current?.bonuses?.length?current.bonuses:[{stat:'defense',value:1}]))
+ for(const bonus of (current?.bonuses||[]))
    addEquipmentBonusRow(bonus.stat,bonus.value);
  renderEquipment();
  form.scrollIntoView({behavior:'smooth',block:'nearest'});
  $('equipmentName').focus();
 }
+
+/* V11 — Mochila e equipamentos compartilham o mesmo personagem e FILE. */
+function normalizeGearSnapshot(raw){
+ const input=raw&&typeof raw==='object'?raw:{};
+ return {
+  weight:clamp(Math.round(Number(input.weight||0)*10)/10,0,9999),
+  bonuses:(Array.isArray(input.bonuses)?input.bonuses:[]).slice(0,8)
+    .filter(x=>x&&EQUIP_STATS.some(st=>st.key===x.stat))
+    .map(x=>({stat:x.stat,value:clamp(Math.trunc(x.value),1,999)})),
+  isDamage:input.isDamage===true,
+  damageDice:String(input.damageDice||'').slice(0,40)
+ };
+}
+function firstAvailableSlot(item){
+ const free=EQUIP_SLOTS.filter(slot=>!equipped(slot.key));
+ if(!free.length)return '';
+ const t=item?.type||'';
+ let preference=[];
+ if(t==='⚔')preference=['weapon','shield'];
+ else if(t==='✦')preference=['artifact1','artifact2','artifact3'];
+ else if(t==='⬡')preference=['chest','helmet','legs','boots','necklace','ring1','ring2'];
+ else if(t==='◇')preference=['necklace','ring1','ring2'];
+ const match=preference.find(key=>free.some(slot=>slot.key===key));
+ return match||free[0].key;
+}
+function renderEquippedPreview(){
+ const area=$('inventoryEquippedPreview');
+ if(!area)return;
+ area.replaceChildren();
+ const h=equipmentNode('h3','','✦ EQUIPADOS · '+Object.keys(state.equipment||{}).filter(k=>equipped(k)).length+'/'+EQUIP_SLOTS.length);
+ area.append(h);
+ const line=equipmentNode('div','inventory-equipped-list');
+ for(const slot of EQUIP_SLOTS){
+  const item=equipped(slot.key);if(!item)continue;
+  const chip=equipmentNode('button','inventory-equipped-chip','✦ '+slot.name+' · '+item.name);
+  chip.type='button';
+  chip.title='Ver '+item.name+' em Equipamentos';
+  chip.addEventListener('click',()=>{
+    selectedEquipmentSlot=slot.key;switchTab('equipment');
+    const heading=$('equipmentGrid');heading?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+  line.append(chip);
+ }
+ if(!line.children.length)line.append(equipmentNode('span','inventory-equipped-empty','Nenhum item equipado ainda.'));
+ area.append(line);
+}
+function equipFromBag(itemId,slotKey){
+ const chosen=state.items.find(x=>x.id===itemId);
+ if(!chosen){toast('O item não está mais na mochila.');return false}
+ if(!EQUIP_SLOTS.some(slot=>slot.key===slotKey)){toast('Escolha um espaço de equipamento.');return false}
+ if(equipped(slotKey)){toast('Espaço ocupado. Desequipe o item atual antes de substituir.');return false}
+ if(Number(chosen.quantity)<=0){toast('Você não possui unidades disponíveis deste item.');return false}
+ const snapshot=normalizeGearSnapshot(chosen.equipmentData);
+ const slotItem={
+  name:chosen.name,weight:snapshot.weight,bonuses:snapshot.bonuses,
+  isDamage:snapshot.isDamage,damageDice:snapshot.damageDice,
+  inventoryType:chosen.type,inventoryId:chosen.id,description:chosen.description||''
+ };
+ if(chosen.quantity>1)chosen.quantity--;
+ else state.items=state.items.filter(x=>x.id!==itemId);
+ state.selectedItem=state.items.some(x=>x.id===itemId)?itemId:null;
+ selectedEquipmentSlot=slotKey;
+ changeEquipment(slotKey,slotItem);
+ renderLibrary('inventory');toast('✦ '+chosen.name+' equipado em '+slotLabel(slotKey)+'!');
+ return true;
+}
+function unequipToBag(slotKey){
+ const slotItem=equipped(slotKey);
+ if(!slotItem){toast('Não há equipamento neste espaço.');return false}
+ const snapshot=normalizeGearSnapshot(slotItem);
+ const itemType=slotItem.inventoryType|| (slotKey.startsWith('artifact')?'✦':slotKey==='weapon'?'⚔':'⬡');
+ const originalId=String(slotItem.inventoryId||'');
+ let target=state.items.find(x=>x.id===originalId);
+ // Itens modificados no equipamento não se fundem a uma pilha com bônus diferentes.
+ const equalGear=x=>{
+  const xSnapshot=normalizeGearSnapshot(x?.equipmentData);
+  return JSON.stringify(xSnapshot)===JSON.stringify(snapshot);
+ };
+ if(target && (target.name!==slotItem.name || target.type!==itemType || !equalGear(target)))target=null;
+ if(target){target.quantity=clamp(Number(target.quantity)+1,1,9999);}
+ else{
+  let newId=originalId||makeId();
+  if(state.items.some(x=>x.id===newId))newId=makeId();
+  state.items.push({
+   id:newId,name:slotItem.name,type:itemType,quantity:1,
+   description:slotItem.description||'',equipmentData:snapshot
+  });
+ }
+ const missing=maxHp()-state.hp;
+ delete state.equipment[slotKey];
+ state.hp=clamp(maxHp()-missing,0,maxHp());
+ renderStatus();renderEquipment();renderLibrary('inventory');persist();
+ toast('⇦ '+slotItem.name+' voltou para o inventário.');
+ return true;
+}
+$('addEquipmentFromInventoryBtn').addEventListener('click',()=>{
+ switchTab('equipment');openEquipmentEditor(selectedEquipmentSlot);
+});
+
 function changeEquipment(slot,item){
  const missing=maxHp()-state.hp;
  if(!state.equipment||typeof state.equipment!=='object')state.equipment={};
  if(item)state.equipment[slot]=item;else delete state.equipment[slot];
  state.hp=clamp(maxHp()-missing,0,maxHp());
- renderStatus();renderEquipment();persist();
+ renderStatus();renderEquipment();renderEquippedPreview();persist();
 }
 const slotSelect=$('equipmentSlot');
 for(const slot of EQUIP_SLOTS){const option=document.createElement('option');option.value=slot.key;option.textContent=slot.name;slotSelect.appendChild(option)}
@@ -1304,12 +1444,15 @@ $('equipmentForm').addEventListener('submit',event=>{
   if(sel&&num&&EQUIP_STATS.some(s=>s.key===sel.value))
    bonuses.push({stat:sel.value,value:clamp(Math.trunc(num.value),1,999)});
  });
- if(!bonuses.length){toast('Selecione pelo menos um aumento de atributo.');return}
  const isDamage=$('equipmentType').value==='damage',dice=$('equipmentDamageDice').value.trim().slice(0,40);
  if(isDamage&&!dice){toast('Informe os dados de dano da arma.');return}
+ const old=equipped(slot);
  const item={name,weight:clamp(Math.round(Number($('equipmentWeight').value)*10)/10,0,9999),
-  bonuses,isDamage,damageDice:isDamage?dice:''};
- changeEquipment(slot,item);closeEquipmentEditor();toast('Equipamento salvo! Bônus aplicados à ficha.');
+  bonuses,isDamage,damageDice:isDamage?dice:'',
+  inventoryId:old?.inventoryId||'',inventoryType:old?.inventoryType||(
+    slot.startsWith('artifact')?'✦':slot==='weapon'?'⚔':'⬡'),
+  description:old?.description||''};
+ changeEquipment(slot,item);closeEquipmentEditor();renderLibrary('inventory');toast('Equipamento salvo! Bônus atualizados.');
 });
 
 makePetals('soulPetals',13);
