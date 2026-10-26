@@ -39,3 +39,43 @@ html[data-theme="forest"] .inventory-equipped-chip{border-color:rgba(131,241,194
  .equip-section.artifacts .equip-slots{grid-template-columns:1fr}
  .inventory-line .inventory-quick-equip{flex-basis:30px}
 }
+
+/* DELTA RPG v12 — bônus opcionais definidos diretamente na mochila */
+.inventory-attributes{
+  padding:15px;
+  border:1px solid var(--equip-border,rgba(129,220,204,.36));
+  border-radius:5px;
+  background:linear-gradient(135deg,rgba(56,138,120,.12),rgba(7,17,35,.22));
+  gap:10px;
+}
+.inventory-attributes-title{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:7px;
+  color:var(--ui-accent,var(--cyan,#a8ffdf));font-size:11px;font-weight:800;
+}
+.inventory-attributes-title span{
+  border:1px solid rgba(156,231,212,.3);border-radius:3px;
+  padding:4px 6px;color:var(--muted,#b9d1d5);font-size:9px;letter-spacing:.06em;
+}
+.inventory-attributes .inventory-equip-hint{margin:0;font-weight:400;letter-spacing:normal}
+.inventory-bonus-list{margin:2px 0;max-width:100%}
+.inventory-bonus-list .equip-bonus-row{grid-template-columns:minmax(0,1fr) 100px 39px}
+.inventory-add-bonus{justify-self:start;max-width:100%;white-space:normal}
+.inventory-item-bonus-mark{
+  display:inline-block;margin-left:8px;color:#8eecc7;
+  font-size:9px;font-weight:700;white-space:nowrap;letter-spacing:0;
+}
+.inventory-bonus-detail{
+  color:#b2fbdc;font-size:11px;line-height:1.55;
+  font-weight:800;margin:12px 0 5px;
+}
+.inventory-bonus-standby{
+  font-size:10px;line-height:1.5;color:var(--muted,#aebfcd);
+  padding:0 0 10px;border-bottom:1px solid rgba(168,232,224,.18);
+}
+@media(max-width:470px){
+  .inventory-attributes{padding:10px}
+  .inventory-bonus-list .equip-bonus-row{grid-template-columns:minmax(0,1fr) 72px 34px;gap:5px}
+  .inventory-bonus-list .equip-bonus-row .equip-input{padding:8px 5px;font-size:11px}
+  .inventory-item-bonus-mark{display:block;margin:3px 0 0}
+}
