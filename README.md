@@ -75,3 +75,13 @@ A aba **Equipamentos**, entre Inventário e Habilidades, oferece **nove espaços
 Cada equipamento possui nome, peso em kg, categoria comum ou de dano, e até oito linhas de **aumentos de atributo**. Equipamentos de dano também têm campo de dados de dano (por exemplo, `2d6+3`). Os aumentos de Força, Defesa, Inteligência e Agilidade são **cumulativos**, apresentados na ficha como `+N`, separadamente dos pontos-base. Ao alterar a Defesa, HP máximo é recalculado mantendo a quantidade de vida que faltava; Inteligência e Agilidade também alteram o ganho de TP.
 
 Os equipamentos ficam salvos no **FILE ativo** e são mantidos ao duplicar, exportar e importar arquivos `.deltarpg`, sem afetar outros personagens. A exportação PDF A4 inclui uma seção de equipamentos, com bônus, peso e dados de dano.
+
+## Integração Inventário ↔ Equipamentos (v11)
+
+- A mochila mostra um botão **✦** ao lado dos itens para equipá-los no primeiro espaço apropriado disponível.
+- Selecionar um item permite escolher manualmente o espaço de equipamento; o botão **ADICIONAR EQUIPAMENTO** abre a área de equipamento.
+- Equipar transfere **uma unidade** do inventário para o slot, sem duplicar; desequipar devolve **uma unidade** à mochila.
+- Um resumo **✦ EQUIPADOS** aparece no inventário. Os itens em uso também aparecem na aba Equipamentos.
+- Três novos espaços: **ARTEFATO I**, **ARTEFATO II** e **ARTEFATO III** (12 slots no total).
+- Armas, armaduras e artefatos podem ter peso, descrição, dados de dano e bônus de atributos personalizados; são mantidos ao guardar no FILE, duplicar, exportar e importar.
+- Pontos extras de Defesa e demais atributos são aplicados apenas enquanto o item estiver equipado.
