@@ -165,13 +165,14 @@
   function showRealm(){
    if(!realm.hidden)return;
    priorOverflow=document.body.style.overflow;
-   warp.classList.remove('active');void warp.offsetWidth;warp.classList.add('active');
-   setTimeout(()=>{
-    realm.hidden=false;document.body.style.overflow='hidden';
+   const reveal=()=>{
+    realm.hidden=false;
+    document.body.style.overflow='hidden';
     const video=realm.querySelector('video');
     video.play().catch(()=>{});
-   },610);
-   setTimeout(()=>warp.classList.remove('active'),900);
+   };
+   if(window.DeltaEyeCrack?.play)window.DeltaEyeCrack.play(reveal);
+   else reveal();
   }
   function goBack(){
    realm.hidden=true;document.body.style.overflow=priorOverflow;
