@@ -11,6 +11,19 @@
   const fallback=document.createElement('span');fallback.className='delta-eye-fallback';
   fallback.innerHTML='<img alt="" src="./assets/secret/eye.svg">';eye.append(gif,fallback);
   document.body.append(eye);
+  // Entrada discreta: uma pequena marca junto ao rodapé, nunca um botão flutuante.
+  const gate=document.createElement('dialog');
+  gate.id='deltaSecretGate';
+  gate.innerHTML='<form method="dialog" id="deltaSecretGateForm">'+
+   '<div class="delta-secret-gate-heading">✧ OLHO VELADO</div>'+
+   '<p>Uma palavra desperta aquilo que observa.</p>'+
+   '<label for="deltaSecretPassword">SENHA</label>'+
+   '<input id="deltaSecretPassword" type="password" autocomplete="off" required maxlength="60" spellcheck="false">'+
+   '<span id="deltaSecretGateError" role="alert" aria-live="polite"></span>'+
+   '<div class="delta-secret-gate-actions">'+
+   '<button type="button" id="deltaSecretGateCancel">VOLTAR</button>'+
+   '<button type="submit">REVELAR</button></div></form>';
+  document.body.append(gate);
   const warp=document.createElement('div');
   warp.id='deltaPortalTransition';warp.setAttribute('aria-hidden','true');
   warp.innerHTML='<span class="eye">◉</span>';document.body.append(warp);
@@ -119,7 +132,23 @@
    warp.classList.remove('active');
    eye.focus();
   }
-  eye.addEventListener('click',showRealm);
+  const password=gate.querySelector('#deltaSecretPassword');
+  const error=gate.querySelector('#deltaSecretGateError');
+  gate.querySelector('#deltaSecretGateCancel').addEventListener('click',()=>gate.close());
+  eye.addEventListener('click',()=>{
+   password.value='';error.textContent='';
+   gate.showModal();password.focus();
+  });
+  gate.querySelector('#deltaSecretGateForm').addEventListener('submit',event=>{
+   event.preventDefault();
+   if(password.value.trim()==='Oculto'){
+    gate.close();password.value='';error.textContent='';
+    showRealm();
+   }else{
+    error.textContent='A palavra não foi reconhecida.';
+    password.select();
+   }
+  });
   document.getElementById('deltaBackToNormal').addEventListener('click',goBack);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!realm.hidden)goBack()});
  }
