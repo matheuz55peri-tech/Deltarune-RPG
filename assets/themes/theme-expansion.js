@@ -7,23 +7,34 @@
   if(!themePanel || !themeOptions || !themeControl)return;
   const prefKey='delta-rpg-worlds-v9';
   const soundKey='delta-rpg-sounds-v9';
-  const names={classic:'ORIGINAL',snow:'NEVE',forest:'FLORESTA',cosmos:'COSMOS',city:'CIDADE',garden:'JARDIM AZUL',playground:'PLAYGROUND'};
+  const names={classic:'ORIGINAL',snow:'NEVE',forest:'FLORESTA',cosmos:'COSMOS',city:'CIDADE',garden:'JARDIM AZUL',nightfall:'PLAYGROUND'};
   const fallback=(()=>{try{
     const legacy=JSON.parse(localStorage.getItem('delta-rpg-appearance-v1')||'null');
     return ['classic','snow','forest'].includes(legacy?.theme)?legacy.theme:'classic'
   }catch(_){return 'classic'}})();
   let saved={};
   try{saved=JSON.parse(localStorage.getItem(prefKey)||'null')||{}}catch(_){}
+  const legacyKey='delta-rpg-appearance-v1';
+  let legacy={};
+  try{legacy=JSON.parse(localStorage.getItem(legacyKey)||'null')||{}}catch(_){}
+  // O tema antigo "playground" é integrado ao tema NOITE DOURADA, que já
+  // possuía os cenários Parque e Lampião. Nenhum cenário é excluído.
+  const storedTheme=saved.theme==='playground'?'nightfall':saved.theme;
   const world={
-    theme:names[saved.theme]?saved.theme:fallback,
+    theme:names[storedTheme]?storedTheme:fallback,
     forestScene:['night','waterfall'].includes(saved.forestScene)?saved.forestScene:'night',
-    cityScene:['balcony','subway','room','street'].includes(saved.cityScene)?saved.cityScene:'balcony'
+    cityScene:['balcony','subway','room','street'].includes(saved.cityScene)?saved.cityScene:'balcony',
+    gardenScene:['blue','hydrangea'].includes(saved.gardenScene)?saved.gardenScene:'blue',
+    nightScene:['playground','lamplight'].includes(saved.nightScene)?saved.nightScene:
+      (['playground','lamplight'].includes(legacy.nightScene)?legacy.nightScene:'playground')
   };
+  // O HTML já contém Cosmos, Cidade e Jardim: reutilizar os botões,
+  // em vez de acrescentar uma segunda cópia de cada tema.
   const newThemes=[
     {key:'cosmos',title:'COSMOS',subtitle:'Além das estrelas'},
-    {key:'city',title:'CIDADE',subtitle:'Noites na varanda'},
-    {key:'garden',title:'JARDIM AZUL',subtitle:'Flores e silêncio'},
-    {key:'playground',title:'PLAYGROUND',subtitle:'Um lugar de memórias'}
+    {key:'city',title:'CIDADE',subtitle:'Varanda, metrô, quarto e rua'},
+    {key:'garden',title:'JARDIM AZUL',subtitle:'Jardim chuvoso e hortênsias'},
+    {key:'nightfall',title:'PLAYGROUND',subtitle:'Parque e lampião'}
   ];
   function buildThemeOption(item){
     const button=document.createElement('button');
@@ -38,7 +49,14 @@
     button.append(image,wrap);themeOptions.append(button);
     return button;
   }
-  newThemes.forEach(buildThemeOption);
+  newThemes.forEach(item=>{
+    const existing=themeOptions.querySelector('[data-theme-choice="'+item.key+'"]');
+    if(!existing){buildThemeOption(item);return;}
+    const title=existing.querySelector('.theme-info strong');
+    const subtitle=existing.querySelector('.theme-info small');
+    if(title)title.textContent=item.title;
+    if(subtitle)subtitle.textContent=item.subtitle;
+  });
   function buildScenes(title,group,scenes){
     const section=document.createElement('section');
     section.className='theme-panel-divider';
@@ -72,6 +90,13 @@
     {key:'room',name:'Quarto',description:'Noite aconchegante'},
     {key:'street',name:'Rua Noturna',description:'Luzes e silêncio'}
   ]);
+  const gardenChoices=buildScenes('CENÁRIOS DO JARDIM','garden',[
+    {key:'blue',name:'Jardim Azul',description:'Gotas pixeladas sobre as flores'},
+    {key:'hydrangea',name:'Hortênsias',description:'Flores azuis em pixelart'}
+  ]);
+  // As versões antigas destes seletores continuam no HTML para segurança,
+  // mas são escondidas somente após o novo painel estar pronto.
+  document.documentElement.classList.add('delta-worlds-deduplicated');
   function closePopover(){
     themePanel.hidden=true;
     $('themeToggle')?.setAttribute('aria-expanded','false');
@@ -85,23 +110,52 @@
     html.dataset.theme=world.theme;
     html.dataset.forestScene=world.forestScene;
     html.dataset.cityScene=world.cityScene;
+    html.dataset.gardenScene=world.gardenScene;
+
+    // O site antigo usa data-theme-scene; manter essa camada sincronizada.
+    const scene=world.theme==='forest'?
+      (world.forestScene==='waterfall'?'waterfall':''):
+      world.theme==='city'?
+        ({balcony:'balcony',subway:'metro',room:'bedroom',street:'street'}[world.cityScene]||''):
+      world.theme==='garden'?(world.gardenScene==='hydrangea'?'hydrangea':''):
+      world.theme==='nightfall'?world.nightScene:
+      world.theme==='cosmos'?'cosmos':'';
+    if(scene)html.dataset.themeScene=scene;
+    else delete html.dataset.themeScene;
+
     const title=$('themeNow');if(title)title.textContent=names[world.theme]||'ORIGINAL';
     themeOptions.querySelectorAll('[data-theme-choice]').forEach(b=>{
       b.setAttribute('aria-pressed',String(b.dataset.themeChoice===world.theme));
     });
     forestChoices.hidden=world.theme!=='forest';
     cityChoices.hidden=world.theme!=='city';
-    $('winterOptions').hidden=world.theme!=='snow';
+    gardenChoices.hidden=world.theme!=='garden';
+    const winter=$('winterOptions');if(winter)winter.hidden=world.theme!=='snow';
+    const night=$('nightOptions');if(night)night.hidden=world.theme!=='nightfall';
     themePanel.querySelectorAll('[data-scene-group]').forEach(b=>{
-      const val=b.dataset.sceneGroup==='forest'?world.forestScene:world.cityScene;
-      b.setAttribute('aria-pressed',String(b.dataset.sceneId===val));
+      const group=b.dataset.sceneGroup;
+      const selected=group==='forest'?world.forestScene:group==='city'?world.cityScene:world.gardenScene;
+      b.setAttribute('aria-pressed',String(b.dataset.sceneId===selected));
+    });
+    themePanel.querySelectorAll('#nightOptions [data-scene]').forEach(b=>{
+      b.setAttribute('aria-pressed',String(b.dataset.scene===world.nightScene));
     });
     const meta=document.querySelector('meta[name="theme-color"]');
     if(meta)meta.content={
       classic:'#080713',snow:'#0d2941',forest:'#051d25',
-      cosmos:'#07051b',city:'#150f2e',garden:'#042935',playground:'#180f05'
+      cosmos:'#07051b',city:'#150f2e',garden:'#042935',nightfall:'#261a10'
     }[world.theme]||'#080713';
-    try{localStorage.setItem(prefKey,JSON.stringify(world))}catch(_){}
+    try{
+      localStorage.setItem(prefKey,JSON.stringify(world));
+      const old=JSON.parse(localStorage.getItem(legacyKey)||'null')||{};
+      old.theme=world.theme;
+      old.forestScene=world.forestScene==='waterfall'?'waterfall':'fireflies';
+      // O motor antigo reconhece só 3 cenas de cidade; a Rua é guardada no v9.
+      old.cityScene={balcony:'balcony',subway:'metro',room:'bedroom',street:'balcony'}[world.cityScene];
+      old.gardenScene='hydrangea';
+      old.nightScene=world.nightScene;
+      localStorage.setItem(legacyKey,JSON.stringify(old));
+    }catch(_){}
   }
   themeOptions.querySelectorAll('[data-theme-choice]').forEach(button=>{
     button.addEventListener('click',()=>{
@@ -109,7 +163,7 @@
       if(!names[key])return;
       world.theme=key;
       applyWorld();
-      if(['snow','forest','city'].includes(key)){
+      if(['snow','forest','city','nightfall'].includes(key)){
         // Os controles antigos podem fechar o menu; mantenha aberto para escolher o subtema.
         setTimeout(showPopover,0);
       }else closePopover();
@@ -118,8 +172,19 @@
   themePanel.querySelectorAll('[data-scene-group]').forEach(button=>{
     button.addEventListener('click',()=>{
       if(button.dataset.sceneGroup==='forest')world.forestScene=button.dataset.sceneId;
-      else world.cityScene=button.dataset.sceneId;
+      else if(button.dataset.sceneGroup==='city')world.cityScene=button.dataset.sceneId;
+      else if(button.dataset.sceneGroup==='garden')world.gardenScene=button.dataset.sceneId;
       world.theme=button.dataset.sceneGroup;
+      applyWorld();
+      closePopover();
+    });
+  });
+  // O Playground mantém os dois cenários que existiam em NOITE DOURADA.
+  themePanel.querySelectorAll('#nightOptions [data-scene]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      if(!['playground','lamplight'].includes(button.dataset.scene))return;
+      world.theme='nightfall';
+      world.nightScene=button.dataset.scene;
       applyWorld();
       closePopover();
     });
