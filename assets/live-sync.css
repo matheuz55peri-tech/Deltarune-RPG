@@ -1,0 +1,36 @@
+/* DELTA RPG — Ficha Ao Vivo (v13) */
+#deltaLiveToggle{min-height:40px;white-space:nowrap;border-color:rgba(121,230,208,.48)}
+#deltaLiveToggle[data-live="true"]{color:#a4ffe3;border-color:#7df9d5;background:rgba(22,92,72,.29)}
+#deltaLiveDialog{
+  border:1px solid rgba(139,244,223,.64);border-radius:7px;
+  background:linear-gradient(140deg,#0a2731,#0b1028 75%);color:#ecffff;
+  width:min(515px,calc(100vw - 22px));max-height:min(90dvh,850px);
+  overflow:auto;padding:0;box-shadow:0 20px 80px #000c,0 0 0 3px rgba(47,174,182,.15);
+  font-family:inherit
+}
+#deltaLiveDialog::backdrop{background:rgba(0,4,13,.75);backdrop-filter:blur(5px)}
+#deltaLiveDialog .delta-live-inner{padding:23px;display:grid;gap:14px}
+#deltaLiveDialog .delta-live-head{display:flex;align-items:start;justify-content:space-between;gap:10px}
+#deltaLiveDialog h2{font:11px 'Press Start 2P',monospace;color:#b7fff1;line-height:1.8;margin:0}
+#deltaLiveDialog p{font-size:12px;line-height:1.6;color:#c9deea;margin:0}
+#deltaLiveDialog .delta-live-close{background:rgba(0,0,0,.2);border:1px solid #649a9d;color:#fff;padding:5px 12px;border-radius:4px;cursor:pointer}
+#deltaLiveDialog .delta-live-action{font-size:11px;font-weight:800;letter-spacing:.06em;
+  border:1px solid #74c9b5;border-radius:4px;padding:12px 13px;
+  cursor:pointer;color:#eafff5;background:rgba(29,105,93,.45)}
+#deltaLiveDialog .delta-live-action:hover{background:rgba(37,129,114,.6)}
+#deltaLiveDialog .delta-live-action:focus-visible{outline:2px solid #b8ffe8;outline-offset:2px}
+#deltaLiveDialog .delta-live-action:disabled{opacity:.4;cursor:not-allowed}
+#deltaLiveDialog .delta-live-secondary{background:rgba(36,49,81,.62);border-color:#738eac}
+#deltaLiveDialog .delta-live-join{display:flex;gap:8px;flex-wrap:wrap}
+#deltaLiveDialog input{flex:1;min-width:180px;max-width:100%;box-sizing:border-box;
+  background:#030e1a;color:#fff;border:1px solid #617d89;border-radius:4px;
+  padding:12px;font:12px monospace;letter-spacing:.08em;text-transform:uppercase}
+#deltaLiveDialog .delta-live-code{padding:12px;border:1px dashed #63afaa;
+  border-radius:5px;background:rgba(4,32,45,.8);display:flex;gap:10px;
+  align-items:center;justify-content:space-between;flex-wrap:wrap}
+#deltaLiveDialog .delta-live-code strong{color:#e2fffa;font:700 12px monospace;letter-spacing:.13em;overflow-wrap:anywhere}
+#deltaLiveDialog .delta-live-status{padding:11px 12px;border-left:3px solid #86f1d8;
+  background:#102b37;color:#cef9fa;font-size:11px;line-height:1.6}
+#deltaLiveDialog .delta-live-note{font-size:10.5px;color:#a5c6cf}
+#deltaLiveDialog [hidden]{display:none!important}
+@media(max-width:480px){#deltaLiveDialog .delta-live-inner{padding:15px}#deltaLiveToggle{font-size:9px}}
