@@ -85,8 +85,8 @@
      el.setAttribute('aria-pressed',String(el===button));el.classList.remove('open');
     });
     name.textContent=c.name;detail.textContent=c.description+' · Recompensas ainda não cadastradas.';
-    openButton.disabled=false;
-    openButton.textContent='✦ ABRIR BAÚ';
+    openButton.disabled=c.id!=='tarare';
+    openButton.textContent=c.id==='tarare'?'✦ ABRIR BAÚ':'✧ ABERTURA EM PREPARAÇÃO';
     panel.scrollIntoView({behavior:'smooth',block:'nearest'});
    });
    grid.append(button);
