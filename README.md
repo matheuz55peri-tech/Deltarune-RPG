@@ -33,7 +33,7 @@ Crie itens com nome, tipo, quantidade e descrição nas abas de inventário.
 ## Publicação
 O workflow em `.github/workflows/pages.yml` publica automaticamente a branch `main` no GitHub Pages.
 
-Este site **não** sincroniza dados entre dispositivos nem tem contas ou servidor multiplayer.
+O site salva FILES localmente e oferece **sessões AO VIVO** opcionais entre navegadores abertos. Não há contas nem armazenamento permanente em nuvem.
 
 ## FILES — arquivos de salvamento (v8)
 
@@ -49,7 +49,7 @@ A primeira aba do site é **FILES**. Cada slot contém uma ficha independente e 
 
 Os arquivos locais são mantidos automaticamente em `localStorage` com a chave `delta-rpg-save-files-v1`. Na primeira abertura, a ficha única das versões anteriores é convertida em **FILE 01 · ORIGINAL**, para preservar os dados existentes.
 
-**Importante:** os saves não são sincronizados entre dispositivos. Compartilhe ou faça backup exportando um arquivo `.deltarpg`, especialmente antes de limpar os dados do navegador.
+**Importante:** os FILES continuam locais. A sincronização entre dispositivos funciona somente enquanto estiverem na mesma sala AO VIVO; ela não substitui backup. Exporte backups antes de limpar o navegador.
 
 
 ## Mundos e áudio (v9)
@@ -101,3 +101,38 @@ e a Agilidade atualizam o ganho de TP.
 Os bônus são opcionais (um item pode ter zero) e seguem o item nos FILES, ao importar/exportar
 um arquivo `.deltarpg` e no PDF da ficha (bônus de itens guardados aparecem como
 *ao equipar*, sem serem somados aos atributos do personagem).
+
+
+## Chuva do Jardim Azul — ondinhas (v13)
+
+No tema **Jardim Azul**, gotas pixeladas de chuva agora produzem ondas
+concêntricas translúcidas em diferentes regiões da tela, como água atingindo
+um vidro ou uma poça. **Clicar/tocar** em qualquer parte da página também
+cria uma ondinha maior, inclusive nos menus, sem bloquear a interação.
+O efeito é desligado ao mudar de tema e respeita a opção de reduzir movimento.
+
+## AO VIVO — edição de ficha em vários dispositivos (v13)
+
+1. Abra o FILE desejado no dispositivo anfitrião e clique em **AO VIVO → CRIAR SALA**.
+2. Copie o código aleatório de **20 caracteres** mostrado no painel.
+3. Nos outros navegadores, abra o mesmo site e acesse **AO VIVO → ENTRAR**,
+   digitando esse código.
+4. Cada convidado recebe **uma cópia independente** da ficha compartilhada
+   nos seus próprios FILES; outros personagens não são sobrescritos.
+5. Edições de HP, TP, atributos, itens, equipamentos, habilidades e buffs
+   da ficha da sala são enviadas automaticamente entre participantes.
+6. O anfitrião distribui as atualizações. Se houver edições simultâneas,
+   a última alteração recebida prevalece. Apenas o FILE da sessão é compartilhado.
+7. Pressionar **DESCONECTAR** encerra sua participação. Fechar o navegador
+   anfitrião encerra a sala; cada participante conserva seu FILE local.
+
+**Limitações:** usa [PeerJS](https://peerjs.com/) 1.5.5, WebRTC e PeerServer Cloud
+para sinalização inicial (até **5 convidados**). Não é um banco de dados:
+**não sincroniza quando os participantes estão offline**, nem mantém salas
+abertas permanentemente. Certas redes podem impedir conexões diretas. A
+disponibilidade do serviço de sinalização externo não é garantida.
+
+**Privacidade:** o código da sala autoriza acesso de edição ao FILE.
+Compartilhe-o somente com pessoas confiáveis, evite informações pessoais
+e exporte backups dos arquivos. Para sincronização permanente entre acessos,
+é necessário um backend próprio com autenticação e banco de dados.
