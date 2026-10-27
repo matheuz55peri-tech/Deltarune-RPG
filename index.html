@@ -1597,7 +1597,13 @@ window.DeltaRpgMasterBridge=Object.freeze({
      return keys.character===name||keys.label===name;
     });
     if(matching.length===1){slot=matching[0];linkedByName=true;break;}
-    if(matching.length>1)return null; // Nunca sobrescrever arbitrariamente fichas homônimas.
+    if(matching.length>1){
+     // When previous imports created duplicates, prefer the one original
+     // local FILE that has no remote binding, never an arbitrary old copy.
+     const originals=matching.filter(x=>!x.remoteSource);
+     if(originals.length===1){slot=originals[0];linkedByName=true;break;}
+     return null; // Ambiguous: ask the master to distinguish the existing FILES.
+    }
    }
   }
   if(!slot){
@@ -1700,7 +1706,7 @@ applyAppearance();
 <script src="./assets/secret-loot.js?v=21" defer></script>
 <script src="./assets/document-mural.js?v=6" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
-<script src="./assets/master-room.js?v=3" defer></script>
+<script src="./assets/master-room.js?v=4" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
 </html>
