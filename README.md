@@ -166,3 +166,17 @@ prontos para colocar na pasta `assets/secret/` do repositório.
 A aba **Inventário** oferece **⇧ IMPORTAR DO CODEX** para escolher arquivos JSON no formato codex-item-v1, exportados pelo [Ateliê de Itens](https://matheuz55peri-tech.github.io/Index-de-itens/studio.html). A wiki também pode transferir um item diretamente pelo botão **♥ Enviar ao Delta RPG**, usando armazenamento local compartilhado no mesmo domínio GitHub Pages.
 
 A importação cria uma nova entrada no inventário do FILE ativo com nome, descrição, quantidade, tipo, peso, dados de dano e bônus ao equipar. Uma miniatura PNG do item é exibida na ficha e preservada no FILE, na duplicação e na exportação de .deltarpg. A integração não altera os atributos-base do personagem. O recebimento automático exige o mesmo navegador/perfil; o JSON funciona como alternativa transferível entre navegadores.
+
+## Sala do Mestre — sincronização automática sem Firebase (2026-10)
+
+Na aba **FILES**, o painel **SALA DO MESTRE** (também acessível pelo cabeçalho) permite editar os personagens dos jogadores em tempo real:
+
+1. O mestre seleciona **CRIAR SALA** e **COPIAR CONVITE**.
+2. Cada jogador abre o link, escolhe seu FILE atual e seleciona **CONECTAR MINHA FICHA**.
+3. O mestre vê uma ficha independente por jogador. **ABRIR E EDITAR** abre o FILE do jogador no editor existente.
+4. Alterações salvas pelo mestre chegam ao FILE do jogador. Alterações feitas pelo jogador retornam ao FILE correspondente do mestre, sem recriar fichas a cada salvamento.
+5. O código é lembrado no navegador, e uma perda de conexão inicia tentativas de reconexão. Cada pessoa continua com os próprios FILES locais.
+
+**Limites importantes:** usa PeerJS/WebRTC e comporta até cinco jogadores. A troca de atualizações só ocorre enquanto os dois navegadores estão online; não é armazenamento em nuvem. Ao reconectar, a versão que ficou no mestre é priorizada, mas, se o jogador tiver mudanças locais diferentes, a versão anterior é preservada automaticamente em um novo FILE de backup antes de aplicar a cópia do mestre. Caso os FILES locais estejam no limite, a sincronização é interrompida para evitar substituir dados sem backup. Evite compartilhar dados pessoais. Algumas redes podem bloquear WebRTC. O antigo arquivo Firebase continua acessível em **Outras formas de compartilhar → Arquivo Firebase (avançado)**.
+
+Implementação: assets/master-room.js, assets/master-room.css e interface DeltaRpgLiveBridge.openFile no index.html.
