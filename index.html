@@ -439,7 +439,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/equipment.css?v=10">
 <link rel="stylesheet" href="./assets/equipment-bridge.css?v=11">
   <link rel="stylesheet" href="./assets/live-sync.css?v=13">
-<link rel="stylesheet" href="./assets/secret-loot.css?v=20">
+<link rel="stylesheet" href="./assets/secret-loot.css?v=21">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="./assets/pdf-compact.js?v=10" defer></script>
@@ -453,7 +453,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/theme-bedroom.css?v=9">
 <link rel="stylesheet" href="./assets/theme-lamplight.css?v=9">
 <link rel="stylesheet" href="./assets/theme-playground.css?v=9">
-<link rel="stylesheet" href="./assets/document-mural.css?v=4">
+<link rel="stylesheet" href="./assets/document-mural.css?v=5">
 <link rel="stylesheet" href="./assets/owner-share.css?v=1">
 </head>
 <body>
@@ -1546,6 +1546,19 @@ window.DeltaRpgLiveBridge=Object.freeze({
 
 /* Arquivo DONO: uma cópia estável por chave remota, sem duplicatas. */
 window.DeltaRpgMasterBridge=Object.freeze({
+ refreshExisting(received,remoteKey){
+  if(!filesReady||!received?.character||!remoteKey)return false;
+  const slot=fileSlots.find(x=>x.remoteSource===short(String(remoteKey),160));
+  if(!slot)return false;
+  const incoming=cleanCharacter(received.character);
+  // Não cria novos FILES: apenas atualiza o slot vinculado a esta origem.
+  slot.data=incoming;slot.updatedAt=stamp();
+  if(activeSaveId===slot.id){
+   state=cleanCharacter(incoming);renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+   localStorage.setItem(KEY,JSON.stringify(state));
+  }
+  commitFiles();renderFiles();return true;
+ },
  ensureOwnerFile(){
   if(!filesReady)return false;
   if(fileSlots.some(x=>x.label==='DONO'))return true;
@@ -1652,9 +1665,9 @@ applyAppearance();
 </script>
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
-<script src="./assets/secret-loot.js?v=20" defer></script>
+<script src="./assets/secret-loot.js?v=21" defer></script>
 <script src="./assets/document-mural.js?v=4" defer></script>
-<script src="./assets/owner-share.js?v=1" defer></script>
+<script src="./assets/owner-share.js?v=2" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
 </html>
