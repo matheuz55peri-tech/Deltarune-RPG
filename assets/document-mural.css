@@ -32,3 +32,37 @@
 .mural-note.note-settle:not(.dragging){animation:muralLanding .55s cubic-bezier(.18,.75,.23,1)}
 @keyframes muralLanding{0%{filter:brightness(1.12)}45%{filter:brightness(1.04)}100%{filter:brightness(1)}}
 @media(prefers-reduced-motion:reduce){.mural-note{transform:none!important;animation:none!important}}
+
+/* Mural V4: redimensionamento em oito direções, papéis e giz evaporando */
+.mural-note{min-height:150px}
+.mural-note textarea{min-height:0;resize:none;overflow:auto}
+.mural-note-grab .mural-paper-toggle{font-size:17px;line-height:1;color:#eedcbd;border:0;background:transparent;padding:1px 5px;cursor:pointer;flex:none}
+.mural-note-grab .mural-paper-toggle:hover{color:#fff;transform:scale(1.15)}
+.mural-note[data-paper=paper]{background:#ecdfc2;color:#2a222c;border-color:#8f7258}
+.mural-note[data-paper=paper] .mural-note-grab{background:#c6aa88;color:#241521}
+.mural-note[data-paper=paper] textarea{color:#271c22}
+.mural-note[data-paper=paper] textarea::placeholder{color:#766354}
+.mural-note[data-paper=paper] .mural-note-bottom{color:#654535;border-color:#826c55}
+.mural-note[data-paper=blue]{background:#182f4f;border-color:#9ad6ff}
+.mural-note[data-paper=blue] .mural-note-grab{background:#254d76}
+.mural-note[data-paper=sage]{background:#1c3b35;border-color:#a0e1bb}
+.mural-note[data-paper=sage] .mural-note-grab{background:#2f6250}
+.mural-note[data-paper=rose]{background:#4d2b42;border-color:#ffaccd}
+.mural-note[data-paper=rose] .mural-note-grab{background:#6d3b60}
+.mural-note[data-paper=gold]{background:#4a3828;border-color:#ffd68f}
+.mural-note[data-paper=gold] .mural-note-grab{background:#735538}
+.mural-resize-handles{position:absolute;inset:0;pointer-events:none}
+.mural-resize-handles i{position:absolute;z-index:3;display:block;pointer-events:auto;width:13px;height:13px;border:2px solid #fffc;background:#222035;opacity:.35;transition:opacity .12s}
+.mural-note:hover .mural-resize-handles i,.mural-note.resizing .mural-resize-handles i{opacity:.95}
+.mural-resize-handles i[data-edge=n]{left:calc(50% - 6px);top:-7px;cursor:n-resize}
+.mural-resize-handles i[data-edge=s]{left:calc(50% - 6px);bottom:-7px;cursor:s-resize}
+.mural-resize-handles i[data-edge=e]{top:calc(50% - 6px);right:-7px;cursor:e-resize}
+.mural-resize-handles i[data-edge=w]{top:calc(50% - 6px);left:-7px;cursor:w-resize}
+.mural-resize-handles i[data-edge=nw]{top:-7px;left:-7px;cursor:nw-resize}
+.mural-resize-handles i[data-edge=ne]{top:-7px;right:-7px;cursor:ne-resize}
+.mural-resize-handles i[data-edge=sw]{bottom:-7px;left:-7px;cursor:sw-resize}
+.mural-resize-handles i[data-edge=se]{bottom:-7px;right:-7px;cursor:se-resize}
+.mural-chalk{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;image-rendering:auto}
+.mural-grid{pointer-events:none}
+.mural-note{z-index:2}
+@media(pointer:coarse){.mural-resize-handles i{opacity:.85;width:16px;height:16px}}
