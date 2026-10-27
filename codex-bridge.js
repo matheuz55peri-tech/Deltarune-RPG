@@ -20,7 +20,7 @@ function visualFrom(data){
   frameUrl:approvedURL(c.frameUrl||(f?'assets/frames/frame-'+String(f).padStart(2,'0')+'.png':null),'frame'),
   backgroundUrl:approvedURL(c.backgroundUrl||(b?'assets/backgrounds/background-'+String(b).padStart(2,'0')+'.'+ext:null),'background'),
   bgZoom:clamp(c.bgZoom??m.bgZoom??100,100,200),bgDim:clamp(c.bgDim??m.bgDim??0,0,75),
-  bgX:clamp(c.bgX??m.bgX??0,-256,256),bgY:clamp(c.bgY??m.bgY??0,-256,256),
+  bgX:clamp(c.bgX??m.bgX??0,-256,256),bgY:clamp(c.bgY??m.bgY??0,-256,256),frameScale:clamp(c.frameScale??m.frameScale??100,40,180),frameX:clamp(c.frameX??m.frameX??0,-256,256),frameY:clamp(c.frameY??m.frameY??0,-256,256),
   customFrame:dataImage(data.frameImage,1300000)
  }
 }
@@ -53,7 +53,7 @@ css.textContent='.codex-layered-icon{position:relative;display:block;flex:none;a
 +'.codex-layered-icon .codex-icon-disc>.codex-icon-background{object-fit:cover;image-rendering:auto;transform-origin:center}'
 +'.codex-layered-icon .codex-icon-disc>.codex-icon-art{object-fit:fill;image-rendering:pixelated;z-index:3}'
 +'.codex-layered-icon .codex-icon-shade{position:absolute;inset:0;z-index:2;pointer-events:none}'
-+'.codex-layered-icon>.codex-icon-frame{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;z-index:4;pointer-events:none;-webkit-mask-image:radial-gradient(circle at center,transparent 0 37.3%,#000 37.6%);mask-image:radial-gradient(circle at center,transparent 0 37.3%,#000 37.6%)}'
++'.codex-layered-icon>.codex-frame-clip{position:absolute;inset:0;z-index:4;pointer-events:none;-webkit-mask-image:radial-gradient(circle closest-side at center,transparent 0 75%,#000 75.5%);mask-image:radial-gradient(circle closest-side at center,transparent 0 75%,#000 75.5%)}.codex-frame-clip>.codex-icon-frame{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;pointer-events:none;transform-origin:center}'
 +'.entry-row.inventory-row .entry-icon.codex-mini-icon{width:52px;height:52px;min-width:52px;line-height:normal;max-width:52px;border-radius:0;font-size:inherit;color:inherit}'
 +'.entry-row.inventory-row .entry-icon.codex-mini-icon img{max-width:none}'
 +'.codex-art-panel{display:flex;flex-direction:column;align-items:center;gap:9px;padding:17px;border:1px solid rgba(224,190,255,.35);border-radius:12px;margin:12px 0;background:radial-gradient(circle at center,#302645,#151221)}'
@@ -71,7 +71,7 @@ function buildIcon(it,mini=false){
  const shade=document.createElement('span');shade.className='codex-icon-shade';shade.style.background='rgba(0,0,0,'+(clamp(c.bgDim,0,75)/100)+')';disc.append(shade);
  const art=document.createElement('img');art.className='codex-icon-art';art.src=it.codexImage;art.alt='';art.loading='lazy';disc.append(art);root.append(disc);
  const frameImg=c.customFrame||c.frameUrl;
- if(frameImg){const frame=document.createElement('img');frame.className='codex-icon-frame';frame.src=frameImg;frame.alt='';frame.loading='lazy';root.append(frame)}
+ if(frameImg){const wrap=document.createElement('span');wrap.className='codex-frame-clip';const frame=document.createElement('img');frame.className='codex-icon-frame';frame.src=frameImg;frame.alt='';frame.loading='lazy';frame.style.transform='translate('+(clamp(c.frameX,-256,256)/512*100)+'%,'+(clamp(c.frameY,-256,256)/512*100)+'%) scale('+(clamp(c.frameScale,40,180)/100)+')';wrap.append(frame);root.append(wrap)}
  return root
 }
 const detail=$delta('itemDetail'),inventory=$delta('inventoryList');
