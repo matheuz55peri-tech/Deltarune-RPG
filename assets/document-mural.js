@@ -2,9 +2,11 @@
 (()=>{'use strict';
 const KEY='delta-document-wall-v1';
 function init(){
- const nav=document.querySelector('.rpg-tabs');if(!nav||document.getElementById('tab-mural'))return;
- const button=document.createElement('button');button.type='button';button.className='rpg-tab';button.dataset.tab='mural';button.setAttribute('role','tab');button.setAttribute('aria-selected','false');button.textContent='✎ MURAL DE DOCUMENTOS';nav.append(button);
- const panel=document.createElement('section');panel.id='tab-mural';panel.className='tab-content mural-tab';panel.hidden=true;
+ const nav=document.querySelector('.rpg-tabs');if(!nav)return;
+ let button=nav.querySelector('[data-tab="mural"]');
+ if(!button){button=document.createElement('button');button.type='button';button.className='rpg-tab';button.dataset.tab='mural';button.setAttribute('role','tab');button.setAttribute('aria-selected','false');button.textContent='✎ MURAL DE DOCUMENTOS';nav.append(button);}
+ let panel=document.getElementById('tab-mural');
+ if(!panel){panel=document.createElement('section');panel.id='tab-mural';panel.className='tab-content mural-tab';panel.hidden=true;nav.after(panel);}
  panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Os bilhetes são salvos automaticamente neste navegador.</p>';
  nav.after(panel);
  const board=panel.querySelector('#muralBoard');
