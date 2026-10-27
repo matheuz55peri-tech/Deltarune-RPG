@@ -25,3 +25,10 @@
 @keyframes muralWrite{0%{transform:translate(-4px,-36px) rotate(-30deg)}50%{transform:translate(2px,-33px) rotate(-10deg)}100%{transform:translate(-4px,-36px) rotate(-20deg)}}
 @media(pointer:coarse){.mural-tab,.mural-tab button,.mural-tab textarea,.mural-tab label{cursor:auto}.mural-feather{display:none}}
 @media(max-width:600px){.mural-head h2{font-size:13px}.mural-board{min-height:670px}.mural-note{width:205px}.mural-note textarea{font-size:10px}}
+
+/* Movimento físico suave dos bilhetes conforme direção e velocidade do arrasto */
+.mural-note{transform:rotate(var(--note-tilt,0deg));transform-origin:50% 18%;will-change:transform;backface-visibility:hidden}
+.mural-note.dragging{box-shadow:12px 19px 0 #0007,0 16px 30px #0008;filter:brightness(1.13)}
+.mural-note.note-settle:not(.dragging){animation:muralLanding .55s cubic-bezier(.18,.75,.23,1)}
+@keyframes muralLanding{0%{filter:brightness(1.12)}45%{filter:brightness(1.04)}100%{filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){.mural-note{transform:none!important;animation:none!important}}
