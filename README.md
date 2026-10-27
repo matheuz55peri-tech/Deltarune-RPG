@@ -159,3 +159,10 @@ o site utiliza o fallback **assets/secret/eye.svg** para o olho e o fundo
 escuro do portal; a navegação e a seleção de baús continuam funcionando.
 O pacote de mídia disponibilizado separadamente contém os dois arquivos
 prontos para colocar na pasta `assets/secret/` do repositório.
+
+
+## Importar itens do Codex Arcano (v15)
+
+A aba **Inventário** oferece **⇧ IMPORTAR DO CODEX** para escolher arquivos JSON no formato codex-item-v1, exportados pelo [Ateliê de Itens](https://matheuz55peri-tech.github.io/Index-de-itens/studio.html). A wiki também pode transferir um item diretamente pelo botão **♥ Enviar ao Delta RPG**, usando armazenamento local compartilhado no mesmo domínio GitHub Pages.
+
+A importação cria uma nova entrada no inventário do FILE ativo com nome, descrição, quantidade, tipo, peso, dados de dano e bônus ao equipar. Uma miniatura PNG do item é exibida na ficha e preservada no FILE, na duplicação e na exportação de .deltarpg. A integração não altera os atributos-base do personagem. O recebimento automático exige o mesmo navegador/perfil; o JSON funciona como alternativa transferível entre navegadores.
