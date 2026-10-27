@@ -96,7 +96,8 @@ function init(){
  }
  async function pushFile(file,c=config,silent=false){
   if(!file||!c||c.mode!=='player')return;
-  const identity=await auth(c);const itemKey=await fileKey(c,file);
+  const identity=await auth(c);const prior=bindings[file.id];
+  const itemKey=(prior?.room===c.room&&prior?.url===c.databaseURL&&prior?.key)||await fileKey(c,file);
   const path=c.room+'/files/'+identity.uid+'/'+itemKey;
   const data={label:String(file.label||'FILE').slice(0,48),playerName:c.playerName||'Jogador',character:file.character,updatedAt:{'.sv':'timestamp'}};
   if(JSON.stringify(data).length>450000)throw Error('A ficha excedeu 450 KB; reduza imagens anexadas.');
@@ -110,7 +111,7 @@ function init(){
  async function shareActive(){
   const file=currentFile();
   if(!file){alert('Abra um FILE antes de compartilhar.');return;}
-  if(!config||config.mode!=='player'){mode.value='player';modeChange();fill();dialog.showModal();report('Configure a conexão de jogador e clique CONECTAR / SALVAR.');return;}
+  if(!config||config.mode!=='player'){fill();mode.value='player';modeChange();dialog.showModal();report('Configure a conexão de jogador e clique CONECTAR / SALVAR.');return;}
   if(sharing)return;sharing=true;
   reportBadge('ENVIANDO…');
   try{await pushFile(file,config);report('Arquivo '+file.label+' enviado e associado a este jogador.');}
@@ -145,6 +146,7 @@ function init(){
    }
   }
   save(CACHE_KEY,{room:config.room,url:config.databaseURL,records});
+  for(const record of Object.values(records))window.DeltaRpgMasterBridge?.refreshExisting?.(record,config.room+'/'+record.remoteKey);
   renderOwner();reportBadge('▣ DONO · '+Object.keys(records).length);
  }
  function renderOwner(){
@@ -195,6 +197,7 @@ function init(){
   }catch(e){report(errorText(e),true)}
  });
  q('ownerRefresh').addEventListener('click',async()=>{try{await loadOwner();report('Lista atualizada.')}catch(e){report(errorText(e),true);}});
+ window.addEventListener('delta-rpg:open-owner',()=>q('deltaOpenOwner').click());
  q('deltaOpenOwner').addEventListener('click',()=>{
   fill();dialog.showModal();
   if(config?.mode==='owner')loadOwner().then(()=>report('Arquivo DONO atualizado.')).catch(e=>report(errorText(e),true));
