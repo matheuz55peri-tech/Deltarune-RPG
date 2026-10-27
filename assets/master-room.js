@@ -292,6 +292,7 @@ async function joinRoom(code,fileId,reconnect=false){
  disconnect(false);explicitStop=false;sequence=run;
  mode='player';room=code.toUpperCase();joinedFileId=fileId;connected=false;
  saveSettings({mode:'player',code:room,fileId:joinedFileId,active:true});
+ refreshBackupButton();
  refresh();report(reconnect?'Reconectando ao mestre...':'Procurando Sala do Mestre...');
  try{
   const Peer=await loadPeer();
@@ -400,11 +401,11 @@ $('dmCopy').onclick=copyInvite;
 $('dmBackup').onclick=()=>{
  const backup=latestBackup();
  if(!backup){report('Não há versão anterior guardada.',true);return;}
- const data={format:'delta-rpg-file-v1',exportedAt:backup.savedAt,
+ const data={format:'delta-rpg-save',version:1,app:'DELTA RPG',exportedAt:backup.savedAt,
   file:{label:backup.label},character:backup.character};
  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='DELTA-RPG-versao-anterior.json';document.body.append(a);a.click();a.remove();
+ a.href=url;a.download='DELTA-RPG-versao-anterior.deltarpg';document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),2000);
  report('Versão anterior exportada. Nenhum FILE novo foi criado.');
 };
