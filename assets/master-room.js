@@ -79,6 +79,7 @@ ui.innerHTML=[
  '<details class="dm-details"><summary>Outras formas de compartilhar</summary><p>A Sala do Mestre funciona ao vivo, enquanto mestre e jogador estão conectados. Para guardar cópias na nuvem, existe o arquivo Firebase anterior, com configuração própria.</p><button type="button" id="dmLegacy">ABRIR ARQUIVO FIREBASE (AVANÇADO)</button></details>'
 ].join('');
 tab.prepend(ui);
+window.DeltaRpgInitiative?.mount?.();
 const legacy=document.getElementById('delta-owner-zone');if(legacy)legacy.hidden=true;
 const toolbar=document.createElement('button');
 toolbar.id='dmTopButton';toolbar.type='button';toolbar.className='reset-top';
@@ -115,6 +116,7 @@ function refresh(){
  toolbar.textContent=mode==='owner'?'✦ MESTRE · '+sessions.size:
    mode==='player'&&connected?'✦ FICHA CONECTADA':'✦ SALA DO MESTRE';
  $('dmCount').textContent=String(sessions.size)+'/'+MAX_PLAYERS;
+ window.DeltaRpgInitiative?.refresh?.({mode,connected,room,hostReady:!!peer?.open});
 }
 function renderPlayers(){
  const host=$('dmPlayerList');host.replaceChildren();
@@ -165,6 +167,7 @@ function disconnect(resetSaved=true){
  try{peer?.destroy()}catch(_){}
  peer=null;
  mode='off';room='';joinedFileId=null;connected=false;playerLast='';
+ window.DeltaRpgInitiative?.stop?.();
  if(resetSaved)saveSettings({active:false});
  refresh();renderPlayers();
 }
@@ -225,10 +228,12 @@ function onHostConnection(c){
    if(!file){emit(c,{kind:'error',message:'O FILE compartilhado não foi encontrado.'});c.close();return;}
    session.last=fingerprint(file);
    emit(c,{kind:'snapshot',label:file.label,character:file.character});
+   window.DeltaRpgInitiative?.hostPlayerJoined?.(session,c);
    report('Jogador conectado: '+session.name+'. Abra a ficha para editar.');
    renderPlayers();
    return;
   }
+  if(window.DeltaRpgInitiative?.hostMessage?.(msg,playerSession,c))return;
   if(msg.kind!=='update'||!msg.character||!playerSession.fileId)return;
   const source=recordKey(room,playerSession.pid);
   const next=fingerprint({character:msg.character});
@@ -241,6 +246,7 @@ function onHostConnection(c){
   renderPlayers();
  });
  c.on('close',()=>{
+  window.DeltaRpgInitiative?.hostPlayerLeft?.(playerSession);
   if(playerSession&&sessions.get(playerSession.pid)===playerSession){
    sessions.delete(playerSession.pid);renderPlayers();
    report('Um jogador desconectou. O FILE permanece salvo em seus arquivos.');
@@ -252,6 +258,7 @@ async function hostRoom(code){
  const run=++sequence;
  disconnect(false);explicitStop=false;sequence=run;
  mode='starting';room=code;connected=false;
+ window.DeltaRpgInitiative?.hostStarted?.(code);
  refresh();report('Criando Sala do Mestre...');
  try{
   const Peer=await loadPeer();
@@ -291,6 +298,7 @@ async function joinRoom(code,fileId,reconnect=false){
  const run=++sequence;
  disconnect(false);explicitStop=false;sequence=run;
  mode='player';room=code.toUpperCase();joinedFileId=fileId;connected=false;
+ window.DeltaRpgInitiative?.playerStarted?.(room,playerId,fileId);
  saveSettings({mode:'player',code:room,fileId:joinedFileId,active:true});
  refreshBackupButton();
  refresh();report(reconnect?'Reconectando ao mestre...':'Procurando Sala do Mestre...');
@@ -302,6 +310,7 @@ async function joinRoom(code,fileId,reconnect=false){
    if(mode!=='player')return;
    const c=peer.connect(PREFIX+room.toLowerCase(),{serialization:'json',reliable:true});
    connection=c;
+   window.DeltaRpgInitiative?.playerConnected?.(c);
    c.on('open',()=>{
     const live=getFile();
     if(!live){report('O FILE compartilhado foi excluído.',true);disconnect();return;}
@@ -310,6 +319,7 @@ async function joinRoom(code,fileId,reconnect=false){
    });
    c.on('data',msg=>{
     if(!validPacket(msg))return;
+    if(window.DeltaRpgInitiative?.playerMessage?.(msg))return;
     if(msg.kind==='full'){report('Esta sala já tem cinco jogadores.',true);disconnect();return;}
     if(msg.kind==='error'){report(msg.message||'Falha ao sincronizar.',true);return;}
     if(msg.kind==='ack'){
