@@ -983,7 +983,7 @@ function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.
   }).filter(Boolean);
   record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,
     quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
-    equipmentData:data};
+    equipmentData:data,...(previous?.codexImage?{codexImage:previous.codexImage}:{})};
  }
  const items=state[conf.collection];const idx=items.findIndex(x=>x.id===record.id);if(idx>=0)items[idx]=record;else items.push(record);state[conf.selected]=record.id;if(type==='skills'&&skillFilter!=='all'&&skillFilter!==record.category)setSkillFilter(record.category);closeEditor(type);renderLibrary(type);persist();toast(type==='skills'?'Habilidade salva!':'Item salvo!')}
 function removeEntry(type,id){const conf=kind[type],entry=state[conf.collection].find(x=>x.id===id);if(!entry||!confirm(`Remover "${entry.name}"?`))return;state[conf.collection]=state[conf.collection].filter(x=>x.id!==id);renderLibrary(type);persist();toast('Removido com sucesso')}
@@ -1034,7 +1034,8 @@ function cleanCharacter(input){
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
   type:short(x.type||'◆',12),quantity:clamp(Math.trunc(x.quantity),1,9999),
-  ...(x.equipmentData&&typeof x.equipmentData==='object'?{equipmentData:normalizeGearSnapshot(x.equipmentData)}:{})}));
+  ...(x.equipmentData&&typeof x.equipmentData==='object'?{equipmentData:normalizeGearSnapshot(x.equipmentData)}:{}),
+  ...(typeof x.codexImage==='string'&&x.codexImage.length<=350000&&x.codexImage.startsWith('data:image/')?{codexImage:x.codexImage}:{})}));
  v.skills=(Array.isArray(input.skills)?input.skills:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
   icon:short(x.icon||'✦',12),cost:clamp(Math.trunc(x.cost),0,100),
@@ -1614,5 +1615,6 @@ applyAppearance();
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
 <script src="./assets/secret-loot.js?v=19" defer></script>
+<script src="codex-bridge.js"></script>
 </body>
 </html>
