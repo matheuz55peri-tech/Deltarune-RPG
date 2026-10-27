@@ -1578,51 +1578,51 @@ window.DeltaRpgMasterBridge=Object.freeze({
   persist();
   const slot=createFile(baseState(),'DONO');fileSlots.unshift(slot);commitFiles();renderFiles();return true;
  },
- upsertReceived(received,remoteKey,occupiedFileIds=[]){
+ upsertReceived(received,remoteKey,occupiedFileIds=[],preserveExisting=false){
   if(!filesReady||!received?.character||!remoteKey)return null;
   const source=short(String(remoteKey),160);
   persist();
-  let slot=fileSlots.find(x=>x.remoteSource===source),created=false,linkedByName=false;
+  let slot=fileSlots.find(x=>x.remoteSource===source);
+  let created=false,linkedByName=false;
   if(!slot){
-   // Match character name first; player name / FILE label are fallbacks. Re-use
-   // exactly one match instead of producing duplicate DONO copies on reconnection.
-   const used=new Set(Array.isArray(occupiedFileIds)?occupiedFileIds:[]);
-   const names=[received.character.name,received.playerName,received.label]
-    .map(masterNameKey)
-    .filter(x=>x&&x!=='sem nome'&&x!=='personagem sem nome'&&x!=='file');
-   for(const name of [...new Set(names)]){
-    const matching=fileSlots.filter(x=>{
-     if(x.label==='DONO'||masterNameKey(x.label).startsWith('backup')||used.has(x.id))return false;
-     const keys=masterNameOf(x);
-     return keys.character===name||keys.label===name;
+   // Find ANY character name, not a preset list of names.
+   // Accept a matching FILE label only when it matches the character's name.
+   const name=masterNameKey(received.character.name);
+   const validName=name&&!['sem nome','personagem sem nome','file'].includes(name);
+   const occupied=new Set(Array.isArray(occupiedFileIds)?occupiedFileIds:[]);
+   if(validName){
+    const matches=fileSlots.filter(x=>{
+     if(x.label==='DONO'||occupied.has(x.id)||
+        masterNameKey(x.label).startsWith('backup'))return false;
+     const existing=masterNameOf(x);
+     return existing.character===name||existing.label===name;
     });
-    if(matching.length===1){slot=matching[0];linkedByName=true;break;}
-    if(matching.length>1){
-     // When previous imports created duplicates, prefer the one original
-     // local FILE that has no remote binding, never an arbitrary old copy.
-     const originals=matching.filter(x=>!x.remoteSource);
-     if(originals.length===1){slot=originals[0];linkedByName=true;break;}
-     return null; // Ambiguous: ask the master to distinguish the existing FILES.
+    if(matches.length===1)slot=matches[0];
+    else if(matches.length>1){
+     // Prefer exactly one original FILE over old imported/received duplicates.
+     const originals=matches.filter(x=>!x.remoteSource);
+     if(originals.length===1)slot=originals[0];
+     else return null; // Ambiguous: never edit the wrong character.
     }
+    if(slot)linkedByName=true;
    }
   }
   if(!slot){
    if(fileSlots.length>=MAX_FILES)return null;
    slot=createFile(received.character,'DONO · '+short(received.label||received.character.name||'FILE',26));
    fileSlots.push(slot);created=true;
-  }else{
+  }else if(!preserveExisting){
    slot.data=cleanCharacter(received.character);
-   // Keep the FILE's existing name when matching by character. No extra FILE.
-   if(!linkedByName&&slot.remoteSource===source&&masterNameKey(slot.label).startsWith('dono ·'))
-    slot.label='DONO · '+short(received.label||'FILE',26);
    slot.updatedAt=stamp();
   }
   slot.remoteSource=source;
-  if(activeSaveId===slot.id){
-   const tab=state.activeTab;
-   state=cleanCharacter(slot.data);state.activeTab=tab;
-   renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
-   localStorage.setItem(KEY,JSON.stringify(state));
+  if(!preserveExisting||created){
+   if(activeSaveId===slot.id){
+    const tab=state.activeTab;
+    state=cleanCharacter(slot.data);state.activeTab=tab;
+    renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+    localStorage.setItem(KEY,JSON.stringify(state));
+   }
   }
   commitFiles();renderFiles();
   return{id:slot.id,created,linkedByName};
@@ -1706,7 +1706,7 @@ applyAppearance();
 <script src="./assets/secret-loot.js?v=21" defer></script>
 <script src="./assets/document-mural.js?v=6" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
-<script src="./assets/master-room.js?v=4" defer></script>
+<script src="./assets/master-room.js?v=5" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
 </html>
