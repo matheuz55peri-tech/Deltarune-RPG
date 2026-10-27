@@ -69,7 +69,7 @@ function buildIcon(it,mini=false){
  const disc=document.createElement('span');disc.className='codex-icon-disc';
  if(c.backgroundUrl){const bg=document.createElement('img');bg.className='codex-icon-background';bg.src=c.backgroundUrl;bg.alt='';bg.loading='lazy';bg.style.transform='translate('+(clamp(c.bgX,-256,256)/512*100)+'%,'+(clamp(c.bgY,-256,256)/512*100)+'%) scale('+(clamp(c.bgZoom,100,200)/100)+')';disc.append(bg)}
  const shade=document.createElement('span');shade.className='codex-icon-shade';shade.style.background='rgba(0,0,0,'+(clamp(c.bgDim,0,75)/100)+')';disc.append(shade);
- const art=document.createElement('img');art.className='codex-icon-art';art.src=it.codexImage;art.alt='';art.loading='lazy';disc.append(art);root.append(disc);
+ const art=document.createElement('img');art.className='codex-icon-art';art.src=it.codexImage;art.alt='';art.loading='lazy';art.style.imageRendering=c.pixelArt===false?'auto':'pixelated';disc.append(art);root.append(disc);
  const frameImg=c.customFrame||c.frameUrl;
  if(frameImg){const wrap=document.createElement('span');wrap.className='codex-frame-clip';const frame=document.createElement('img');frame.className='codex-icon-frame';frame.src=frameImg;frame.alt='';frame.loading='lazy';frame.style.transform='translate('+(clamp(c.frameX,-256,256)/512*100)+'%,'+(clamp(c.frameY,-256,256)/512*100)+'%) scale('+(clamp(c.frameScale,40,180)/100)+')';wrap.append(frame);root.append(wrap)}
  return root
