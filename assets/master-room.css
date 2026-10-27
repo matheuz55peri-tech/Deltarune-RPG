@@ -1,0 +1,47 @@
+/* DELTA RPG · Sala do Mestre: interface simples, legível e responsiva */
+#delta-owner-zone[hidden]{display:none!important}
+#deltaMasterRoom{margin:14px 0 26px;border:1px solid rgba(189,164,232,.48);border-radius:12px;padding:clamp(14px,2.7vw,24px);background:linear-gradient(130deg,rgba(23,20,46,.96),rgba(11,15,34,.97));box-shadow:0 12px 34px rgba(0,0,0,.23);color:#f6f1ff;scroll-margin-top:25px}
+#deltaMasterRoom *,#dmDialog *{box-sizing:border-box}
+.dm-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.dm-eyebrow{font:700 10px/1.7 'Space Grotesk',sans-serif;letter-spacing:1.7px;color:#baa6f3}
+.dm-head h2{font:clamp(12px,2vw,16px)/1.75 'Press Start 2P',monospace;color:#f7f4ff;margin:7px 0}
+.dm-head p{color:#bbb6d1;font:14px/1.5 'Space Grotesk',sans-serif;max-width:620px;margin:4px 0 0}
+.dm-badge{border-radius:50px;border:1px solid #716884;background:#27243e;padding:8px 12px;white-space:nowrap;color:#c9c0dc;font:700 11px 'Space Grotesk',sans-serif}
+.dm-badge[data-active=true]{background:rgba(38,99,82,.26);border-color:#4baf96;color:#9af3d4}
+.dm-actions{display:flex;flex-wrap:wrap;gap:10px;margin:21px 0 12px}
+#deltaMasterRoom button,#dmDialog button{cursor:pointer;border-radius:8px;border:1px solid rgba(189,180,218,.55);background:#22223e;color:#faf8ff;padding:12px 17px;font:700 11px/1.5 'Space Grotesk',sans-serif;letter-spacing:.6px;transition:background .15s,border-color .15s,transform .15s}
+#deltaMasterRoom button:hover,#dmDialog button:hover{background:#41375e;border-color:#c2aef6;transform:translateY(-1px)}
+#deltaMasterRoom button:focus-visible,#dmDialog button:focus-visible{outline:2px solid #ecd3ff;outline-offset:2px}
+#deltaMasterRoom button[hidden],#dmDialog [hidden]{display:none!important}
+#dmStart,#dmConnect{background:#504073!important;border-color:#ac91e9!important}
+.dm-session{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-radius:10px;border:1px solid #68618e;background:rgba(74,65,115,.27);padding:12px 15px;margin-top:14px}
+.dm-session>div{display:grid;gap:5px}
+.dm-session small{font:700 9px 'Space Grotesk',sans-serif;letter-spacing:1.4px;color:#bbb5d4}
+#dmRoomCode{font:700 clamp(13px,2vw,20px)/1.7 ui-monospace,monospace;letter-spacing:1.5px;word-break:break-all;color:#f6dba5}
+.dm-hint{font:13px/1.6 'Space Grotesk',sans-serif;color:#9eefd8;background:rgba(17,55,46,.41);border:1px solid rgba(75,145,123,.5);border-radius:8px;padding:11px 13px;margin:15px 0}
+.dm-hint[data-error=true]{color:#ffc3cd;background:rgba(101,31,42,.25);border-color:#a65877}
+.dm-players{margin-top:22px;border-top:1px solid rgba(202,192,226,.23);padding-top:18px}
+.dm-players-title{display:flex;align-items:center;justify-content:space-between;font:700 12px 'Space Grotesk',sans-serif;letter-spacing:1.25px;color:#e8daff}
+.dm-players-title span{color:#b8afd4}
+#dmPlayerList{display:grid;gap:10px;margin-top:13px}
+#dmPlayerList>p{margin:0;font:13px/1.65 'Space Grotesk',sans-serif;color:#bcb5d0}
+.dm-player{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border:1px solid #4b4266;border-radius:9px;background:rgba(41,33,67,.64);padding:13px}
+.dm-player-info{display:grid;gap:5px;min-width:0}
+.dm-player-info strong{font:700 14px 'Space Grotesk',sans-serif;color:#fff0c9}
+.dm-player-info span{font:12px 'Space Grotesk',sans-serif;color:#dfd6ed;overflow-wrap:anywhere}
+.dm-player-info small{font:11px 'Space Grotesk',sans-serif;color:#8cebc3}
+.dm-details{margin-top:17px;padding-top:12px;border-top:1px solid rgba(194,180,214,.17);font:12px/1.6 'Space Grotesk',sans-serif;color:#aea5c3}
+.dm-details summary{cursor:pointer}
+.dm-details button{margin-top:4px}
+#dmDialog{width:min(540px,calc(100vw - 24px));max-height:90vh;overflow:auto;border:1px solid #9785bd;border-radius:12px;background:#101125;color:#f7f1ff;padding:0;box-shadow:0 25px 100px #000b}
+#dmDialog::backdrop{background:#030207d9;backdrop-filter:blur(6px)}
+.dm-dialog-body{display:grid;gap:14px;padding:clamp(16px,4vw,27px)}
+.dm-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dm-dialog-head h2{font:12px/1.7 'Press Start 2P',monospace;margin:0}
+#dmDialog #dmClose{padding:4px 12px;font-size:22px;letter-spacing:0}
+.dm-dialog-body>p{font:13px/1.7 'Space Grotesk',sans-serif;color:#c2b9d4;margin:0}
+.dm-dialog-body label{display:grid;gap:7px;color:#e8dfff;font:700 12px/1.55 'Space Grotesk',sans-serif}
+.dm-dialog-body input{width:100%;border:1px solid #6d5f89;background:#19192e;color:white;border-radius:8px;padding:13px 11px;font:14px 'Space Grotesk',sans-serif}
+#dmSelectedFile{color:#a7efda!important;border:1px solid #395c55;border-radius:7px;padding:10px}
+.dm-dialog-body .dm-footnote{font-size:12px;color:#9e94af}
+@media(max-width:580px){.dm-actions button,.dm-session button,.dm-player button{width:100%}.dm-player{align-items:stretch}.dm-session{align-items:stretch}#dmTopButton{font-size:10px}}
