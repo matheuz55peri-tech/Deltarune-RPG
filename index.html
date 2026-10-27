@@ -1548,17 +1548,25 @@ window.DeltaRpgLiveBridge=Object.freeze({
 });
 
 
-/* Arquivo DONO: uma cópia estável por chave remota, sem duplicatas. */
+/* Arquivo DONO: vínculo estável por sala/jogador, reaproveitando o FILE pelo nome. */
+const masterNameKey=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+ .trim().toLocaleLowerCase('pt-BR').replace(/\s+/g,' ');
+const masterNameOf=slot=>{
+ const n=masterNameKey(slot.data?.name);
+ const label=masterNameKey(slot.label).replace(/^(?:dono|ao vivo)\s*[·:|-]\s*/,'');
+ return{character:n,label};
+};
 window.DeltaRpgMasterBridge=Object.freeze({
  refreshExisting(received,remoteKey){
   if(!filesReady||!received?.character||!remoteKey)return false;
   const slot=fileSlots.find(x=>x.remoteSource===short(String(remoteKey),160));
   if(!slot)return false;
   const incoming=cleanCharacter(received.character);
-  // Não cria novos FILES: apenas atualiza o slot vinculado a esta origem.
   slot.data=incoming;slot.updatedAt=stamp();
   if(activeSaveId===slot.id){
-   state=cleanCharacter(incoming);renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+   const tab=state.activeTab;
+   state=cleanCharacter(incoming);state.activeTab=tab;
+   renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
    localStorage.setItem(KEY,JSON.stringify(state));
   }
   commitFiles();renderFiles();return true;
@@ -1570,28 +1578,48 @@ window.DeltaRpgMasterBridge=Object.freeze({
   persist();
   const slot=createFile(baseState(),'DONO');fileSlots.unshift(slot);commitFiles();renderFiles();return true;
  },
- upsertReceived(received,remoteKey){
+ upsertReceived(received,remoteKey,occupiedFileIds=[]){
   if(!filesReady||!received?.character||!remoteKey)return null;
   const source=short(String(remoteKey),160);
   persist();
-  let slot=fileSlots.find(x=>x.remoteSource===source);
-  let created=false;
+  let slot=fileSlots.find(x=>x.remoteSource===source),created=false,linkedByName=false;
+  if(!slot){
+   // Match character name first; player name / FILE label are fallbacks. Re-use
+   // exactly one match instead of producing duplicate DONO copies on reconnection.
+   const used=new Set(Array.isArray(occupiedFileIds)?occupiedFileIds:[]);
+   const names=[received.character.name,received.playerName,received.label]
+    .map(masterNameKey)
+    .filter(x=>x&&x!=='sem nome'&&x!=='personagem sem nome'&&x!=='file');
+   for(const name of [...new Set(names)]){
+    const matching=fileSlots.filter(x=>{
+     if(x.label==='DONO'||masterNameKey(x.label).startsWith('backup')||used.has(x.id))return false;
+     const keys=masterNameOf(x);
+     return keys.character===name||keys.label===name;
+    });
+    if(matching.length===1){slot=matching[0];linkedByName=true;break;}
+    if(matching.length>1)return null; // Nunca sobrescrever arbitrariamente fichas homônimas.
+   }
+  }
   if(!slot){
    if(fileSlots.length>=MAX_FILES)return null;
-   slot=createFile(received.character,'DONO · '+short(received.label||'FILE',26));
-   slot.remoteSource=source;
+   slot=createFile(received.character,'DONO · '+short(received.label||received.character.name||'FILE',26));
    fileSlots.push(slot);created=true;
   }else{
    slot.data=cleanCharacter(received.character);
-   slot.label='DONO · '+short(received.label||'FILE',26);
+   // Keep the FILE's existing name when matching by character. No extra FILE.
+   if(!linkedByName&&slot.remoteSource===source&&masterNameKey(slot.label).startsWith('dono ·'))
+    slot.label='DONO · '+short(received.label||'FILE',26);
    slot.updatedAt=stamp();
   }
+  slot.remoteSource=source;
   if(activeSaveId===slot.id){
-   state=cleanCharacter(slot.data);renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+   const tab=state.activeTab;
+   state=cleanCharacter(slot.data);state.activeTab=tab;
+   renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
    localStorage.setItem(KEY,JSON.stringify(state));
   }
   commitFiles();renderFiles();
-  return {id:slot.id,created};
+  return{id:slot.id,created,linkedByName};
  }
 });
 
@@ -1672,7 +1700,7 @@ applyAppearance();
 <script src="./assets/secret-loot.js?v=21" defer></script>
 <script src="./assets/document-mural.js?v=6" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
-<script src="./assets/master-room.js?v=2" defer></script>
+<script src="./assets/master-room.js?v=3" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
 </html>
