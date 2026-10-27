@@ -266,7 +266,14 @@ async function joinRoom(code,fileId,reconnect=false){
     if(msg.kind==='error'){report(msg.message||'Falha ao sincronizar.',true);return;}
     if(msg.kind==='snapshot'||msg.kind==='update'){
      const before=getFile();
-     if(!before||!remoteWrite(joinedFileId,msg.character)){report('Não foi possível aplicar a ficha recebida.',true);return;}
+     if(!before){report('O FILE compartilhado não existe mais.',true);return;}
+     // Preserve any offline edits before accepting a potentially newer master copy.
+     if(msg.kind==='snapshot'&&fingerprint(before)!==fingerprint({character:msg.character})){
+      const backup=bridge.createSharedFile(before.character,'BACKUP · '+safeLabel(before.label,18));
+      if(!backup){report('A ficha local é diferente da cópia do mestre e não há espaço para um backup. Exporte seu FILE antes de conectar.',true);disconnect();return;}
+      bridge.openFile?.(joinedFileId);
+     }
+     if(!remoteWrite(joinedFileId,msg.character)){report('Não foi possível aplicar a ficha recebida.',true);return;}
      playerLast=fingerprint({character:msg.character});
      connected=true;report('✓ SINCRONIZADO · o mestre pode editar sua ficha ao vivo.');refresh();
     }
