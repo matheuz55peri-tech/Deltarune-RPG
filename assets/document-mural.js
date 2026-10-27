@@ -17,7 +17,44 @@ function init(){
  function add(note){
   const el=document.createElement('article');el.className='mural-note';el.dataset.id=note.id;
   el.style.left=note.x+'px';el.style.top=note.y+'px';el.style.zIndex=note.z||1;
-  el.innerHTML='<div class="mural-note-grab" title="Arraste para mover"><span class="mural-pin">◆</span><span class="mural-drag-label">SEGURE PARA MOVER</span><button class="mural-delete" type="button" aria-label="Excluir bilhete">×</button></div><textarea spellcheck="true" maxlength="3000" aria-label="Texto do bilhete" placeholder="* Você encontrou uma lembrança..."></textarea><div class="mural-note-bottom"><span>✦ TEXTO</span><span class="mural-counter">0/3000</span></div>';
+  note.width=Math.max(180,Math.min(680,Number(note.width)||245));note.height=Math.max(150,Math.min(640,Number(note.height)||184));
+  note.paper=['shadow','paper','blue','sage','rose','gold'].includes(note.paper)?note.paper:'shadow';
+  el.style.width=note.width+'px';el.style.height=note.height+'px';el.dataset.paper=note.paper;
+  el.innerHTML='<div class="mural-note-grab" title="Arraste para mover"><span class="mural-pin">◆</span><span class="mural-drag-label">SEGURE PARA MOVER</span><button class="mural-paper-toggle" type="button" aria-label="Trocar fundo da nota" title="Trocar fundo da nota">◈</button><button class="mural-delete" type="button" aria-label="Excluir bilhete">×</button></div><textarea spellcheck="true" maxlength="3000" aria-label="Texto do bilhete" placeholder="* Você encontrou uma lembrança..."></textarea><div class="mural-note-bottom"><span>✦ TEXTO</span><span class="mural-counter">0/3000</span></div><div class="mural-resize-handles" aria-hidden="true"><i data-edge="n"></i><i data-edge="s"></i><i data-edge="e"></i><i data-edge="w"></i><i data-edge="nw"></i><i data-edge="ne"></i><i data-edge="sw"></i><i data-edge="se"></i></div>';
+  const papers=['shadow','paper','blue','sage','rose','gold'];
+  el.querySelector('.mural-paper-toggle').addEventListener('click',()=>{
+   const idx=papers.indexOf(note.paper);note.paper=papers[(idx+1)%papers.length];
+   el.dataset.paper=note.paper;save();
+  });
+  for(const handle of el.querySelectorAll('.mural-resize-handles i')){
+   let origin=null;const edge=handle.dataset.edge;
+   handle.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;
+    e.preventDefault();e.stopPropagation();
+    note.z=++z;el.style.zIndex=z;
+    origin={x:e.clientX,y:e.clientY,left:note.x,top:note.y,width:note.width,height:note.height};
+    handle.setPointerCapture(e.pointerId);el.classList.add('resizing');
+   });
+   handle.addEventListener('pointermove',e=>{
+    if(!origin)return;
+    const scale=board.getBoundingClientRect().width/board.clientWidth||1;
+    const dx=(e.clientX-origin.x)/scale,dy=(e.clientY-origin.y)/scale;
+    let x=origin.left,y=origin.top,w=origin.width,h=origin.height;
+    if(edge.includes('e'))w=Math.max(180,Math.min(700,origin.width+dx));
+    if(edge.includes('s'))h=Math.max(150,Math.min(700,origin.height+dy));
+    if(edge.includes('w')){w=Math.max(180,Math.min(700,origin.width-dx));x=origin.left+origin.width-w;}
+    if(edge.includes('n')){h=Math.max(150,Math.min(700,origin.height-dy));y=origin.top+origin.height-h;}
+    x=Math.max(0,x);y=Math.max(0,y);
+    w=Math.min(w,Math.max(180,board.clientWidth-x-5));
+    h=Math.min(h,Math.max(150,board.clientHeight-y-5));
+    note.x=Math.round(x);note.y=Math.round(y);
+    note.width=Math.round(w);note.height=Math.round(h);
+    el.style.left=note.x+'px';el.style.top=note.y+'px';
+    el.style.width=note.width+'px';el.style.height=note.height+'px';
+   });
+   const done=()=>{if(!origin)return;origin=null;el.classList.remove('resizing');save();};
+   handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
+  }
   const input=el.querySelector('textarea');input.value=note.text||'';
   const counter=el.querySelector('.mural-counter');counter.textContent=input.value.length+'/3000';
   input.addEventListener('input',()=>{note.text=input.value;counter.textContent=input.value.length+'/3000';feather.classList.remove('is-writing');void feather.offsetWidth;feather.classList.add('is-writing');save();});
@@ -59,7 +96,7 @@ function init(){
   board.append(el);
  }
  notes.forEach(add);
- function create(){const i=notes.length;const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,7),text:'',x:Math.min(40+(i%4)*48,Math.max(0,board.clientWidth-260)),y:40+Math.floor(i/4)*50,z:++z};notes.push(n);add(n);save();board.querySelector('[data-id="'+n.id+'"] textarea').focus();}
+ function create(){const i=notes.length;const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,7),text:'',x:Math.min(40+(i%4)*48,Math.max(0,board.clientWidth-260)),y:40+Math.floor(i/4)*50,z:++z,width:245,height:184,paper:'shadow'};notes.push(n);add(n);save();board.querySelector('[data-id="'+n.id+'"] textarea').focus();}
  panel.querySelector('#muralAdd').addEventListener('click',create);
  panel.querySelector('#muralExport').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,notes},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mural-documentos.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
  panel.querySelector('#muralImport').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.notes))throw Error();if(!confirm('Substituir o mural atual pelo arquivo importado?'))return;notes=d.notes.filter(n=>n&&typeof n.text==='string'&&Number.isFinite(n.x)&&Number.isFinite(n.y)).slice(0,150);board.querySelectorAll('.mural-note').forEach(el=>el.remove());notes.forEach(add);save();}catch{alert('Arquivo de mural inválido.')}e.target.value='';});
