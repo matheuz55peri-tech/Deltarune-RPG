@@ -201,10 +201,10 @@ function onHostConnection(c){
    let fileId=saved?.id;
    const incoming={label:safeLabel(msg.label,36),playerName:safeLabel(msg.name,36),character:msg.character};
    if(!saved){
-    // Find the original FILE by character/player name and bind it permanently.
+    // Find the original FILE by the character name, regardless of what it is.
     // Never make another copy if a unique matching FILE already exists.
     const occupied=[...sessions.values()].map(s=>s.fileId);
-    const received=master.upsertReceived(incoming,source,occupied);
+    const received=master.upsertReceived(incoming,source,occupied,true);
     if(!received){emit(c,{kind:'error',message:'Não foi possível associar a ficha. Verifique o limite de FILES ou se existem fichas repetidas com o mesmo nome.'});c.close();return;}
     fileId=received.id;
     report(received.linkedByName?'✓ FILE existente associado automaticamente a '+(incoming.character.name||incoming.playerName)+'.':'✓ Ficha de '+(incoming.character.name||incoming.playerName)+' recebida.');
