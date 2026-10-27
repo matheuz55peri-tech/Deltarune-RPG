@@ -1,0 +1,29 @@
+
+/* Compartilhamento persistente / arquivo DONO */
+#delta-owner-zone{margin:14px 0 24px}
+.owner-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px;border:1px solid #8172a299;background:#0c0b1dc7;border-radius:5px;padding:12px}
+.owner-tools button,.owner-dialog button,.owner-file-card button{cursor:pointer;background:#17172e;color:#f9f5ff;border:1px solid #d4c9ed;padding:11px 13px;font:9px/1.6 'Press Start 2P',monospace}
+.owner-tools button:hover,.owner-dialog button:hover{background:#383059}
+#deltaOwnerBadge{font:10px 'Space Grotesk',sans-serif;color:#a5ebd0}
+#deltaOwnerDialog{width:min(760px,calc(100vw - 24px));max-height:92vh;overflow:auto;background:#090a17;color:#eee9f6;border:2px solid #a49abd;padding:0;box-shadow:0 24px 100px #000d}
+#deltaOwnerDialog::backdrop{background:#030306d9;backdrop-filter:blur(7px)}
+.owner-dialog{padding:clamp(15px,3vw,30px)}
+.owner-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.owner-dialog h2{font:clamp(12px,2vw,17px)/1.6 'Press Start 2P',monospace;color:#faf2ff}
+.owner-dialog-head button{font-size:23px;padding:0 10px}
+.owner-intro,.owner-disclaimer{font:12px/1.7 'Space Grotesk',sans-serif;color:#bfb9d0}
+.owner-setup{display:grid;gap:12px}
+.owner-setup label{display:grid;gap:7px;color:#e4ddf0;font:10px/1.5 'Press Start 2P',monospace}
+.owner-setup label input,.owner-setup label select{width:100%;min-width:0;max-width:100%;box-sizing:border-box;background:#171827;color:white;border:1px solid #665f86;border-radius:3px;font:13px 'Space Grotesk',sans-serif;padding:11px}
+.owner-setup-actions{display:flex;gap:8px;flex-wrap:wrap}
+.owner-setup-actions button{flex:1;min-width:150px}
+#ownerStatus{padding:10px;min-height:38px;color:#9eebcf;background:#11211fb9;border:1px solid #3c8572;font:12px/1.5 'Space Grotesk',sans-serif;overflow-wrap:anywhere}
+#ownerStatus[data-error=true]{background:#31191c;border-color:#a5536c;color:#ffc2ce}
+.owner-list-bar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:22px;border-bottom:1px solid #50495e;padding-bottom:12px;font:10px 'Press Start 2P',monospace}
+#ownerReceivedList{display:grid;gap:8px;max-height:390px;overflow:auto;margin-top:12px}
+.owner-file-card{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px;border:1px solid #524866;background:linear-gradient(120deg,#121229,#1d182d)}
+.owner-file-copy{display:grid;gap:7px;min-width:180px}
+.owner-file-copy strong{font:11px/1.5 'Press Start 2P',monospace;color:#f8de9d}
+.owner-file-copy small{font:12px 'Space Grotesk',sans-serif;color:#bdb8ce}
+.owner-file-card button{font-size:8px}
+@media(max-width:600px){.owner-tools button{width:100%}.owner-dialog h2{font-size:12px}}
