@@ -166,7 +166,40 @@ function init(){
     if(!result){report('Limite do armazenamento local atingido. A ficha continua acessível no arquivo DONO.',true);return;}
     report(result.created?'Ficha adicionada aos seus FILES.':'Mesmo FILE atualizado sem duplicar.');
    });
-   card.append(header,apply);list.append(card);
+   const inspect=document.createElement('details');inspect.className='owner-file-inspector';
+   const sum=document.createElement('summary');sum.textContent='◈ VER FICHA COMPLETA';inspect.append(sum);
+   const stats=document.createElement('div');stats.className='owner-stats';
+   const character=record.character;
+   for(const [label,value] of [['NOME',character.name||'SEM NOME'],['NÍVEL',character.level||1],
+     ['HP',character.hp??0],['TP',character.tp??0],['ATAQUE',character.strength??1],
+     ['DEFESA',character.defense??1],['INTELIGÊNCIA',character.intelligence??1],['AGILIDADE',character.agility??1]]){
+    const box=document.createElement('div');const a=document.createElement('small');a.textContent=label;
+    const b=document.createElement('strong');b.textContent=String(value);box.append(a,b);stats.append(box);
+   }
+   inspect.append(stats);
+   for(const [field,title] of [['skills','HABILIDADES'],['items','INVENTÁRIO'],['equipment','EQUIPAMENTOS'],['activeBuffs','EFEITOS ATIVOS']]){
+    const section=document.createElement('section');section.className='owner-field';
+    const h=document.createElement('h4');h.textContent=title;section.append(h);
+    const entries=Array.isArray(character[field])?character[field]:Object.values(character[field]||{});
+    if(!entries.length){const none=document.createElement('p');none.textContent='Nenhum registrado.';section.append(none);}
+    for(const entry of entries){
+     if(entry==null)continue;
+     const p=document.createElement('p');
+     p.textContent=typeof entry==='object'?
+      (String(entry.name||entry.label||entry.title||'ITEM')+' · '+String(entry.description||entry.effect||entry.type||'')).slice(0,500):
+      String(entry).slice(0,500);
+     section.append(p);
+    }
+    inspect.append(section);
+   }
+   const extra=document.createElement('button');extra.type='button';extra.textContent='↓ EXPORTAR JSON';
+   extra.addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify({label:record.label,character:record.character},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;
+    link.download='ficha-'+normalize(record.label)+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+   });
+   inspect.append(extra);
+   card.append(header,apply,inspect);list.append(card);
   }
  }
  async function connect(){
