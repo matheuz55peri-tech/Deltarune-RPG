@@ -44,7 +44,7 @@ function d20(){
 const standings=()=>[...state.rolls].sort((a,b)=>
  b.total-a.total||b.agility-a.agility||b.die-a.die||a.order-b.order);
 let role='off',room='',mine='',myFile='',ready=false,connected=false,open=false,pending=false;
-let state={round:1,rolls:[]},sessions=new Map(),mounted=false;
+let state={round:1,rolls:[]},sessions=new Map(),mounted=false,playerConnection=null;
 function persist(){
  if(role!=='host'||!room)return;
  try{
@@ -160,7 +160,7 @@ function refresh(info={}){
  draw();
 }
 function stop(){
- role='off';room='';mine='';myFile='';ready=false;connected=false;open=false;pending=false;
+ role='off';room='';mine='';myFile='';ready=false;connected=false;open=false;pending=false;playerConnection=null;
  state={round:1,rolls:[]};sessions.clear();
  if(mounted)$('dmInitiativePanel').dataset.open='no';
  draw();
@@ -170,7 +170,7 @@ function hostStarted(code){
  sessions.clear();restore(code);draw();
 }
 function playerStarted(code,pid,fileId){
- role='player';room=code;mine=pid;myFile=fileId;
+ role='player';room=code;mine=pid;myFile=fileId;playerConnection=null;
  ready=false;connected=false;pending=false;
  sessions.clear();state={round:1,rolls:[]};draw();
 }
@@ -195,6 +195,7 @@ function hostMessage(message,session,conn){
   characterName:safe(character.name)||'Personagem',die,agility,total:die+agility,order:state.rolls.length});
  broadcast();return true;
 }
+function playerConnected(conn){playerConnection=conn;}
 function playerMessage(message){
  if(!message||message.kind!=='initiative-state')return false;
  if(role!=='player')return true;
@@ -206,7 +207,7 @@ function playerMessage(message){
 }
 window.DeltaRpgInitiative=Object.freeze({
  mount,refresh,stop,hostStarted,playerStarted,hostPlayerJoined,hostPlayerLeft,
- hostMessage,playerMessage,
- connection:()=>null
+ hostMessage,playerMessage,playerConnected,
+ connection:()=>playerConnection
 });
 })();
