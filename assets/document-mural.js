@@ -8,6 +8,41 @@ function init(){
  panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Os bilhetes são salvos automaticamente neste navegador.</p>';
  nav.after(panel);
  const board=panel.querySelector('#muralBoard');
+ const chalk=document.createElement('canvas');chalk.className='mural-chalk';chalk.setAttribute('aria-hidden','true');board.append(chalk);
+ const cx=chalk.getContext('2d'),trails=[];let drawing=false,lastPoint=null,frameChalk=0;
+ function resizeChalk(){const dpr=Math.min(2,devicePixelRatio||1);chalk.width=Math.max(1,Math.round(board.clientWidth*dpr));chalk.height=Math.max(1,Math.round(board.clientHeight*dpr));if(cx)cx.setTransform(dpr,0,0,dpr,0,0);}
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(resizeChalk).observe(board);resizeChalk();
+ function chalkPoint(e){const r=board.getBoundingClientRect(),sx=board.clientWidth/r.width,sy=board.clientHeight/r.height;return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
+ function drawChalk(now){
+  if(!cx)return;
+  cx.clearRect(0,0,board.clientWidth,board.clientHeight);
+  for(let i=trails.length-1;i>=0;i--){
+   const seg=trails[i],alpha=Math.max(0,1-(now-seg.t)/2900);
+   if(!alpha){trails.splice(i,1);continue;}
+   cx.save();cx.strokeStyle='rgba(231,224,255,'+(alpha*.65)+')';cx.lineWidth=2.7;cx.lineCap='round';
+   cx.beginPath();cx.moveTo(seg.a.x,seg.a.y);cx.lineTo(seg.b.x,seg.b.y);cx.stroke();
+   cx.fillStyle='rgba(255,238,229,'+(alpha*.33)+')';
+   for(let j=0;j<3;j++){const t=(j+.3)/3;const x=seg.a.x+(seg.b.x-seg.a.x)*t+(j-1)*2;
+    const y=seg.a.y+(seg.b.y-seg.a.y)*t+(j%2?1.5:-1.5);cx.fillRect(x,y,1.5,1.5);}
+   cx.restore();
+  }
+  if(trails.length||drawing)frameChalk=requestAnimationFrame(drawChalk);else frameChalk=0;
+ }
+ board.addEventListener('pointerdown',e=>{
+  if(e.button!==0||e.target.closest('.mural-note')||e.target.closest('button,textarea'))return;
+  drawing=true;lastPoint=chalkPoint(e);board.setPointerCapture(e.pointerId);
+  if(!frameChalk&&cx)frameChalk=requestAnimationFrame(drawChalk);
+ });
+ board.addEventListener('pointermove',e=>{
+  if(!drawing||!lastPoint)return;
+  const point=chalkPoint(e);if(Math.hypot(point.x-lastPoint.x,point.y-lastPoint.y)<1)return;
+  trails.push({a:lastPoint,b:point,t:performance.now()});
+  if(trails.length>1250)trails.splice(0,trails.length-1250);
+  lastPoint=point;
+ });
+ const endChalk=()=>{drawing=false;lastPoint=null;};
+ board.addEventListener('pointerup',endChalk);board.addEventListener('pointercancel',endChalk);
+
  let notes=[];try{notes=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(notes))notes=[];}catch{}
  let z=Math.max(1,...notes.map(n=>n.z||1));
  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(notes))}catch{}};
