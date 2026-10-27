@@ -180,3 +180,15 @@ Na aba **FILES**, o painel **SALA DO MESTRE** (também acessível pelo cabeçalh
 **Limites importantes:** usa PeerJS/WebRTC e comporta até cinco jogadores. A troca de atualizações só ocorre enquanto os dois navegadores estão online; não é armazenamento em nuvem. Ao reconectar, a versão que ficou no mestre é priorizada (salvo quando há histórico que permite aplicar com segurança uma edição offline do jogador). Se a ficha local do jogador for diferente, sua versão anterior é guardada em um **único backup local substituível por FILE**, fora da lista principal de FILES, com botão para exportar um arquivo compatível .deltarpg. Assim, reconexões não multiplicam FILES. Caso não seja possível salvar o backup, a sincronização é interrompida. Evite compartilhar dados pessoais. Algumas redes podem bloquear WebRTC. O antigo arquivo Firebase continua acessível em **Outras formas de compartilhar → Arquivo Firebase (avançado)**.
 
 Implementação: assets/master-room.js, assets/master-room.css e interface DeltaRpgLiveBridge.openFile no index.html.
+
+## Rolagem de iniciativa da Sala do Mestre (outubro de 2026)
+
+- O botão **⚄ ROLAGEM DE INICIATIVA** aparece ao lado das ações da Sala do Mestre **apenas enquanto uma sala está ativa**. Não aparece ao usar FILES locais fora da sala.
+- Cada jogador conectado pode clicar em **ROLAR 1D20 + AGL** uma única vez por rodada. O próprio navegador do mestre sorteia o d20 com gerador criptográfico; os jogadores não escolhem nem informam o resultado.
+- **AGL** é calculada automaticamente como Agilidade-base da ficha + bônus de Agilidade dos equipamentos equipados + buffs temporários ativos de Agilidade. O valor fica registrado no momento da rolagem.
+- Mestre e jogadores veem a mesma tabela sincronizada e atualizada, com nome do personagem, nome do jogador, resultado do d20, bônus de AGL e total. A ordem é decrescente pelo total (desempate por AGL, depois valor do dado e ordem da rolagem).
+- O mestre pode clicar **NOVA RODADA** para limpar as rolagens e liberar os botões de todos para rolar novamente.
+- A lista fica salva **localmente no navegador do mestre**, vinculada ao código da sala. Reabrir a mesma sala recupera a rodada. Reconexões recebem a classificação atual, sem gerar arquivos FILE adicionais.
+- Usa a infraestrutura WebRTC da sala, portanto não há rolagens remotas quando o mestre está offline. O cálculo da rolagem depende de uma conexão ativa.
+
+Implementação isolada: `assets/initiative-room.js`, `assets/initiative-room.css`, com eventos de integração em `assets/master-room.js`.
