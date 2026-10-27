@@ -9,6 +9,8 @@ const tab=document.getElementById('tab-files');
 if(!bridge||!master||!tab||document.getElementById('deltaMasterRoom'))return;
 const STORAGE='delta-rpg-master-room-v1';
 const PLAYER_KEY='delta-rpg-master-player-id-v1';
+const BASELINES_KEY='delta-rpg-master-baselines-v1';
+const BACKUPS_KEY='delta-rpg-master-backups-v1';
 const PREFIX='delta-master-';
 const MAX_PLAYERS=5;
 const MAX_PACKET=420000;
@@ -19,6 +21,35 @@ const readLocal=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)
 const saveLocal=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch(_){}};
 const safeLabel=(s,max=48)=>String(s||'').trim().slice(0,max);
 const fingerprint=(file)=>JSON.stringify(file?.character||null);
+const hashCharacter=character=>{
+ const s=JSON.stringify(character||null);let n=2166136261;
+ for(let i=0;i<s.length;i++)n=Math.imul(n^s.charCodeAt(i),16777619);
+ return(n>>>0).toString(36);
+};
+const baselineKey=(code,id)=>code+'|'+playerId+'|'+id;
+function getBaseline(code,id){return readLocal(BASELINES_KEY,{})[baselineKey(code,id)]||''}
+function setBaseline(code,id,character){
+ const saved=readLocal(BASELINES_KEY,{});saved[baselineKey(code,id)]=hashCharacter(character);
+ saveLocal(BASELINES_KEY,saved);
+}
+function backupKey(code,id){return code+'|'+playerId+'|'+id}
+function latestBackup(){return readLocal(BACKUPS_KEY,{})[backupKey(settings.code,settings.fileId)]||null}
+function refreshBackupButton(){
+ const btn=$('dmBackup');if(btn)btn.hidden=!latestBackup();
+}
+function keepOldVersion(code,id,file){
+ // Store at most one version per shared FILE; never generate a new FILE slot.
+ const key=backupKey(code,id);
+ try{
+  const old=readLocal(BACKUPS_KEY,{});
+  old[key]={label:file.label,character:file.character,savedAt:new Date().toISOString()};
+  const keys=Object.keys(old);
+  while(keys.length>10)delete old[keys.shift()];
+  localStorage.setItem(BACKUPS_KEY,JSON.stringify(old));
+  refreshBackupButton();
+  return true;
+ }catch(e){console.warn('Não foi possível guardar a versão anterior',e);return false}
+}
 const recordKey=(code,pid)=>'sala-'+code+'-'+pid;
 const getArchived=(source)=>{try{const a=JSON.parse(localStorage.getItem('delta-rpg-save-files-v1')||'null');return a?.slots?.find(x=>x.remoteSource===source)||null}catch(_){return null}};
 let settings=readLocal(STORAGE,{mode:'',code:'',name:'',active:false,fileId:''});
@@ -37,6 +68,7 @@ ui.innerHTML=[
  '<div class="dm-actions"><button id="dmStart" type="button">✦ CRIAR SALA</button>',
  '<button id="dmJoinOpen" type="button">↳ ENTRAR COMO JOGADOR</button>',
  '<button id="dmResume" type="button" hidden>↻ REABRIR SALA</button>',
+ '<button id="dmBackup" type="button" hidden>↓ BAIXAR VERSÃO ANTERIOR</button>',
  '<button id="dmStop" type="button" hidden>DESCONECTAR</button></div>',
  '<div id="dmSession" class="dm-session" hidden>',
  '<div><small>SEU CÓDIGO DE CONVITE</small><strong id="dmRoomCode"></strong></div>',
@@ -167,10 +199,25 @@ function onHostConnection(c){
    const source=recordKey(room,pid);
    let saved=getArchived(source);
    let fileId=saved?.id;
+   const incoming={label:safeLabel(msg.label,36),playerName:safeLabel(msg.name,36),character:msg.character};
    if(!saved){
-    const received=master.upsertReceived({label:safeLabel(msg.label,36),character:msg.character},source);
-    if(!received){emit(c,{kind:'error',message:'O mestre chegou ao limite de 64 FILES.'});c.close();return;}
+    // Find the original FILE by character/player name and bind it permanently.
+    // Never make another copy if a unique matching FILE already exists.
+    const occupied=[...sessions.values()].map(s=>s.fileId);
+    const received=master.upsertReceived(incoming,source,occupied);
+    if(!received){emit(c,{kind:'error',message:'Não foi possível associar a ficha. Verifique o limite de FILES ou se existem fichas repetidas com o mesmo nome.'});c.close();return;}
     fileId=received.id;
+    report(received.linkedByName?'✓ FILE existente associado automaticamente a '+(incoming.character.name||incoming.playerName)+'.':'✓ Ficha de '+(incoming.character.name||incoming.playerName)+' recebida.');
+   }else{
+    // If the master has not changed this character since the last sync,
+    // an offline edit from the player can safely update this SAME FILE.
+    const hostFile=bridge.readFile(fileId);
+    const base=typeof msg.lastKnown==='string'?msg.lastKnown:'';
+    if(base&&hostFile&&base===hashCharacter(hostFile.character)&&
+        hashCharacter(msg.character)!==base){
+     const received=master.upsertReceived(incoming,source);
+     if(received)fileId=received.id;
+    }
    }
    const session={pid,name:safeLabel(msg.name,36)||'Jogador',fileId,conn:c,ready:true,last:''};
    sessions.set(pid,session);playerSession=session;
@@ -190,7 +237,7 @@ function onHostConnection(c){
   if(!received){emit(c,{kind:'error',message:'O mestre não conseguiu salvar a atualização.'});return;}
   playerSession.fileId=received.id;
   playerSession.last=next;
-  emit(c,{kind:'ack'});
+  emit(c,{kind:'ack',signature:hashCharacter(msg.character)});
   renderPlayers();
  });
  c.on('close',()=>{
@@ -257,25 +304,35 @@ async function joinRoom(code,fileId,reconnect=false){
    c.on('open',()=>{
     const live=getFile();
     if(!live){report('O FILE compartilhado foi excluído.',true);disconnect();return;}
-    emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character});
+    emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character,lastKnown:getBaseline(room,joinedFileId)});
     report('Conectado. Aguardando a ficha do mestre...');
    });
    c.on('data',msg=>{
     if(!validPacket(msg))return;
     if(msg.kind==='full'){report('Esta sala já tem cinco jogadores.',true);disconnect();return;}
     if(msg.kind==='error'){report(msg.message||'Falha ao sincronizar.',true);return;}
+    if(msg.kind==='ack'){
+     if(typeof msg.signature==='string'){
+      const all=readLocal(BASELINES_KEY,{});
+      all[baselineKey(room,joinedFileId)]=msg.signature;
+      saveLocal(BASELINES_KEY,all);
+     }
+     return;
+    }
     if(msg.kind==='snapshot'||msg.kind==='update'){
      const before=getFile();
      if(!before){report('O FILE compartilhado não existe mais.',true);return;}
-     // Preserve any offline edits before accepting a potentially newer master copy.
+     // One replaceable backup per player FILE in localStorage (not another FILE).
      if(msg.kind==='snapshot'&&fingerprint(before)!==fingerprint({character:msg.character})){
-      const backup=bridge.createSharedFile(before.character,'BACKUP · '+safeLabel(before.label,18));
-      if(!backup){report('A ficha local é diferente da cópia do mestre e não há espaço para um backup. Exporte seu FILE antes de conectar.',true);disconnect();return;}
-      bridge.openFile?.(joinedFileId);
+      if(!keepOldVersion(room,joinedFileId,before)){
+       report('Seu arquivo difere do mestre. Faça uma exportação manual antes de sincronizar.',true);
+       disconnect();return;
+      }
      }
      if(!remoteWrite(joinedFileId,msg.character)){report('Não foi possível aplicar a ficha recebida.',true);return;}
      playerLast=fingerprint({character:msg.character});
-     connected=true;report('✓ SINCRONIZADO · o mestre pode editar sua ficha ao vivo.');refresh();
+     setBaseline(room,joinedFileId,msg.character);
+     connected=true;report('✓ SINCRONIZADO · a mesma ficha é atualizada sem gerar cópias.');refresh();
     }
    });
    c.on('close',()=>{
@@ -340,6 +397,18 @@ $('dmConnect').onclick=()=>{
 $('dmClose').onclick=()=>dialog.close();
 $('dmStop').onclick=()=>{disconnect();report('Desconectado. Os FILES locais foram preservados.');};
 $('dmCopy').onclick=copyInvite;
+$('dmBackup').onclick=()=>{
+ const backup=latestBackup();
+ if(!backup){report('Não há versão anterior guardada.',true);return;}
+ const data={format:'delta-rpg-file-v1',exportedAt:backup.savedAt,
+  file:{label:backup.label},character:backup.character};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='DELTA-RPG-versao-anterior.json';document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),2000);
+ report('Versão anterior exportada. Nenhum FILE novo foi criado.');
+};
+refreshBackupButton();
 $('dmLegacy').onclick=()=>document.getElementById('deltaOpenOwner')?.click();
 toolbar.onclick=()=>{
  if(mode==='off'&&queryCode&&/^[A-F0-9]{24}$/i.test(queryCode))$('dmJoinOpen').click();
