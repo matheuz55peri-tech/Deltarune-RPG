@@ -453,7 +453,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/theme-bedroom.css?v=9">
 <link rel="stylesheet" href="./assets/theme-lamplight.css?v=9">
 <link rel="stylesheet" href="./assets/theme-playground.css?v=9">
-<link rel="stylesheet" href="./assets/document-mural.css?v=5">
+<link rel="stylesheet" href="./assets/document-mural.css?v=6">
 <link rel="stylesheet" href="./assets/owner-share.css?v=1">
 </head>
 <body>
@@ -523,7 +523,9 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <button type="button" class="rpg-tab" data-tab="inventory" role="tab" aria-selected="false">✧ INVENTÁRIO</button>
         <button type="button" class="rpg-tab" data-tab="equipment" role="tab" aria-selected="false">⬡ EQUIPAMENTOS</button>
         <button type="button" class="rpg-tab" data-tab="skills" role="tab" aria-selected="false">⚔ HABILIDADES</button>
+        <button type="button" class="rpg-tab" data-tab="mural" role="tab" aria-selected="false">✎ MURAL DE DOCUMENTOS</button>
       </nav>
+      <section class="tab-content mural-tab" id="tab-mural" hidden aria-label="Mural de documentos"><div class="rpg-box mural-shell"><h2>MURAL DE DOCUMENTOS</h2><p>Organize e escreva seus bilhetes aqui.</p></div></section>
       <section class="tab-content files-tab" id="tab-files" aria-label="Arquivos de salvamento">
   <div class="rpg-box files-shell">
     <div class="files-heading-row">
@@ -842,7 +844,7 @@ function updateSoul(animate=true){
  hueAnimation=requestAnimationFrame(frame);
 }
 
-function switchTab(tab){if(!['files','sheet','inventory','equipment','skills'].includes(tab))tab='files';state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['files','sheet','inventory','equipment','skills'])$('tab-'+key).hidden=(key!==tab);if(tab==='equipment')renderEquipment();if(tab==='files'&&filesReady)renderFiles();persist()}
+function switchTab(tab){if(!['files','sheet','inventory','equipment','skills','mural'].includes(tab))tab='files';state.activeTab=tab;document.querySelectorAll('.rpg-tab').forEach(btn=>{const selected=btn.dataset.tab===tab;btn.classList.toggle('active',selected);btn.setAttribute('aria-selected',String(selected))});for(const key of ['files','sheet','inventory','equipment','skills','mural']){const section=$('tab-'+key);if(section)section.hidden=(key!==tab);}if(tab==='equipment')renderEquipment();if(tab==='files'&&filesReady)renderFiles();persist()}
 function renderStatus(animateSoul=false){
  $('characterName').value=state.name;$('level').value=state.level;
  for(const k of SOUL_KEYS){$(k).value=state[k];const buff=attrBonus(k),gear=equipmentBonus(k),bonus=buff+gear,tag=$('bonus-'+k);tag.hidden=bonus===0;tag.textContent='+'+fmt(bonus);tag.title='EQUIPAMENTOS +'+fmt(gear)+' | BUFFS +'+fmt(buff)}
@@ -1666,7 +1668,7 @@ applyAppearance();
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
 <script src="./assets/secret-loot.js?v=21" defer></script>
-<script src="./assets/document-mural.js?v=4" defer></script>
+<script src="./assets/document-mural.js?v=6" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
