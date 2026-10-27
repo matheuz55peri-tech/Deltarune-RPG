@@ -23,9 +23,39 @@ function init(){
   input.addEventListener('input',()=>{note.text=input.value;counter.textContent=input.value.length+'/3000';feather.classList.remove('is-writing');void feather.offsetWidth;feather.classList.add('is-writing');save();});
   el.querySelector('.mural-delete').addEventListener('click',()=>{if(!confirm('Excluir este bilhete?'))return;notes=notes.filter(n=>n.id!==note.id);el.remove();save();});
   const grab=el.querySelector('.mural-note-grab');let start=null;
-  grab.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();start={px:e.clientX,py:e.clientY,x:note.x,y:note.y};note.z=++z;el.style.zIndex=z;grab.setPointerCapture(e.pointerId);el.classList.add('dragging');});
-  grab.addEventListener('pointermove',e=>{if(!start)return;const scale=board.getBoundingClientRect().width/board.clientWidth||1;note.x=Math.max(0,Math.min(board.clientWidth-el.offsetWidth,start.x+(e.clientX-start.px)/scale));note.y=Math.max(0,Math.min(board.clientHeight-el.offsetHeight,start.y+(e.clientY-start.py)/scale));el.style.left=note.x+'px';el.style.top=note.y+'px';});
-  const stop=()=>{if(start){start=null;el.classList.remove('dragging');save();}};grab.addEventListener('pointerup',stop);grab.addEventListener('pointercancel',stop);
+  let tilt=0,velocity=0,frame=0,lastX=0,lastY=0;
+  function animateTilt(){
+   const target=start?Math.max(-12,Math.min(12,velocity*1.45)):0;
+   velocity*=.76;
+   tilt+=(target-tilt)*(start?.22:.11);
+   el.style.setProperty('--note-tilt',tilt.toFixed(2)+'deg');
+   if(start||Math.abs(tilt)>.12||Math.abs(velocity)>.12)frame=requestAnimationFrame(animateTilt);
+   else{el.style.setProperty('--note-tilt','0deg');frame=0;}
+  }
+  grab.addEventListener('pointerdown',e=>{
+   if(e.target.closest('button'))return;
+   e.preventDefault();start={px:e.clientX,py:e.clientY,x:note.x,y:note.y};
+   lastX=e.clientX;lastY=e.clientY;velocity=0;note.z=++z;el.style.zIndex=z;
+   grab.setPointerCapture(e.pointerId);el.classList.add('dragging');
+   if(!frame)frame=requestAnimationFrame(animateTilt);
+  });
+  grab.addEventListener('pointermove',e=>{
+   if(!start)return;
+   const dx=e.clientX-lastX,dy=e.clientY-lastY;
+   lastX=e.clientX;lastY=e.clientY;
+   velocity=Math.max(-9,Math.min(9,velocity*.55+dx*.45+dy*.07));
+   const scale=board.getBoundingClientRect().width/board.clientWidth||1;
+   note.x=Math.max(0,Math.min(board.clientWidth-el.offsetWidth,start.x+(e.clientX-start.px)/scale));
+   note.y=Math.max(0,Math.min(board.clientHeight-el.offsetHeight,start.y+(e.clientY-start.py)/scale));
+   el.style.left=note.x+'px';el.style.top=note.y+'px';
+  });
+  const stop=()=>{
+   if(start){start=null;velocity=0;el.classList.remove('dragging');
+    el.classList.remove('note-settle');void el.offsetWidth;el.classList.add('note-settle');
+    setTimeout(()=>el.classList.remove('note-settle'),700);save();}
+  };
+  grab.addEventListener('pointerup',stop);grab.addEventListener('pointercancel',stop);
+  el.addEventListener('pointerdown',()=>{note.z=++z;el.style.zIndex=z;});
   board.append(el);
  }
  notes.forEach(add);
