@@ -20,7 +20,7 @@ function visualFrom(data){
   frameUrl:approvedURL(c.frameUrl||(f?'assets/frames/frame-'+String(f).padStart(2,'0')+'.png':null),'frame'),
   backgroundUrl:approvedURL(c.backgroundUrl||(b?'assets/backgrounds/background-'+String(b).padStart(2,'0')+'.'+ext:null),'background'),
   bgZoom:clamp(c.bgZoom??m.bgZoom??100,100,200),bgDim:clamp(c.bgDim??m.bgDim??0,0,75),
-  bgX:clamp(c.bgX??m.bgX??0,-256,256),bgY:clamp(c.bgY??m.bgY??0,-256,256),frameScale:clamp(c.frameScale??m.frameScale??100,40,180),frameX:clamp(c.frameX??m.frameX??0,-256,256),frameY:clamp(c.frameY??m.frameY??0,-256,256),
+  bgX:clamp(c.bgX??m.bgX??0,-256,256),bgY:clamp(c.bgY??m.bgY??0,-256,256),frameScale:clamp(c.frameScale??m.frameScale??100,40,180),frameX:clamp(c.frameX??m.frameX??0,-256,256),frameY:clamp(c.frameY??m.frameY??0,-256,256),pixelArt:(c.pixelArt??m.pixelArt)!==false,
   customFrame:dataImage(data.frameImage,1300000)
  }
 }
