@@ -453,7 +453,8 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/theme-bedroom.css?v=9">
 <link rel="stylesheet" href="./assets/theme-lamplight.css?v=9">
 <link rel="stylesheet" href="./assets/theme-playground.css?v=9">
-<link rel="stylesheet" href="./assets/document-mural.css?v=3">
+<link rel="stylesheet" href="./assets/document-mural.css?v=4">
+<link rel="stylesheet" href="./assets/owner-share.css?v=1">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -1075,7 +1076,7 @@ function loadFileSystem(){
   fileSlots=archive.slots.slice(0,MAX_FILES).map(x=>{
    try{if(!x||!x.data)return null;
     return{id:short(x.id,100)||freshId(),label:short(x.label||'FILE',36),
-     createdAt:short(x.createdAt,32)||stamp(),updatedAt:short(x.updatedAt,32)||stamp(),data:cleanCharacter(x.data)};
+     createdAt:short(x.createdAt,32)||stamp(),updatedAt:short(x.updatedAt,32)||stamp(),data:cleanCharacter(x.data),remoteSource:short(x.remoteSource||'',160)};
    }catch(err){return null}
   }).filter(Boolean);
   activeSaveId=archive.activeId;
@@ -1145,6 +1146,7 @@ function activateFile(slot){
 }
 function openFile(id){
  persist();const slot=fileSlots.find(x=>x.id===id);if(!slot)return;
+ if(slot.label==='DONO'){window.dispatchEvent(new Event('delta-rpg:open-owner'));return;}
  activateFile(slot);toast('FILE aberto: '+charLabel(slot));
 }
 function newFile(){
@@ -1541,6 +1543,41 @@ window.DeltaRpgLiveBridge=Object.freeze({
  }
 });
 
+
+/* Arquivo DONO: uma cópia estável por chave remota, sem duplicatas. */
+window.DeltaRpgMasterBridge=Object.freeze({
+ ensureOwnerFile(){
+  if(!filesReady)return false;
+  if(fileSlots.some(x=>x.label==='DONO'))return true;
+  if(fileSlots.length>=MAX_FILES)return false;
+  persist();
+  const slot=createFile(baseState(),'DONO');fileSlots.unshift(slot);commitFiles();renderFiles();return true;
+ },
+ upsertReceived(received,remoteKey){
+  if(!filesReady||!received?.character||!remoteKey)return null;
+  const source=short(String(remoteKey),160);
+  persist();
+  let slot=fileSlots.find(x=>x.remoteSource===source);
+  let created=false;
+  if(!slot){
+   if(fileSlots.length>=MAX_FILES)return null;
+   slot=createFile(received.character,'DONO · '+short(received.label||'FILE',26));
+   slot.remoteSource=source;
+   fileSlots.push(slot);created=true;
+  }else{
+   slot.data=cleanCharacter(received.character);
+   slot.label='DONO · '+short(received.label||'FILE',26);
+   slot.updatedAt=stamp();
+  }
+  if(activeSaveId===slot.id){
+   state=cleanCharacter(slot.data);renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
+   localStorage.setItem(KEY,JSON.stringify(state));
+  }
+  commitFiles();renderFiles();
+  return {id:slot.id,created};
+ }
+});
+
 makePetals('soulPetals',13);
 loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
 
@@ -1616,7 +1653,8 @@ applyAppearance();
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
 <script src="./assets/secret-loot.js?v=20" defer></script>
-<script src="./assets/document-mural.js?v=3" defer></script>
+<script src="./assets/document-mural.js?v=4" defer></script>
+<script src="./assets/owner-share.js?v=1" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
 </html>
