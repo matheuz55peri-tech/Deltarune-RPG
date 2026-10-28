@@ -1,13 +1,15 @@
 /* DELTA RPG — Mural de documentos, notas arrastáveis e pena animada */
 (()=>{'use strict';
-const KEY='delta-document-wall-v1';
+const KEY='delta-document-wall-v1'; // Legacy shared mural: retained as a backup.
+const MIGRATION='delta-document-wall-legacy-migration-v2';
 function init(){
  const nav=document.querySelector('.rpg-tabs');if(!nav)return;
+ const bridge=window.DeltaRpgMuralBridge;if(!bridge)return;
  let button=nav.querySelector('[data-tab="mural"]');
  if(!button){button=document.createElement('button');button.type='button';button.className='rpg-tab';button.dataset.tab='mural';button.setAttribute('role','tab');button.setAttribute('aria-selected','false');button.textContent='✎ MURAL DE DOCUMENTOS';nav.append(button);}
  let panel=document.getElementById('tab-mural');
  if(!panel){panel=document.createElement('section');panel.id='tab-mural';panel.className='tab-content mural-tab';panel.hidden=true;nav.after(panel);}
- panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Os bilhetes são salvos automaticamente neste navegador.</p>';
+ panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Cada FILE possui seu próprio mural. As notas acompanham a ficha nos salvamentos e exportações.</p>';
  nav.after(panel);
  const board=panel.querySelector('#muralBoard');
  const chalk=document.createElement('canvas');chalk.className='mural-chalk';chalk.setAttribute('aria-hidden','true');board.append(chalk);
@@ -45,13 +47,36 @@ function init(){
  const endChalk=()=>{drawing=false;lastPoint=null;};
  board.addEventListener('pointerup',endChalk);board.addEventListener('pointercancel',endChalk);
 
- let notes=[];try{notes=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(notes))notes=[];}catch{}
- let z=Math.max(1,...notes.map(n=>n.z||1));
- const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(notes))}catch{}};
+ let notes=[],currentFileId=null,z=1;
+ const save=owner=>{
+  const id=owner||currentFileId;
+  if(!id||id!==currentFileId)return false;
+  return bridge.writeNotes(id,notes);
+ };
+ function migrateLegacyFile(){
+  const id=bridge.activeFileId();
+  if(!id||localStorage.getItem(MIGRATION))return;
+  let old=[];
+  try{old=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{}
+  if(!Array.isArray(old)||old.length===0){
+   localStorage.setItem(MIGRATION,JSON.stringify({fileId:null,migrated:false}));return;
+  }
+  // The old mural was shared by every FILE. Assign it once to the currently
+  // selected FILE only and keep the previous storage key as a recovery copy.
+  if(bridge.readNotes(id).length===0){
+   if(bridge.writeNotes(id,old)){
+    localStorage.setItem(MIGRATION,JSON.stringify({fileId:id,migrated:true}));
+   }
+  }else{
+   // Do not overwrite the current FILE; the old mural remains untouched.
+   localStorage.setItem(MIGRATION,JSON.stringify({fileId:null,migrated:false,legacyBackup:true}));
+  }
+ }
  const feather=document.createElement('div');feather.className='mural-feather';feather.setAttribute('aria-hidden','true');feather.innerHTML='<span>✒</span>';panel.append(feather);
  panel.addEventListener('pointermove',e=>{const r=panel.getBoundingClientRect();feather.style.left=(e.clientX-r.left)+'px';feather.style.top=(e.clientY-r.top)+'px';});
  panel.addEventListener('pointerleave',()=>feather.classList.remove('is-writing'));
  function add(note){
+  const owner=currentFileId;
   const el=document.createElement('article');el.className='mural-note';el.dataset.id=note.id;
   el.style.left=note.x+'px';el.style.top=note.y+'px';el.style.zIndex=note.z||1;
   note.width=Math.max(180,Math.min(680,Number(note.width)||245));note.height=Math.max(150,Math.min(640,Number(note.height)||184));
@@ -61,7 +86,7 @@ function init(){
   const papers=['shadow','paper','blue','sage','rose','gold'];
   el.querySelector('.mural-paper-toggle').addEventListener('click',()=>{
    const idx=papers.indexOf(note.paper);note.paper=papers[(idx+1)%papers.length];
-   el.dataset.paper=note.paper;save();
+   el.dataset.paper=note.paper;save(owner);
   });
   for(const handle of el.querySelectorAll('.mural-resize-handles i')){
    let origin=null;const edge=handle.dataset.edge;
@@ -89,13 +114,13 @@ function init(){
     el.style.left=note.x+'px';el.style.top=note.y+'px';
     el.style.width=note.width+'px';el.style.height=note.height+'px';
    });
-   const done=()=>{if(!origin)return;origin=null;el.classList.remove('resizing');save();};
+   const done=()=>{if(!origin)return;origin=null;el.classList.remove('resizing');save(owner);};
    handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);
   }
   const input=el.querySelector('textarea');input.value=note.text||'';
   const counter=el.querySelector('.mural-counter');counter.textContent=input.value.length+'/3000';
-  input.addEventListener('input',()=>{note.text=input.value;counter.textContent=input.value.length+'/3000';feather.classList.remove('is-writing');void feather.offsetWidth;feather.classList.add('is-writing');save();});
-  el.querySelector('.mural-delete').addEventListener('click',()=>{if(!confirm('Excluir este bilhete?'))return;notes=notes.filter(n=>n.id!==note.id);el.remove();save();});
+  input.addEventListener('input',()=>{note.text=input.value;counter.textContent=input.value.length+'/3000';feather.classList.remove('is-writing');void feather.offsetWidth;feather.classList.add('is-writing');save(owner);});
+  el.querySelector('.mural-delete').addEventListener('click',()=>{if(owner!==currentFileId||!confirm('Excluir este bilhete?'))return;notes=notes.filter(n=>n.id!==note.id);el.remove();save(owner);});
   const grab=el.querySelector('.mural-note-grab');let start=null;
   let tilt=0,velocity=0,frame=0,lastX=0,lastY=0;
   function animateTilt(){
@@ -126,21 +151,40 @@ function init(){
   const stop=()=>{
    if(start){start=null;velocity=0;el.classList.remove('dragging');
     el.classList.remove('note-settle');void el.offsetWidth;el.classList.add('note-settle');
-    setTimeout(()=>el.classList.remove('note-settle'),700);save();}
+    setTimeout(()=>el.classList.remove('note-settle'),700);save(owner);}
   };
   grab.addEventListener('pointerup',stop);grab.addEventListener('pointercancel',stop);
   el.addEventListener('pointerdown',()=>{note.z=++z;el.style.zIndex=z;});
   board.append(el);
  }
- notes.forEach(add);
- function create(){const i=notes.length;const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,7),text:'',x:Math.min(40+(i%4)*48,Math.max(0,board.clientWidth-260)),y:40+Math.floor(i/4)*50,z:++z,width:245,height:184,paper:'shadow'};notes.push(n);add(n);save();board.querySelector('[data-id="'+n.id+'"] textarea').focus();}
+ function refreshNotes(force=false){
+  const id=bridge.activeFileId();
+  const incoming=id?bridge.readNotes(id):[];
+  if(!force&&id===currentFileId&&JSON.stringify(incoming)===JSON.stringify(notes))return;
+  currentFileId=id;
+  notes=incoming;
+  z=Math.max(1,...notes.map(n=>n.z||1));
+  board.querySelectorAll('.mural-note').forEach(el=>el.remove());
+  trails.length=0;drawing=false;lastPoint=null;
+  notes.forEach(add);
+ }
+ migrateLegacyFile();
+ refreshNotes(true);
+ window.addEventListener('delta-rpg:file-changed',()=>refreshNotes());
+ window.addEventListener('delta-rpg:mural-refresh',e=>{
+  if(e.detail?.fileId===bridge.activeFileId())refreshNotes();
+ });
+ window.addEventListener('delta-rpg:save',e=>{
+  if(e.detail?.fileId===bridge.activeFileId())refreshNotes();
+ });
+ function create(){if(!currentFileId)return;const i=notes.length;const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,7),text:'',x:Math.min(40+(i%4)*48,Math.max(0,board.clientWidth-260)),y:40+Math.floor(i/4)*50,z:++z,width:245,height:184,paper:'shadow'};notes.push(n);add(n);save(currentFileId);board.querySelector('[data-id="'+n.id+'"] textarea').focus();}
  panel.querySelector('#muralAdd').addEventListener('click',create);
- panel.querySelector('#muralExport').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,notes},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mural-documentos.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
- panel.querySelector('#muralImport').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.notes))throw Error();if(!confirm('Substituir o mural atual pelo arquivo importado?'))return;notes=d.notes.filter(n=>n&&typeof n.text==='string'&&Number.isFinite(n.x)&&Number.isFinite(n.y)).slice(0,150);board.querySelectorAll('.mural-note').forEach(el=>el.remove());notes.forEach(add);save();}catch{alert('Arquivo de mural inválido.')}e.target.value='';});
+ panel.querySelector('#muralExport').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:2,app:'DELTA RPG',fileId:currentFileId,notes},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mural-documentos.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
+ panel.querySelector('#muralImport').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.notes))throw Error();if(!confirm('Substituir o mural atual pelo arquivo importado?'))return;notes=d.notes.filter(n=>n&&typeof n.text==='string'&&Number.isFinite(n.x)&&Number.isFinite(n.y)).slice(0,150);board.querySelectorAll('.mural-note').forEach(el=>el.remove());notes.forEach(add);save(currentFileId);}catch{alert('Arquivo de mural inválido.')}e.target.value='';});
  // Reutiliza a lógica original de abas do site; se necessário sincroniza manualmente.
- button.addEventListener('click',()=>{document.querySelectorAll('.rpg-tab').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-selected',String(b===button));});document.querySelectorAll('.tab-content').forEach(s=>{s.hidden=s!==panel;s.classList.toggle('active',s===panel);});});
+ button.addEventListener('click',()=>{refreshNotes();document.querySelectorAll('.rpg-tab').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-selected',String(b===button));});document.querySelectorAll('.tab-content').forEach(s=>{s.hidden=s!==panel;s.classList.toggle('active',s===panel);});});
  nav.querySelectorAll('.rpg-tab:not([data-tab="mural"])').forEach(b=>b.addEventListener('click',()=>{panel.hidden=true;panel.classList.remove('active');button.classList.remove('active');button.setAttribute('aria-selected','false');}));
- if(!notes.length)create();
 }
+
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
