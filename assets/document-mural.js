@@ -9,7 +9,7 @@ function init(){
  if(!button){button=document.createElement('button');button.type='button';button.className='rpg-tab';button.dataset.tab='mural';button.setAttribute('role','tab');button.setAttribute('aria-selected','false');button.textContent='✎ MURAL DE DOCUMENTOS';nav.append(button);}
  let panel=document.getElementById('tab-mural');
  if(!panel){panel=document.createElement('section');panel.id='tab-mural';panel.className='tab-content mural-tab';panel.hidden=true;nav.after(panel);}
- panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Cada FILE possui seu próprio mural. As notas acompanham a ficha nos salvamentos e exportações.</p>';
+ panel.innerHTML='<div class="mural-head"><div><span class="mural-kicker">✦ ARQUIVO DE MEMÓRIAS</span><h2>MURAL DE DOCUMENTOS</h2><span class="mural-current-file" id="muralCurrentFile"></span><p>Arraste os bilhetes, escreva suas histórias e organize o mural.</p></div><div class="mural-actions"><button type="button" id="muralAdd">+ NOVO BILHETE</button><button type="button" id="muralExport">↓ EXPORTAR</button><label class="mural-import">↑ IMPORTAR<input id="muralImport" type="file" accept=".json,application/json" hidden></label></div></div><div class="mural-board" id="muralBoard" aria-label="Mural de bilhetes arrastáveis"><div class="mural-grid"></div></div><p class="mural-foot">Cada FILE possui seu próprio mural. As notas acompanham a ficha nos salvamentos e exportações.</p>';
  nav.after(panel);
  const board=panel.querySelector('#muralBoard');
  const chalk=document.createElement('canvas');chalk.className='mural-chalk';chalk.setAttribute('aria-hidden','true');board.append(chalk);
@@ -159,6 +159,9 @@ function init(){
  }
  function refreshNotes(force=false){
   const id=bridge.activeFileId();
+  const label=window.DeltaRpgLiveBridge?.readFile?.(id)?.label;
+  const fileIndicator=panel.querySelector('#muralCurrentFile');
+  if(fileIndicator)fileIndicator.textContent=id?'✦ FILE ATIVO · '+(label||'PERSONAGEM'):'NENHUM FILE ABERTO';
   const incoming=id?bridge.readNotes(id):[];
   if(!force&&id===currentFileId&&JSON.stringify(incoming)===JSON.stringify(notes))return;
   currentFileId=id;
