@@ -192,3 +192,14 @@ Implementação: assets/master-room.js, assets/master-room.css e interface Delta
 - Usa a infraestrutura WebRTC da sala, portanto não há rolagens remotas quando o mestre está offline. O cálculo da rolagem depende de uma conexão ativa.
 
 Implementação isolada: `assets/initiative-room.js`, `assets/initiative-room.css`, com eventos de integração em `assets/master-room.js`.
+
+## Mural de Documentos individual para cada FILE (outubro de 2026)
+
+- O mural é armazenado em `character.muralNotes` dentro de **cada FILE**, identificado pelo ID do slot. Não depende do nome do personagem: FILES distintos, mesmo com o mesmo nome, têm murais separados.
+- Ao abrir ou alternar FILES, a aba Mural mostra **somente os bilhetes daquele FILE**. A interface indica o FILE ativo. As notas preservam texto, posição, dimensões, ordem de sobreposição e papel; os demais personagens não recebem cópias acidentais.
+- Ao criar um novo FILE, o mural começa vazio. Ao duplicar, a cópia recebe as notas do original, mas passa a ser independente.
+- Notas também entram no backup e na exportação/importação `.deltarpg`, e são incluídas nos dados da ficha enviados pelas salas ao vivo e pelo compartilhamento do mestre.
+- **Migração sem apagar conteúdo:** o mural antigo, anteriormente compartilhado por todos os FILES, é copiado **uma única vez** para o FILE selecionado na primeira abertura após a atualização, desde que esse FILE não tenha notas. Os dados originais permanecem preservados na chave legada `delta-document-wall-v1` para recuperação. Se o FILE selecionado já tiver notas, elas não serão sobrescritas e os dados legados continuam guardados para importação manual.
+- Exportar ou importar o mural separadamente também continua disponível, afetando apenas o FILE atualmente aberto.
+
+O mural segue sujeito aos limites de armazenamento do navegador e, nas salas em tempo real, à conexão entre os participantes.
