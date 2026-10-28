@@ -1,0 +1,43 @@
+/* Atlas 4x4 de símbolos recortados das imagens enviadas pelo usuário. */
+.delta-icon-sprite{
+ --delta-x:0%;--delta-y:0%;
+ display:inline-block;flex:none;width:32px;height:32px;min-width:0;
+ background-image:url("./delta-icon-atlas.webp");
+ background-repeat:no-repeat;background-size:400% 400%;
+ background-position:var(--delta-x) var(--delta-y);
+ background-color:transparent!important;box-shadow:none;
+}
+.delta-icon-sprite[data-delta-icon="defense"]{--delta-x:0%;--delta-y:0%}
+.delta-icon-sprite[data-delta-icon="heal"]{--delta-x:33.333333%;--delta-y:0%}
+.delta-icon-sprite[data-delta-icon="magic"]{--delta-x:66.666667%;--delta-y:0%}
+.delta-icon-sprite[data-delta-icon="ranged"]{--delta-x:100%;--delta-y:0%}
+.delta-icon-sprite[data-delta-icon="summon"]{--delta-x:0%;--delta-y:33.333333%}
+.delta-icon-sprite[data-delta-icon="self-debuff"]{--delta-x:33.333333%;--delta-y:33.333333%}
+.delta-icon-sprite[data-delta-icon="enemy-debuff"]{--delta-x:66.666667%;--delta-y:33.333333%}
+.delta-icon-sprite[data-delta-icon="attack"]{--delta-x:100%;--delta-y:33.333333%}
+.delta-icon-sprite[data-delta-icon="fabric"]{--delta-x:0%;--delta-y:66.666667%}
+.delta-icon-sprite[data-delta-icon="cloak"]{--delta-x:33.333333%;--delta-y:66.666667%}
+.delta-icon-sprite[data-delta-icon="staff"]{--delta-x:66.666667%;--delta-y:66.666667%}
+.delta-icon-sprite[data-delta-icon="armor"]{--delta-x:100%;--delta-y:66.666667%}
+.delta-icon-sprite[data-delta-icon="crystal"]{--delta-x:0%;--delta-y:100%}
+.delta-icon-sprite[data-delta-icon="potion"]{--delta-x:33.333333%;--delta-y:100%}
+.delta-icon-sprite:is([data-delta-icon="fabric"],[data-delta-icon="cloak"],[data-delta-icon="staff"],[data-delta-icon="armor"],[data-delta-icon="crystal"],[data-delta-icon="potion"]){image-rendering:pixelated}
+.entry-row .entry-icon.delta-icon-sprite{display:inline-block;width:30px;height:30px;min-width:30px}
+.entry-row.inventory-row .entry-icon.delta-icon-sprite{width:34px;height:34px}
+.entry-detail .detail-icon.delta-icon-sprite{display:block;width:58px;height:58px;min-width:58px}
+.delta-skill-type-picker{display:flex;align-items:center;gap:10px;min-width:0}
+.delta-skill-type-picker select{flex:1;min-width:0}
+.delta-skill-preview{width:48px;height:48px;border:1px solid rgba(189,206,248,.28);border-radius:6px;background-color:rgba(5,9,25,.2)!important}
+.delta-icon-hint{font-size:11px;line-height:1.5;color:#b8c6e4;padding:3px 0 8px}
+.delta-item-picker-field{display:grid;gap:10px}
+.delta-icon-choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:9px}
+.delta-item-icon-option{display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center;min-height:86px;padding:8px 5px;border:1px solid rgba(153,195,237,.31);border-radius:5px;background:rgba(9,16,39,.60);color:#e9ecff;cursor:pointer;transition:border-color .16s,background .16s}
+.delta-item-icon-option:is(:hover,:focus-visible){border-color:#c3e3ff;background:rgba(45,75,132,.38)}
+.delta-item-icon-option.selected{border-color:#8be8ff;background:rgba(35,93,124,.37);box-shadow:inset 0 0 0 1px rgba(130,226,255,.35)}
+.delta-item-icon-choice{width:49px;height:49px}
+.delta-auto-icon{display:grid;place-items:center;width:49px;height:49px;border:1px dashed rgba(196,236,255,.4);color:#d5effa;font:9px 'Press Start 2P',monospace}
+.delta-item-icon-caption{font-size:9px;font-weight:800;line-height:1.3;text-align:center;letter-spacing:.01em}
+.delta-skill-type-label{color:#c0e5ff;font-size:10px;font-weight:800;letter-spacing:.1em}
+.equip-slot-icon.delta-icon-sprite{width:38px;height:38px}
+.delta-equip-detail-icon{width:58px;height:58px;margin:4px 0 12px}
+@media(max-width:480px){.delta-icon-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.delta-item-icon-caption{font-size:8px}.entry-detail .detail-icon.delta-icon-sprite{width:45px;height:45px;min-width:45px}}

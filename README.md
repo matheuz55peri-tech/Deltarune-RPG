@@ -224,3 +224,8 @@ No cadastro ou na edição de qualquer item do inventário, a raridade é opcion
 ## Raridade em Equipamentos (outubro de 2026)
 
 O seletor de raridade do inventário e o novo seletor do editor de **Equipamentos** exibem apenas Comum, Raro, Épico, Lendário e ÚNICO, sem descrições das cores. Os fundos dos equipamentos ocupados (inclusive o espaço selecionado e o painel de detalhes) passam a usar a paleta da raridade do item, incluindo a animação discreta para ÚNICO. O comum e os espaços vazios conservam o estilo original do tema; o efeito respeita a configuração de reduzir movimento. Raridades definidas diretamente em Equipamentos também são mantidas no FILE, nas salas e ao devolver o equipamento ao inventário.
+
+
+## Símbolos originais e opções visuais (outubro de 2026)
+
+As nove imagens fornecidas foram recortadas com transparência e organizadas em um atlas WebP 4×4 (`assets/delta-icon-atlas.webp`). Os símbolos de habilidades são: Defesa (asas verdes), Ataque (emblema dourado), Magia (pergaminhos roxos), Cura (flor branca), Ataque à distância (estrela esverdeada), Invocação (lobos dourados), Auto-debuff (flor atravessada pela espada) e Debuff em inimigos (asas com olho). Esses são **tipos visuais** independentes do cálculo existente de Dano, Cura e Buff. Os seis itens em pixel art foram individualizados e centralizados como opções do editor de Inventário: Pano Rúnico, Capuz Verde, Cajado, Armadura, Cristal e Poção. Os ícones padrão também passam a utilizar essas imagens no Inventário, em Habilidades e nos equipamentos ocupados, enquanto imagens personalizadas recebidas do Codex continuam disponíveis. A seleção acompanha cada FILE, a importação/exportação `.deltarpg` e a sincronização.

@@ -458,6 +458,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/master-room.css?v=1">
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
 <link rel="stylesheet" href="./assets/item-rarity.css?v=2">
+<link rel="stylesheet" href="./assets/delta-icons.css?v=1">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -607,6 +608,11 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="editor-fields">
         <label class="editor-label first-input">NOME DO ITEM<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Poção de cura" autocomplete="off"></label>
         <label class="editor-label">CATEGORIA<select class="editor-input" name="type"><option value="⚔">Arma</option><option value="✦">Artefato</option><option value="♥">Consumível</option><option value="⬡">Equipamento</option><option value="◆">Material</option><option value="✿">Outro</option></select></label>
+        <div class="editor-label editor-wide delta-item-picker-field">
+          <span>ÍCONE DO ITEM <span class="rarity-optional">(OPCIONAL)</span></span>
+          <input type="hidden" name="iconAsset" value="auto">
+          <div id="deltaItemIconChoices" class="delta-icon-choice-grid" role="group" aria-label="Ícone do item"></div>
+        </div>
         <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Lendário</option><option value="unique">ÚNICO</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
         <label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Efeito, origem, regras de utilização..."></textarea></label>
@@ -673,8 +679,15 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="editor-fields">
         <label class="editor-label first-input">NOME DA HABILIDADE<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Rude Buster" autocomplete="off"></label>
         <label class="editor-label">CUSTO DE TP (%)<input required class="editor-input" name="cost" type="number" min="0" max="100" step="1" value="20"></label>
-        <label class="editor-label">CATEGORIA<select class="editor-input" name="category" id="skillCategory"><option value="damage">⚔ Dano</option><option value="heal">♥ Cura</option><option value="buff">✦ Buff</option></select></label>
-        <label class="editor-label">ÍCONE<select class="editor-input" name="icon"><option value="⚔">⚔ Golpe</option><option value="✦">✦ Magia</option><option value="♥">♥ Cura</option><option value="☼">☼ Luz</option><option value="❖">❖ Especial</option><option value="✿">✿ Natureza</option><option value="◆">◆ Outro</option></select></label>
+        <label class="editor-label">EFEITO NA FICHA<select class="editor-input" name="category" id="skillCategory"><option value="damage">Dano</option><option value="heal">Cura</option><option value="buff">Buff</option></select></label>
+        <label class="editor-label">TIPO DE HABILIDADE
+          <span class="delta-skill-type-picker"><select class="editor-input" id="skillVisualType" name="abilityType">
+            <option value="defense">Defesa</option><option value="attack">Ataque</option><option value="magic">Magia</option>
+            <option value="heal">Cura</option><option value="ranged">Ataque à distância</option><option value="summon">Invocação</option>
+            <option value="self-debuff">Auto-debuff</option><option value="enemy-debuff">Debuff em inimigos</option>
+          </select><span class="delta-icon-sprite delta-skill-preview" id="skillTypePreview" data-delta-icon="attack" aria-hidden="true"></span></span>
+        </label>
+        <p class="delta-icon-hint editor-wide">O tipo define o símbolo. O efeito na ficha mantém as regras existentes de Dano, Cura e Buff.</p>
         <label class="editor-label skill-power-field" id="skillPowerWrap">VALOR DO EFEITO (HP OU DANO)<input class="editor-input" name="power" type="number" min="0" max="9999" value="10" step="1"></label>
         <label class="editor-label skill-buff-field" id="skillBuffTargetWrap" hidden>BUFF APLICADO A<select class="editor-input" name="target"><option value="strength">Força</option><option value="defense">Defesa</option><option value="intelligence">Inteligência</option><option value="agility">Agilidade</option><option value="hp">HP temporário (escudo)</option></select></label>
         <label class="editor-label skill-buff-field" id="skillBuffAmountWrap" hidden>BÔNUS (+)<input class="editor-input" name="amount" type="number" min="1" max="999" value="2" step="1"></label>
@@ -894,6 +907,55 @@ function normalizeItemRarity(raw){
   epic:'epic',epico:'epic',epica:'epic',legendary:'legendary',lendario:'legendary',lendaria:'legendary',
   unique:'unique',unico:'unique',unica:'unique'})[name]||'common';
 }
+/* Atlas transparente extraído das nove referências originais. */
+const DELTA_SKILL_TYPES=Object.freeze({
+ defense:'DEFESA',attack:'ATAQUE',magic:'MAGIA',heal:'CURA',
+ ranged:'ATAQUE À DISTÂNCIA',summon:'INVOCAÇÃO',
+ 'self-debuff':'AUTO-DEBUFF','enemy-debuff':'DEBUFF EM INIMIGOS'
+});
+const DELTA_ITEM_ICONS=Object.freeze({
+ fabric:'PANO RÚNICO',cloak:'CAPUZ VERDE',staff:'CAJADO',
+ armor:'ARMADURA',crystal:'CRISTAL',potion:'POÇÃO'
+});
+const DELTA_ITEM_TYPE_DEFAULT=Object.freeze({'⚔':'staff','✦':'crystal','♥':'potion','⬡':'armor','◆':'fabric','✿':'cloak'});
+const DELTA_ICON_COORDS=Object.freeze({
+ defense:[0,0],heal:[1,0],magic:[2,0],ranged:[3,0],
+ summon:[0,1],'self-debuff':[1,1],'enemy-debuff':[2,1],attack:[3,1],
+ fabric:[0,2],cloak:[1,2],staff:[2,2],armor:[3,2],crystal:[0,3],potion:[1,3]
+});
+function safeAbilityType(raw,category='damage'){
+ const key=String(raw||'');
+ if(Object.prototype.hasOwnProperty.call(DELTA_SKILL_TYPES,key))return key;
+ return category==='heal'?'heal':category==='buff'?'defense':'attack';
+}
+function safeItemIcon(raw){const key=String(raw||'');return Object.prototype.hasOwnProperty.call(DELTA_ITEM_ICONS,key)?key:'auto'}
+function itemIconFor(entry){
+ const chosen=safeItemIcon(entry?.iconAsset);
+ return chosen!=='auto'?chosen:(DELTA_ITEM_TYPE_DEFAULT[entry?.type||entry?.inventoryType]||'fabric');
+}
+function iconNode(asset,className='',label=''){
+ const icon=makeEl('span','delta-icon-sprite '+className);
+ icon.dataset.deltaIcon=Object.prototype.hasOwnProperty.call(DELTA_ICON_COORDS,asset)?asset:'fabric';
+ if(label){icon.setAttribute('role','img');icon.setAttribute('aria-label',label)}
+ else icon.setAttribute('aria-hidden','true');
+ return icon;
+}
+function itemIconOptionsRender(){
+ const host=$('deltaItemIconChoices'),form=$('itemForm');
+ if(!host||!form)return;
+ const selected=safeItemIcon(form.elements.namedItem('iconAsset')?.value);
+ host.replaceChildren();
+ for(const key of ['auto',...Object.keys(DELTA_ITEM_ICONS)]){
+  const button=makeEl('button','delta-item-icon-option'+(key===selected?' selected':''));
+  button.type='button';button.setAttribute('aria-pressed',String(key===selected));
+  button.setAttribute('aria-label',key==='auto'?'Automático':DELTA_ITEM_ICONS[key]);
+  if(key==='auto')button.append(makeEl('span','delta-auto-icon','AUTO'));
+  else button.append(iconNode(key,'delta-item-icon-choice'));
+  button.append(makeEl('span','delta-item-icon-caption',key==='auto'?'AUTO':DELTA_ITEM_ICONS[key]));
+  button.addEventListener('click',()=>{form.elements.namedItem('iconAsset').value=key;itemIconOptionsRender()});
+  host.append(button);
+ }
+}
 const kind={skills:{collection:'skills',selected:'selectedSkill',list:'skillsList',detail:'skillDetail',form:'skillForm',heading:'skillFormHeading',primary:'name'},inventory:{collection:'items',selected:'selectedItem',list:'inventoryList',detail:'itemDetail',form:'itemForm',heading:'itemFormHeading',primary:'name'}};
 function selectEntry(type,id){state[kind[type].selected]=id;renderLibrary(type);persist()}
 function createBlank(type){const area=$(kind[type].detail);area.replaceChildren();const info=makeEl('div','empty-state');info.append(makeEl('strong','',type==='skills'?'✦ NENHUMA HABILIDADE':'✦ NENHUM ITEM'),makeEl('span','',type==='skills'?'Clique em ADICIONAR HABILIDADE para criar sua primeira técnica.':'Clique em ADICIONAR ITEM para montar seu inventário.'));area.append(info)}
@@ -905,8 +967,8 @@ function renderLibrary(type){
  if(rows.length===0){const note=makeEl('div','empty-state');note.append(makeEl('strong','',type==='skills'?'✦ SEM HABILIDADES':'✦ MOCHILA VAZIA'),makeEl('span','',type==='skills'?(skillFilter==='all'?'Clique em ADICIONAR HABILIDADE para criar uma técnica.':'Nenhuma habilidade nesta categoria. Você pode adicionar uma nova ou trocar o filtro.'):'Clique em ADICIONAR ITEM para montar seu inventário.'));list.append(note)}
  for(const entry of rows){const category=type==='skills'?skillCategory(entry):null;const selected=entry.id===state[config.selected];const button=makeEl('button','entry-row '+(type==='inventory'?'inventory-row ':'')+(category?'category-'+category+' ':'')+(selected?'selected':''));button.type='button';button.setAttribute('aria-pressed',String(selected));
   if(type==='inventory')button.dataset.rarity=normalizeItemRarity(entry.rarity);
-  if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(makeEl('span','entry-icon',entry.type||'◆'));
-  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));if(type==='inventory'&&normalizeItemRarity(entry.rarity)!=='common')name.append(makeEl('span','item-rarity-pill',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));button.append(name);if(type==='inventory'){
+  if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(iconNode(itemIconFor(entry),'entry-icon'));
+  const name=makeEl('span','entry-name');if(type==='skills')name.append(iconNode(safeAbilityType(entry.abilityType,category),'entry-icon'));name.append(makeEl('span','',entry.name));if(type==='inventory'&&normalizeItemRarity(entry.rarity)!=='common')name.append(makeEl('span','item-rarity-pill',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));button.append(name);if(type==='inventory'){
     if(entry.equipmentData?.bonuses?.length)name.append(makeEl('span','inventory-item-bonus-mark','✦ '+entry.equipmentData.bonuses.length+' bônus'));
     button.append(makeEl('span','entry-quantity','x'+entry.quantity));
   }button.addEventListener('click',()=>selectEntry(type,entry.id));
@@ -936,9 +998,9 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
  const entry=state[config.collection].find(x=>x.id===state[config.selected]);
  if(!entry || (type==='skills'&&skillFilter!=='all'&&skillCategory(entry)!==skillFilter)){createBlank(type);return}
  const category=type==='skills'?skillCategory(entry):null;if(category)area.classList.add('category-'+category);if(type==='inventory')area.dataset.rarity=normalizeItemRarity(entry.rarity);else delete area.dataset.rarity;
- const head=makeEl('div','detail-head'),text=makeEl('div');text.append(makeEl('div','detail-eyebrow',type==='skills'?'✦ TÉCNICA SELECIONADA':'✦ ITEM SELECIONADO'),makeEl('h3','detail-title',entry.name));head.append(text,makeEl('span','detail-icon',type==='skills'?(entry.icon||'✦'):(entry.type||'◆')));area.append(head);
+ const head=makeEl('div','detail-head'),text=makeEl('div');text.append(makeEl('div','detail-eyebrow',type==='skills'?'✦ TÉCNICA SELECIONADA':'✦ ITEM SELECIONADO'),makeEl('h3','detail-title',entry.name));head.append(text,type==='skills'?iconNode(safeAbilityType(entry.abilityType,category),'detail-icon delta-detail-sprite'):iconNode(itemIconFor(entry),'detail-icon delta-detail-sprite'));area.append(head);
  if(type==='skills'){
-  const typeName={damage:'DANO',heal:'CURA',buff:'BUFF'}[category];area.append(makeEl('span','skill-tag category-'+category,typeName));
+  const typeName={damage:'DANO',heal:'CURA',buff:'BUFF'}[category];area.append(makeEl('span','skill-tag category-'+category,typeName));area.append(makeEl('span','delta-skill-type-label',DELTA_SKILL_TYPES[safeAbilityType(entry.abilityType,category)]));
   area.append(makeEl('div','detail-cost',`${fmt(entry.cost)}% DO TP MÁXIMO  ·  ATUAL: ${fmt(state.tp)} / 100`));
   if(category==='heal')area.append(makeEl('div','library-meta',`♥ Recupera até ${fmt(entry.power||0)} HP.`));
   if(category==='damage')area.append(makeEl('div','library-meta',`⚔ Dano informado: ${fmt(entry.power||0)}. Aplique o dano ao alvo no seu RPG.`));
@@ -984,13 +1046,31 @@ function openEditor(type,id=null){const conf=kind[type],form=$(conf.form),entry=
    for(const bonus of normalizeGearSnapshot(entry?.equipmentData).bonuses)
      addEquipmentBonusRow(bonus.stat,bonus.value,'inventoryBonusRows');
  }
- if(type==='skills'){if(!entry){form.elements.namedItem('cost').value='20';form.elements.namedItem('power').value='10';form.elements.namedItem('amount').value='2';form.elements.namedItem('turns').value='3';form.elements.namedItem('category').value=skillFilter==='all'?'damage':skillFilter;}updateSkillFields()}if(!entry&&type==='inventory')form.elements.namedItem('quantity').value='1';form.scrollIntoView({behavior:'smooth',block:'nearest'});form.elements.namedItem('name').focus()}
+ if(type==='skills'){
+  if(!entry){form.elements.namedItem('cost').value='20';form.elements.namedItem('power').value='10';form.elements.namedItem('amount').value='2';form.elements.namedItem('turns').value='3';form.elements.namedItem('category').value=skillFilter==='all'?'damage':skillFilter;}
+  $('skillVisualType').value=safeAbilityType(entry?.abilityType,form.elements.namedItem('category').value);
+  updateSkillFields();updateSkillTypePreview();
+ }
+ if(type==='inventory'){
+  if(!entry)form.elements.namedItem('quantity').value='1';
+  form.elements.namedItem('iconAsset').value=safeItemIcon(entry?.iconAsset);
+  itemIconOptionsRender();
+ }form.scrollIntoView({behavior:'smooth',block:'nearest'});form.elements.namedItem('name').focus()}
 function updateSkillFields(){const v=$('skillCategory').value,isBuff=v==='buff';$('skillPowerWrap').hidden=isBuff;$('skillBuffTargetWrap').hidden=!isBuff;$('skillBuffAmountWrap').hidden=!isBuff;$('skillBuffTurnsWrap').hidden=!isBuff}
-$('skillCategory').addEventListener('change',()=>{updateSkillFields();$('skillForm').elements.namedItem('icon').value=({damage:'⚔',heal:'♥',buff:'✦'}[$('skillCategory').value]||'✦')});
+function updateSkillTypePreview(){
+ const preview=$('skillTypePreview');
+ if(preview)preview.dataset.deltaIcon=safeAbilityType($('skillVisualType')?.value,$('skillCategory')?.value);
+}
+$('skillCategory').addEventListener('change',()=>{
+ updateSkillFields();
+ $('skillVisualType').value=safeAbilityType('', $('skillCategory').value);
+ updateSkillTypePreview();
+});
+$('skillVisualType').addEventListener('change',updateSkillTypePreview);
 document.querySelectorAll('.skill-filter').forEach(btn=>btn.addEventListener('click',()=>setSkillFilter(btn.dataset.filter)));
 function closeEditor(type){$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
 function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.form),id=type==='skills'?skillEditId:itemEditId,name=String(form.elements.namedItem('name').value||'').trim().slice(0,55),description=String(form.elements.namedItem('description').value||'').slice(0,3000);if(!name){toast('Digite o nome.');return}
- let record;if(type==='skills')record={id:id||makeId(),name,description,icon:form.elements.namedItem('icon').value,cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else{
+ let record;if(type==='skills')record={id:id||makeId(),name,description,icon:({heal:'♥',damage:'⚔',buff:'✦'}[form.elements.namedItem('category').value]||'✦'),abilityType:safeAbilityType(form.elements.namedItem('abilityType').value,form.elements.namedItem('category').value),cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else{
   const previous=state.items.find(x=>x.id===id);
   const data=normalizeGearSnapshot(previous?.equipmentData);
   data.bonuses=[...$('inventoryBonusRows').querySelectorAll('.equip-bonus-row')].slice(0,8).map(row=>{
@@ -1000,7 +1080,7 @@ function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.
     return Number.isFinite(value)&&value>=1&&value<=999?{stat:sel.value,value}:null;
   }).filter(Boolean);
   record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,
-    rarity:normalizeItemRarity(form.elements.namedItem('rarity').value),quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
+    iconAsset:safeItemIcon(form.elements.namedItem('iconAsset').value),rarity:normalizeItemRarity(form.elements.namedItem('rarity').value),quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
     equipmentData:data,...(previous?.codexImage?{codexImage:previous.codexImage}:{})};
  }
  const items=state[conf.collection];const idx=items.findIndex(x=>x.id===record.id);if(idx>=0)items[idx]=record;else items.push(record);state[conf.selected]=record.id;if(type==='skills'&&skillFilter!=='all'&&skillFilter!==record.category)setSkillFilter(record.category);closeEditor(type);renderLibrary(type);persist();toast(type==='skills'?'Habilidade salva!':'Item salvo!')}
@@ -1075,12 +1155,12 @@ function cleanCharacter(input){
  v.tp=clamp(one(input.tp),0,100);
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
-  type:short(x.type||'◆',12),rarity:normalizeItemRarity(x.rarity),quantity:clamp(Math.trunc(x.quantity),1,9999),
+  type:short(x.type||'◆',12),iconAsset:safeItemIcon(x.iconAsset),rarity:normalizeItemRarity(x.rarity),quantity:clamp(Math.trunc(x.quantity),1,9999),
   ...(x.equipmentData&&typeof x.equipmentData==='object'?{equipmentData:normalizeGearSnapshot(x.equipmentData)}:{}),
   ...(typeof x.codexImage==='string'&&x.codexImage.length<=350000&&x.codexImage.startsWith('data:image/')?{codexImage:x.codexImage}:{})}));
  v.skills=(Array.isArray(input.skills)?input.skills:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
-  icon:short(x.icon||'✦',12),cost:clamp(Math.trunc(x.cost),0,100),
+  icon:short(x.icon||'✦',12),abilityType:safeAbilityType(x.abilityType,x.category),cost:clamp(Math.trunc(x.cost),0,100),
   category:['damage','heal','buff'].includes(x.category)?x.category:'damage',
   power:clamp(Math.trunc(x.power),0,9999),
   target:['hp','strength','defense','intelligence','agility'].includes(x.target)?x.target:'strength',
@@ -1283,7 +1363,7 @@ function normalizeEquipment(source){
    .filter(b=>b&&EQUIP_STATS.some(stat=>stat.key===b.stat))
    .map(b=>({stat:b.stat,value:clamp(Math.trunc(b.value),1,999)}));
   output[slot.key]={
-   name:String(entry.name||'').slice(0,65),rarity:normalizeItemRarity(entry.rarity),
+   name:String(entry.name||'').slice(0,65),rarity:normalizeItemRarity(entry.rarity),iconAsset:safeItemIcon(entry.iconAsset),
    weight:clamp(Math.round(Number(entry.weight||0)*10)/10,0,9999),
    bonuses,isDamage:entry.isDamage===true,damageDice:String(entry.damageDice||'').slice(0,40),
    inventoryId:String(entry.inventoryId||'').slice(0,80),
@@ -1319,7 +1399,7 @@ function renderEquipment(){
    button.type='button';button.setAttribute('aria-pressed',String(selectedEquipmentSlot===slot.key));
    button.setAttribute('aria-label',slot.name+': '+(item?item.name:'vazio'));
    if(item){button.dataset.rarity=normalizeItemRarity(item.rarity);button.title=item.name+' · '+ITEM_RARITY_LABELS[normalizeItemRarity(item.rarity)];}
-   button.append(equipmentNode('span','equip-slot-icon',slot.icon),
+   button.append(item?iconNode(itemIconFor(item),'equip-slot-icon delta-equip-icon'):equipmentNode('span','equip-slot-icon',slot.icon),
      equipmentNode('span','equip-slot-type',slot.name),
      equipmentNode('span','equip-slot-name',item?item.name:'[ VAZIO ]'));
    if(item?.bonuses?.length)button.appendChild(equipmentNode('span','equip-slot-buff',bonusSummary(item)));
@@ -1333,6 +1413,7 @@ function renderEquipment(){
  if(current)detail.dataset.rarity=normalizeItemRarity(current.rarity);else detail.removeAttribute('data-rarity');
  detail.appendChild(equipmentNode('span','equip-small','✦ '+slotLabel(selectedEquipmentSlot)));
  detail.appendChild(equipmentNode('h3','',current?.name||'ESPAÇO VAZIO'));
+ if(current)detail.appendChild(iconNode(itemIconFor(current),'delta-equip-detail-icon'));
  if(current){
   detail.appendChild(equipmentNode('span','equip-rarity-tag',ITEM_RARITY_LABELS[normalizeItemRarity(current.rarity)]));
   const addLine=(label,value)=>{
@@ -1459,7 +1540,7 @@ function equipFromBag(itemId,slotKey){
  const slotItem={
   name:chosen.name,weight:snapshot.weight,bonuses:snapshot.bonuses,
   isDamage:snapshot.isDamage,damageDice:snapshot.damageDice,
-  inventoryType:chosen.type,inventoryId:chosen.id,rarity:normalizeItemRarity(chosen.rarity),description:chosen.description||''
+  inventoryType:chosen.type,inventoryId:chosen.id,rarity:normalizeItemRarity(chosen.rarity),iconAsset:safeItemIcon(chosen.iconAsset),description:chosen.description||''
  };
  if(chosen.quantity>1)chosen.quantity--;
  else state.items=state.items.filter(x=>x.id!==itemId);
@@ -1481,13 +1562,13 @@ function unequipToBag(slotKey){
   const xSnapshot=normalizeGearSnapshot(x?.equipmentData);
   return JSON.stringify(xSnapshot)===JSON.stringify(snapshot);
  };
- if(target && (target.name!==slotItem.name || target.type!==itemType || normalizeItemRarity(target.rarity)!==normalizeItemRarity(slotItem.rarity) || !equalGear(target)))target=null;
+ if(target && (target.name!==slotItem.name || target.type!==itemType || normalizeItemRarity(target.rarity)!==normalizeItemRarity(slotItem.rarity) || safeItemIcon(target.iconAsset)!==safeItemIcon(slotItem.iconAsset) || !equalGear(target)))target=null;
  if(target){target.quantity=clamp(Number(target.quantity)+1,1,9999);}
  else{
   let newId=originalId||makeId();
   if(state.items.some(x=>x.id===newId))newId=makeId();
   state.items.push({
-   id:newId,name:slotItem.name,type:itemType,rarity:normalizeItemRarity(slotItem.rarity),quantity:1,
+   id:newId,name:slotItem.name,type:itemType,rarity:normalizeItemRarity(slotItem.rarity),iconAsset:safeItemIcon(slotItem.iconAsset),quantity:1,
    description:slotItem.description||'',equipmentData:snapshot
   });
  }
@@ -1544,7 +1625,7 @@ $('equipmentForm').addEventListener('submit',event=>{
   bonuses,isDamage,damageDice:isDamage?dice:'',
   inventoryId:old?.inventoryId||'',inventoryType:old?.inventoryType||(
     slot.startsWith('artifact')?'✦':slot==='weapon'?'⚔':'⬡'),
-  description:old?.description||'',rarity:normalizeItemRarity($('equipmentRarity').value)};
+  description:old?.description||'',rarity:normalizeItemRarity($('equipmentRarity').value),iconAsset:safeItemIcon(old?.iconAsset)};
  changeEquipment(slot,item);closeEquipmentEditor();renderLibrary('inventory');toast('Equipamento salvo! Bônus atualizados.');
 });
 
