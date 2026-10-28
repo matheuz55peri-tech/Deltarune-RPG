@@ -55,3 +55,80 @@ html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::after{
 .inventory-equipped-chip[data-rarity]:not([data-rarity="common"]),.equip-slot[data-rarity]:not([data-rarity="common"]){border-color:var(--item-equipped)!important;box-shadow:inset 3px 0 0 var(--item-equipped)}
 @media(max-width:560px){.item-rarity-pill{font-size:7px;padding:3px 4px} .inventory-line .entry-name{font-size:10px}}
 @media(prefers-reduced-motion:reduce){html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::before,html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::after{animation:none}}
+
+/* v2 — Os equipamentos usam o MESMO fundo da raridade do inventário.
+   Itens comuns/vazios continuam com o tema original do usuário. */
+html body .equip-slot.filled[data-rarity="rare"],
+html body #equipmentDetails[data-rarity="rare"],
+html body .inventory-equipped-chip[data-rarity="rare"]{
+ --rarity-accent:#68b6ff;--rarity-start:rgba(30,96,179,.82);--rarity-end:rgba(9,28,75,.91);--rarity-glow:rgba(65,156,255,.22)
+}
+html body .equip-slot.filled[data-rarity="epic"],
+html body #equipmentDetails[data-rarity="epic"],
+html body .inventory-equipped-chip[data-rarity="epic"]{
+ --rarity-accent:#c69aff;--rarity-start:rgba(95,46,161,.82);--rarity-end:rgba(46,18,91,.91);--rarity-glow:rgba(160,92,251,.24)
+}
+html body .equip-slot.filled[data-rarity="legendary"],
+html body #equipmentDetails[data-rarity="legendary"],
+html body .inventory-equipped-chip[data-rarity="legendary"]{
+ --rarity-accent:#ffd090;--rarity-start:rgba(168,88,18,.86);--rarity-end:rgba(82,43,14,.92);--rarity-glow:rgba(255,154,55,.25)
+}
+html body .equip-slot.filled[data-rarity="unique"],
+html body #equipmentDetails[data-rarity="unique"],
+html body .inventory-equipped-chip[data-rarity="unique"]{
+ --rarity-accent:#ff9ba7;--rarity-start:rgba(153,27,55,.88);--rarity-end:rgba(77,9,30,.94);--rarity-glow:rgba(255,63,92,.30)
+}
+html body .equip-slot.filled[data-rarity]:not([data-rarity="common"]){
+ position:relative;isolation:isolate;
+ background:linear-gradient(140deg,var(--rarity-start),var(--rarity-end))!important;
+ border-color:var(--rarity-accent)!important;
+ box-shadow:inset 3px 0 0 var(--rarity-accent),0 0 12px var(--rarity-glow);
+ transition:background .18s,box-shadow .18s,border-color .18s
+}
+html body .equip-slot.filled[data-rarity]:not([data-rarity="common"]):is(:hover,:focus-visible,.selected){
+ background:linear-gradient(140deg,var(--rarity-start),var(--rarity-end))!important;
+ border-color:var(--rarity-accent)!important;
+ box-shadow:inset 3px 0 0 var(--rarity-accent),0 0 20px var(--rarity-glow)
+}
+html body .equip-slot.filled[data-rarity]:not([data-rarity="common"]) .equip-slot-icon,
+html body .equip-slot.filled[data-rarity]:not([data-rarity="common"]) .equip-slot-type{color:var(--rarity-accent)}
+html body #equipmentDetails[data-rarity]:not([data-rarity="common"]){
+ border-color:var(--rarity-accent);
+ background:linear-gradient(150deg,var(--rarity-start),var(--rarity-end) 85%);
+ box-shadow:0 0 18px var(--rarity-glow)
+}
+html body #equipmentDetails[data-rarity]:not([data-rarity="common"]) .equip-small{color:var(--rarity-accent)}
+html body #equipmentDetails .equip-rarity-tag{
+ display:inline-flex;align-self:flex-start;margin:0 0 8px;
+ padding:5px 8px;border:1px solid rgba(177,193,226,.36);
+ border-radius:3px;font:8px/1.6 'Press Start 2P',monospace;
+ color:#cbd6ef;background:rgba(8,12,31,.35)
+}
+html body #equipmentDetails[data-rarity]:not([data-rarity="common"]) .equip-rarity-tag{
+ border-color:var(--rarity-accent);color:var(--rarity-accent);background:rgba(0,0,0,.3)
+}
+html body .inventory-equipped-chip[data-rarity]:not([data-rarity="common"]){
+ background:linear-gradient(135deg,var(--rarity-start),var(--rarity-end))!important;
+ border-color:var(--rarity-accent)!important;
+ box-shadow:inset 3px 0 0 var(--rarity-accent)
+}
+html body .inventory-equipped-chip[data-rarity]:not([data-rarity="common"]):hover{
+ box-shadow:inset 3px 0 0 var(--rarity-accent),0 0 12px var(--rarity-glow)
+}
+html body .equip-slot.filled[data-rarity="unique"]::after{
+ content:"✦";position:absolute;pointer-events:none;z-index:2;
+ right:6px;top:3px;font-size:12px;color:#ffd0d8;text-shadow:0 0 8px #ff4363;
+ animation:unique-item-spark 2.5s ease-in-out infinite
+}
+html body #equipmentDetails[data-rarity="unique"]{
+ box-shadow:0 0 17px var(--rarity-glow),inset 3px 0 0 var(--rarity-accent);
+ animation:equip-unique-aura 2.6s ease-in-out infinite
+}
+@keyframes equip-unique-aura{
+ 0%,100%{box-shadow:0 0 11px rgba(255,63,92,.20),inset 3px 0 0 var(--rarity-accent)}
+ 50%{box-shadow:0 0 21px rgba(255,63,92,.36),inset 3px 0 0 var(--rarity-accent)}
+}
+@media(prefers-reduced-motion:reduce){
+ html body .equip-slot.filled[data-rarity="unique"]::after,
+ html body #equipmentDetails[data-rarity="unique"]{animation:none}
+}

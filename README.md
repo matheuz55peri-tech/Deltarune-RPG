@@ -219,3 +219,8 @@ O mural segue sujeito aos limites de armazenamento do navegador e, nas salas em 
 ## Raridade opcional de itens (outubro de 2026)
 
 No cadastro ou na edição de qualquer item do inventário, a raridade é opcional e usa **Comum** como padrão. Itens comuns mantêm o fundo original do tema; **Raro** utiliza azul, **Épico** roxo, **Lendário** laranja e **ÚNICO** vermelho, com brilho discreto animado na lateral da barrinha. Reduzir movimento desativa a animação. A raridade aparece na lista e nos detalhes do item e acompanha a ficha em FILES, importações/exportações, PDF, sincronização entre jogadores e operações de equipar/desequipar. O importador do Codex Arcano reconhece os nomes das raridades em português e inglês.
+
+
+## Raridade em Equipamentos (outubro de 2026)
+
+O seletor de raridade do inventário e o novo seletor do editor de **Equipamentos** exibem apenas Comum, Raro, Épico, Lendário e ÚNICO, sem descrições das cores. Os fundos dos equipamentos ocupados (inclusive o espaço selecionado e o painel de detalhes) passam a usar a paleta da raridade do item, incluindo a animação discreta para ÚNICO. O comum e os espaços vazios conservam o estilo original do tema; o efeito respeita a configuração de reduzir movimento. Raridades definidas diretamente em Equipamentos também são mantidas no FILE, nas salas e ao devolver o equipamento ao inventário.

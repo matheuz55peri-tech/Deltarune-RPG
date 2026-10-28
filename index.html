@@ -457,7 +457,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/owner-share.css?v=1">
 <link rel="stylesheet" href="./assets/master-room.css?v=1">
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
-<link rel="stylesheet" href="./assets/item-rarity.css?v=1">
+<link rel="stylesheet" href="./assets/item-rarity.css?v=2">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -607,7 +607,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="editor-fields">
         <label class="editor-label first-input">NOME DO ITEM<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Poção de cura" autocomplete="off"></label>
         <label class="editor-label">CATEGORIA<select class="editor-input" name="type"><option value="⚔">Arma</option><option value="✦">Artefato</option><option value="♥">Consumível</option><option value="⬡">Equipamento</option><option value="◆">Material</option><option value="✿">Outro</option></select></label>
-        <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum · fundo original</option><option value="rare">Raro · azul</option><option value="epic">Épico · roxo</option><option value="legendary">Lendário · laranja</option><option value="unique">ÚNICO · vermelho</option></select></label>
+        <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Lendário</option><option value="unique">ÚNICO</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
         <label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Efeito, origem, regras de utilização..."></textarea></label>
         <div class="editor-label editor-wide inventory-attributes">
@@ -640,6 +640,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
    <label class="equip-field">NOME<input id="equipmentName" class="equip-input" maxlength="65" required placeholder="Ex.: Peitoral do Guardião" autocomplete="off"></label>
    <label class="equip-field">PESO (kg)<input id="equipmentWeight" class="equip-input" type="number" value="0" min="0" max="9999" step="0.1"></label>
    <label class="equip-field">TIPO<select id="equipmentType" class="equip-input"><option value="utility">COMUM</option><option value="damage">EQUIPAMENTO DE DANO</option></select></label>
+   <label class="equip-field">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select id="equipmentRarity" class="equip-input"><option value="common">Comum</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Lendário</option><option value="unique">ÚNICO</option></select></label>
    <label class="equip-field wide equip-damage-settings" id="equipmentDamageWrap" hidden>DADOS DE DANO<input id="equipmentDamageDice" class="equip-input" maxlength="40" placeholder="Ex.: 2d6+3"></label>
    <div class="equip-field wide"><span>AUMENTOS DE ATRIBUTO</span><p class="equip-message">Você pode adicionar vários aumentos ao mesmo equipamento.</p><div class="equip-bonus-list" id="equipmentBonusRows"></div>
    <button type="button" class="library-btn secondary" id="addEquipmentBonusBtn">＋ ADICIONAR AUMENTO</button></div>
@@ -1317,7 +1318,7 @@ function renderEquipment(){
    const button=equipmentNode('button','equip-slot'+(item?' filled':'')+(selectedEquipmentSlot===slot.key?' selected':''));
    button.type='button';button.setAttribute('aria-pressed',String(selectedEquipmentSlot===slot.key));
    button.setAttribute('aria-label',slot.name+': '+(item?item.name:'vazio'));
-   if(item)button.dataset.rarity=normalizeItemRarity(item.rarity);
+   if(item){button.dataset.rarity=normalizeItemRarity(item.rarity);button.title=item.name+' · '+ITEM_RARITY_LABELS[normalizeItemRarity(item.rarity)];}
    button.append(equipmentNode('span','equip-slot-icon',slot.icon),
      equipmentNode('span','equip-slot-type',slot.name),
      equipmentNode('span','equip-slot-name',item?item.name:'[ VAZIO ]'));
@@ -1329,9 +1330,11 @@ function renderEquipment(){
  }
  detail.replaceChildren();
  const current=equipped(selectedEquipmentSlot);
+ if(current)detail.dataset.rarity=normalizeItemRarity(current.rarity);else detail.removeAttribute('data-rarity');
  detail.appendChild(equipmentNode('span','equip-small','✦ '+slotLabel(selectedEquipmentSlot)));
  detail.appendChild(equipmentNode('h3','',current?.name||'ESPAÇO VAZIO'));
  if(current){
+  detail.appendChild(equipmentNode('span','equip-rarity-tag',ITEM_RARITY_LABELS[normalizeItemRarity(current.rarity)]));
   const addLine=(label,value)=>{
    const row=equipmentNode('div','equip-stat-line');
    row.append(equipmentNode('span','',label),equipmentNode('strong','',value));detail.appendChild(row);
@@ -1390,6 +1393,7 @@ function openEquipmentEditor(slot=selectedEquipmentSlot){
  $('equipmentName').value=current?.name||'';
  $('equipmentWeight').value=current?.weight??0;
  $('equipmentType').value=current?.isDamage?'damage':selectedEquipmentSlot==='weapon'?'damage':'utility';
+ $('equipmentRarity').value=normalizeItemRarity(current?.rarity);
  $('equipmentDamageDice').value=current?.damageDice||'';
  toggleEquipmentDamage();
  $('equipmentBonusRows').replaceChildren();
@@ -1540,7 +1544,7 @@ $('equipmentForm').addEventListener('submit',event=>{
   bonuses,isDamage,damageDice:isDamage?dice:'',
   inventoryId:old?.inventoryId||'',inventoryType:old?.inventoryType||(
     slot.startsWith('artifact')?'✦':slot==='weapon'?'⚔':'⬡'),
-  description:old?.description||'',rarity:normalizeItemRarity(old?.rarity)};
+  description:old?.description||'',rarity:normalizeItemRarity($('equipmentRarity').value)};
  changeEquipment(slot,item);closeEquipmentEditor();renderLibrary('inventory');toast('Equipamento salvo! Bônus atualizados.');
 });
 
