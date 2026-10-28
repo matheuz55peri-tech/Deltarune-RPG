@@ -699,7 +699,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Nu
 const one=v=>Math.round(v*10)/10;
 const fmt=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const MAX_TP=100;
-const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[]});
+const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
 let state=baseState();
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -1032,6 +1032,25 @@ const FILE_FORMAT='delta-rpg-save',FILE_VERSION=1,MAX_FILES=64;
 const short=(val,max=200)=>String(typeof val==='string'?val:(val??'')).slice(0,max);
 const freshId=()=>makeId();
 const stamp=()=>new Date().toISOString();
+/* FILE-owned documents, included in backups, imports and live synchronization. */
+function normalizeMuralNotes(raw){
+ if(!Array.isArray(raw))return [];
+ const result=[],ids=new Set();
+ const finite=(v,fallback,min,max)=>Number.isFinite(Number(v))?
+  Math.max(min,Math.min(max,Number(v))):fallback;
+ for(const original of raw.slice(0,150)){
+  if(!original||typeof original!=='object'||Array.isArray(original))continue;
+  let id=short(original.id,90)||freshId();
+  if(ids.has(id))id=freshId();ids.add(id);
+  result.push({id,text:short(original.text,3000),
+   x:finite(original.x,20,0,20000),y:finite(original.y,20,0,20000),
+   z:finite(original.z,1,1,999999),width:finite(original.width,245,180,700),
+   height:finite(original.height,184,150,700),
+   paper:['shadow','paper','blue','sage','rose','gold'].includes(original.paper)?
+    original.paper:'shadow'});
+ }
+ return result;
+}
 function cleanCharacter(input){
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Personagem inválido');
  const v=baseState();v.name=short(input.name,32);v.level=clamp(Math.trunc(input.level),1,99);
@@ -1054,6 +1073,7 @@ function cleanCharacter(input){
   .map(x=>({id:short(x.id,80)||freshId(),skillId:short(x.skillId,80),name:short(x.name,55),
   target:x.target,amount:clamp(Math.trunc(x.amount),1,999),remaining:clamp(Math.trunc(x.remaining),1,99)}));
  v.equipment=normalizeEquipment(input.equipment);
+ v.muralNotes=normalizeMuralNotes(input.muralNotes);
  const equippedDef=Object.values(v.equipment).filter(Boolean).reduce((n,item)=>n+(item.bonuses||[]).filter(b=>b.stat==='defense').reduce((sum,b)=>sum+b.value,0),0);
  const db=v.activeBuffs.filter(x=>x.target==='defense').reduce((n,x)=>n+x.amount,0);
  v.hp=clamp(Math.round(input.hp),0,20+4*(v.defense+db+equippedDef));
@@ -1147,6 +1167,7 @@ function activateFile(slot){
  closeEditor('skills');closeEditor('inventory');setSkillFilter('all');
  renderStatus();renderLibrary('skills');renderLibrary('inventory');
  switchTab('sheet');persist();renderFiles();
+ window.dispatchEvent(new CustomEvent('delta-rpg:file-changed',{detail:{fileId:activeSaveId}}));
 }
 function openFile(id){
  persist();const slot=fileSlots.find(x=>x.id===id);if(!slot)return;
@@ -1508,6 +1529,27 @@ $('equipmentForm').addEventListener('submit',event=>{
 
 /* v13: ponte segura e opcional entre FILES locais e sessões WebRTC.
    Somente a ficha selecionada é compartilhada; outras fichas ficam intocadas. */
+window.DeltaRpgMuralBridge=Object.freeze({
+ activeFileId(){return filesReady?activeSaveId:null},
+ readNotes(id){
+  if(!filesReady||!id)return [];
+  const slot=fileSlots.find(x=>x.id===id);if(!slot)return [];
+  return normalizeMuralNotes(slot.id===activeSaveId?state.muralNotes:slot.data.muralNotes);
+ },
+ writeNotes(id,notes){
+  if(!filesReady||!id)return false;
+  const slot=fileSlots.find(x=>x.id===id);if(!slot)return false;
+  const safe=normalizeMuralNotes(notes);
+  if(slot.id===activeSaveId){
+   state.muralNotes=safe;persist();
+  }else{
+   slot.data.muralNotes=safe;slot.updatedAt=stamp();
+   try{commitFiles()}catch(err){console.warn('Falha ao salvar mural do FILE',err);return false}
+   window.dispatchEvent(new CustomEvent('delta-rpg:save',{detail:{fileId:id}}));
+  }
+  return true;
+ }
+});
 window.DeltaRpgLiveBridge=Object.freeze({
  activeFileId(){return filesReady?activeSaveId:null},
  openFile(id){if(!filesReady||!fileSlots.some(x=>x.id===id))return false;openFile(id);return true;},
@@ -1544,6 +1586,7 @@ window.DeltaRpgLiveBridge=Object.freeze({
   }
   commitFiles();
   renderFiles();
+  window.dispatchEvent(new CustomEvent('delta-rpg:mural-refresh',{detail:{fileId:id}}));
   return true;
  }
 });
@@ -1570,7 +1613,9 @@ window.DeltaRpgMasterBridge=Object.freeze({
    renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();
    localStorage.setItem(KEY,JSON.stringify(state));
   }
-  commitFiles();renderFiles();return true;
+  commitFiles();renderFiles();
+  window.dispatchEvent(new CustomEvent('delta-rpg:mural-refresh',{detail:{fileId:slot.id}}));
+  return true;
  },
  ensureOwnerFile(){
   if(!filesReady)return false;
@@ -1626,6 +1671,7 @@ window.DeltaRpgMasterBridge=Object.freeze({
    }
   }
   commitFiles();renderFiles();
+  window.dispatchEvent(new CustomEvent('delta-rpg:mural-refresh',{detail:{fileId:slot.id}}));
   return{id:slot.id,created,linkedByName};
  }
 });
@@ -1705,7 +1751,7 @@ applyAppearance();
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
 <script src="./assets/secret-loot.js?v=21" defer></script>
-<script src="./assets/document-mural.js?v=6" defer></script>
+<script src="./assets/document-mural.js?v=7" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
 <script src="./assets/initiative-room.js?v=1" defer></script>
 <script src="./assets/master-room.js?v=6" defer></script>
