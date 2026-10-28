@@ -32,7 +32,7 @@ function accept(data){
  const kind=['⚔','✦','♥','⬡','◆','✿'].includes(m.type)?m.type:'◆';
  const desc=[m.description||'',m.effect?'Efeito: '+m.effect:'',m.tags?'Etiquetas: '+m.tags:'',m.rarity?'Raridade: '+m.rarity:''].filter(Boolean).join('\n').slice(0,3000);
  const art=dataImage(data.image),fallback=dataImage(data.card);
- const record={id:makeId(),name,description:desc,type:kind,quantity:Math.max(1,Math.min(9999,Math.trunc(Number(m.quantity)||1))),
+ const record={id:makeId(),name,description:desc,type:kind,rarity:normalizeItemRarity(m.rarity),quantity:Math.max(1,Math.min(9999,Math.trunc(Number(m.quantity)||1))),
   equipmentData:normalizeGearSnapshot({weight:Math.max(0,Number(m.weight)||0),damageDice:String(m.damageDice||'').slice(0,40),isDamage:kind==='⚔'||Boolean(m.damageDice),bonuses})};
  if(art||fallback)record.codexImage=art||fallback;
  // O ícone só recebe fundo e moldura separados quando a arte independente está presente.

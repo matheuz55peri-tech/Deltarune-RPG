@@ -214,3 +214,8 @@ O mural segue sujeito aos limites de armazenamento do navegador e, nas salas em 
 - Novos documentos começam com o coração como broche. Documentos antigos continuam com o alfinete clássico até que o usuário escolha outro. A seleção do broche e o formato são preservados ao salvar.
 - Os novos campos (`kind`, `pin`, `image`) são normalizados e validados pela mesma rotina de salvamento do personagem, sem afetar itens, habilidades, equipamentos, o mural antigo ou os controles de sala.
 - Fotos são compactadas no navegador, com limite por foto e limite total de imagens por mural para evitar exceder o armazenamento local e os pacotes das salas ao vivo.
+
+
+## Raridade opcional de itens (outubro de 2026)
+
+No cadastro ou na edição de qualquer item do inventário, a raridade é opcional e usa **Comum** como padrão. Itens comuns mantêm o fundo original do tema; **Raro** utiliza azul, **Épico** roxo, **Lendário** laranja e **ÚNICO** vermelho, com brilho discreto animado na lateral da barrinha. Reduzir movimento desativa a animação. A raridade aparece na lista e nos detalhes do item e acompanha a ficha em FILES, importações/exportações, PDF, sincronização entre jogadores e operações de equipar/desequipar. O importador do Codex Arcano reconhece os nomes das raridades em português e inglês.

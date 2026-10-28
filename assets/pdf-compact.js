@@ -183,7 +183,8 @@
         const layouts=items.slice(i,i+2).map(item=>{
           const boosts=(item.equipmentData?.bonuses||[]).filter(x=>x&&Number(x.value)>0)
             .map(x=>'+'+num(x.value)+' '+({strength:'FOR',defense:'DEF',intelligence:'INT',agility:'AGI'}[x.stat]||x.stat)).join(' · ');
-          const desc=small((boosts?'[AO EQUIPAR] '+boosts+'\n':'')+(item.description||''),colW-9,7.7);
+          const rare={rare:'RARO',epic:'ÉPICO',legendary:'LENDÁRIO',unique:'ÚNICO'}[String(item.rarity||'').toLowerCase()]||'';
+          const desc=small((rare?'['+rare+']\n':'')+(boosts?'[AO EQUIPAR] '+boosts+'\n':'')+(item.description||''),colW-9,7.7);
           return {item,desc,h:Math.max(14,10+desc.length*3.4)};
         });
         const rowH=Math.max(...layouts.map(a=>a.h));

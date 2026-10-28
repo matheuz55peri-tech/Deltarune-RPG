@@ -1,0 +1,57 @@
+/* Raridade dos itens — COMUM preserva o fundo original do tema. */
+.rarity-optional{font-size:9px;opacity:.7;font-weight:normal;letter-spacing:0}
+html body .inventory-line .entry-row.inventory-row[data-rarity]{position:relative;isolation:isolate;transition:background .18s,border-color .18s,box-shadow .18s}
+html body .inventory-line .entry-row.inventory-row[data-rarity="rare"]{
+ --item-rare:#68b6ff; --item-glow:rgba(65,156,255,.22);
+ background:linear-gradient(98deg,rgba(30,96,179,.76),rgba(9,28,75,.83));
+ border-color:rgba(93,180,255,.6)
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity="epic"]{
+ --item-rare:#c69aff; --item-glow:rgba(160,92,251,.24);
+ background:linear-gradient(98deg,rgba(95,46,161,.77),rgba(46,18,91,.85));
+ border-color:rgba(192,126,255,.62)
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity="legendary"]{
+ --item-rare:#ffd090; --item-glow:rgba(255,154,55,.25);
+ background:linear-gradient(98deg,rgba(168,88,18,.83),rgba(82,43,14,.9));
+ border-color:rgba(255,182,79,.7)
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]{
+ --item-rare:#ff9ba7; --item-glow:rgba(255,63,92,.31);
+ background:linear-gradient(98deg,rgba(153,27,55,.83),rgba(77,9,30,.92));
+ border-color:rgba(255,106,125,.85)
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity]:not([data-rarity="common"]):is(:hover,:focus-visible,.selected){
+ background:linear-gradient(98deg,color-mix(in srgb,var(--item-rare) 35%,#121121),color-mix(in srgb,var(--item-rare) 13%,#111027));
+ border-color:var(--item-rare);
+ box-shadow:inset 3px 0 0 var(--item-rare),0 0 12px var(--item-glow)
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity]:not([data-rarity="common"]) .entry-icon,
+html body .inventory-line .entry-row.inventory-row[data-rarity]:not([data-rarity="common"]) .entry-quantity{color:var(--item-rare)}
+html body .inventory-line .entry-row.inventory-row .entry-name{flex-wrap:wrap;gap:5px 9px}
+.item-rarity-pill{font:700 8px/1.5 'Press Start 2P',monospace;letter-spacing:.02em;white-space:nowrap;color:var(--item-rare);background:rgba(3,2,12,.37);border:1px solid color-mix(in srgb,var(--item-rare) 55%,transparent);padding:3px 5px;border-radius:3px}
+html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::before{
+ content:"";position:absolute;pointer-events:none;z-index:2;left:0;top:3px;bottom:3px;width:4px;
+ background:linear-gradient(180deg,#ffa9b4,#ff3152,#ffa9b4);box-shadow:0 0 9px #ff4569;animation:unique-item-glint 2.5s ease-in-out infinite
+}
+html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::after{
+ content:"✦";position:absolute;pointer-events:none;z-index:2;right:6px;top:-7px;
+ color:#ffc4cc;font-size:10px;text-shadow:0 0 7px #ff4363;animation:unique-item-spark 2.5s ease-in-out infinite
+}
+@keyframes unique-item-glint{0%,100%{opacity:.6;box-shadow:0 0 5px #ff4569}50%{opacity:1;box-shadow:0 0 12px #ff4569}}
+@keyframes unique-item-spark{0%,100%{opacity:.45;transform:scale(.75)}50%{opacity:1;transform:scale(1.15)}}
+#itemDetail[data-rarity="rare"]{--item-rare:#75baff;--item-tint:rgba(50,118,201,.18)}
+#itemDetail[data-rarity="epic"]{--item-rare:#d4a0ff;--item-tint:rgba(122,55,194,.18)}
+#itemDetail[data-rarity="legendary"]{--item-rare:#ffd08b;--item-tint:rgba(218,118,37,.18)}
+#itemDetail[data-rarity="unique"]{--item-rare:#ffa2b1;--item-tint:rgba(224,58,83,.19)}
+#itemDetail[data-rarity]:not([data-rarity="common"]){border-color:color-mix(in srgb,var(--item-rare) 55%,transparent);background:linear-gradient(165deg,var(--item-tint),rgba(7,6,20,.92) 42%)}
+#itemDetail[data-rarity]:not([data-rarity="common"]) .detail-icon{color:var(--item-rare)}
+#itemDetail .item-rarity-detail{align-self:flex-start;font:8px/1.7 'Press Start 2P',monospace;letter-spacing:.07em;border:1px solid rgba(188,186,207,.34);border-radius:3px;color:#c4bfd3;padding:5px 7px}
+#itemDetail[data-rarity]:not([data-rarity="common"]) .item-rarity-detail{color:var(--item-rare);border-color:color-mix(in srgb,var(--item-rare) 55%,transparent);background:var(--item-tint)}
+.inventory-equipped-chip[data-rarity="rare"],.equip-slot[data-rarity="rare"]{--item-equipped:#67b8ff}
+.inventory-equipped-chip[data-rarity="epic"],.equip-slot[data-rarity="epic"]{--item-equipped:#c59aff}
+.inventory-equipped-chip[data-rarity="legendary"],.equip-slot[data-rarity="legendary"]{--item-equipped:#ffc583}
+.inventory-equipped-chip[data-rarity="unique"],.equip-slot[data-rarity="unique"]{--item-equipped:#ff8ea4}
+.inventory-equipped-chip[data-rarity]:not([data-rarity="common"]),.equip-slot[data-rarity]:not([data-rarity="common"]){border-color:var(--item-equipped)!important;box-shadow:inset 3px 0 0 var(--item-equipped)}
+@media(max-width:560px){.item-rarity-pill{font-size:7px;padding:3px 4px} .inventory-line .entry-name{font-size:10px}}
+@media(prefers-reduced-motion:reduce){html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::before,html body .inventory-line .entry-row.inventory-row[data-rarity="unique"]::after{animation:none}}

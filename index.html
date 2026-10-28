@@ -457,6 +457,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/owner-share.css?v=1">
 <link rel="stylesheet" href="./assets/master-room.css?v=1">
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
+<link rel="stylesheet" href="./assets/item-rarity.css?v=1">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -606,6 +607,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="editor-fields">
         <label class="editor-label first-input">NOME DO ITEM<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Poção de cura" autocomplete="off"></label>
         <label class="editor-label">CATEGORIA<select class="editor-input" name="type"><option value="⚔">Arma</option><option value="✦">Artefato</option><option value="♥">Consumível</option><option value="⬡">Equipamento</option><option value="◆">Material</option><option value="✿">Outro</option></select></label>
+        <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum · fundo original</option><option value="rare">Raro · azul</option><option value="epic">Épico · roxo</option><option value="legendary">Lendário · laranja</option><option value="unique">ÚNICO · vermelho</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
         <label class="editor-label editor-wide">DESCRIÇÃO / EFEITO<textarea class="editor-textarea" name="description" maxlength="3000" placeholder="Efeito, origem, regras de utilização..."></textarea></label>
         <div class="editor-label editor-wide inventory-attributes">
@@ -884,6 +886,13 @@ const makeId=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUI
 let skillFilter='all';
 const makeEl=(tag,className='',text=null)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!==null)el.textContent=text;return el};
 let skillEditId=null,itemEditId=null;
+const ITEM_RARITY_LABELS=Object.freeze({common:'COMUM',rare:'RARO',epic:'ÉPICO',legendary:'LENDÁRIO',unique:'ÚNICO'});
+function normalizeItemRarity(raw){
+ const name=String(raw??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ return ({common:'common',comum:'common',rare:'rare',raro:'rare',rara:'rare',
+  epic:'epic',epico:'epic',epica:'epic',legendary:'legendary',lendario:'legendary',lendaria:'legendary',
+  unique:'unique',unico:'unique',unica:'unique'})[name]||'common';
+}
 const kind={skills:{collection:'skills',selected:'selectedSkill',list:'skillsList',detail:'skillDetail',form:'skillForm',heading:'skillFormHeading',primary:'name'},inventory:{collection:'items',selected:'selectedItem',list:'inventoryList',detail:'itemDetail',form:'itemForm',heading:'itemFormHeading',primary:'name'}};
 function selectEntry(type,id){state[kind[type].selected]=id;renderLibrary(type);persist()}
 function createBlank(type){const area=$(kind[type].detail);area.replaceChildren();const info=makeEl('div','empty-state');info.append(makeEl('strong','',type==='skills'?'✦ NENHUMA HABILIDADE':'✦ NENHUM ITEM'),makeEl('span','',type==='skills'?'Clique em ADICIONAR HABILIDADE para criar sua primeira técnica.':'Clique em ADICIONAR ITEM para montar seu inventário.'));area.append(info)}
@@ -894,8 +903,9 @@ function renderLibrary(type){
  const currentId=state[config.selected];if(!rows.some(x=>x.id===currentId))state[config.selected]=rows[0]?.id||null;
  if(rows.length===0){const note=makeEl('div','empty-state');note.append(makeEl('strong','',type==='skills'?'✦ SEM HABILIDADES':'✦ MOCHILA VAZIA'),makeEl('span','',type==='skills'?(skillFilter==='all'?'Clique em ADICIONAR HABILIDADE para criar uma técnica.':'Nenhuma habilidade nesta categoria. Você pode adicionar uma nova ou trocar o filtro.'):'Clique em ADICIONAR ITEM para montar seu inventário.'));list.append(note)}
  for(const entry of rows){const category=type==='skills'?skillCategory(entry):null;const selected=entry.id===state[config.selected];const button=makeEl('button','entry-row '+(type==='inventory'?'inventory-row ':'')+(category?'category-'+category+' ':'')+(selected?'selected':''));button.type='button';button.setAttribute('aria-pressed',String(selected));
+  if(type==='inventory')button.dataset.rarity=normalizeItemRarity(entry.rarity);
   if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(makeEl('span','entry-icon',entry.type||'◆'));
-  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));button.append(name);if(type==='inventory'){
+  const name=makeEl('span','entry-name');if(type==='skills')name.append(makeEl('span','entry-icon',entry.icon||'✦'));name.append(makeEl('span','',entry.name));if(type==='inventory'&&normalizeItemRarity(entry.rarity)!=='common')name.append(makeEl('span','item-rarity-pill',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));button.append(name);if(type==='inventory'){
     if(entry.equipmentData?.bonuses?.length)name.append(makeEl('span','inventory-item-bonus-mark','✦ '+entry.equipmentData.bonuses.length+' bônus'));
     button.append(makeEl('span','entry-quantity','x'+entry.quantity));
   }button.addEventListener('click',()=>selectEntry(type,entry.id));
@@ -924,7 +934,7 @@ function useSkill(entry){
 function renderDetails(type){const config=kind[type],area=$(config.detail);area.replaceChildren();area.classList.remove('category-heal','category-damage','category-buff');
  const entry=state[config.collection].find(x=>x.id===state[config.selected]);
  if(!entry || (type==='skills'&&skillFilter!=='all'&&skillCategory(entry)!==skillFilter)){createBlank(type);return}
- const category=type==='skills'?skillCategory(entry):null;if(category)area.classList.add('category-'+category);
+ const category=type==='skills'?skillCategory(entry):null;if(category)area.classList.add('category-'+category);if(type==='inventory')area.dataset.rarity=normalizeItemRarity(entry.rarity);else delete area.dataset.rarity;
  const head=makeEl('div','detail-head'),text=makeEl('div');text.append(makeEl('div','detail-eyebrow',type==='skills'?'✦ TÉCNICA SELECIONADA':'✦ ITEM SELECIONADO'),makeEl('h3','detail-title',entry.name));head.append(text,makeEl('span','detail-icon',type==='skills'?(entry.icon||'✦'):(entry.type||'◆')));area.append(head);
  if(type==='skills'){
   const typeName={damage:'DANO',heal:'CURA',buff:'BUFF'}[category];area.append(makeEl('span','skill-tag category-'+category,typeName));
@@ -934,6 +944,7 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
   if(category==='buff')area.append(makeEl('div','library-meta',`✦ +${fmt(entry.amount||0)} ${buffLabel[entry.target]||'atributo'} · duração ${entry.turns||3} turno(s).`));
   if(state.tp<entry.cost)area.append(makeEl('div','library-meta','TP insuficiente para usar agora.'))
  }else{
+  area.append(makeEl('span','item-rarity-detail',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));
   area.append(makeEl('div','detail-cost',`QUANTIDADE: ${entry.quantity}`));
   const configured=normalizeGearSnapshot(entry.equipmentData).bonuses;
   area.append(makeEl('div','inventory-bonus-detail',configured.length?
@@ -988,7 +999,7 @@ function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.
     return Number.isFinite(value)&&value>=1&&value<=999?{stat:sel.value,value}:null;
   }).filter(Boolean);
   record={id:id||makeId(),name,description,type:form.elements.namedItem('type').value,
-    quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
+    rarity:normalizeItemRarity(form.elements.namedItem('rarity').value),quantity:clamp(Math.trunc(form.elements.namedItem('quantity').value),1,9999),
     equipmentData:data,...(previous?.codexImage?{codexImage:previous.codexImage}:{})};
  }
  const items=state[conf.collection];const idx=items.findIndex(x=>x.id===record.id);if(idx>=0)items[idx]=record;else items.push(record);state[conf.selected]=record.id;if(type==='skills'&&skillFilter!=='all'&&skillFilter!==record.category)setSkillFilter(record.category);closeEditor(type);renderLibrary(type);persist();toast(type==='skills'?'Habilidade salva!':'Item salvo!')}
@@ -1003,7 +1014,7 @@ $('resetBtn').addEventListener('click',()=>{if(!confirm('Reiniciar SOMENTE o FIL
 
 /* Exporta as três seções, inclusive descrições de TODAS as entradas, mesmo que apenas uma esteja selecionada na interface. */
 function fillExportExtra(doc){const sheet=doc.querySelector('#tab-skills');if(!sheet)return;let appendix=doc.querySelector('#exportAppend');if(!appendix){appendix=doc.createElement('div');appendix.id='exportAppend';sheet.appendChild(appendix)}
- for(const [type,records] of [['INVENTÁRIO',state.items],['HABILIDADES',state.skills]]){const section=doc.createElement('div');section.style.cssText='background:#070919;border:1px solid #7585b5;padding:18px;margin:16px 0;color:white;break-inside:avoid;';const h=doc.createElement('h3');h.textContent='✦ '+type+' — DESCRIÇÕES';h.style.cssText='font:13px monospace;margin:0 0 14px;color:#9ceeff';section.append(h);if(!records.length){const p=doc.createElement('p');p.textContent='Nenhum registro adicionado.';section.append(p)}for(const record of records){const p=doc.createElement('p');p.style.cssText='font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid #383c59;padding:10px 0;line-height:1.5;';p.textContent=(type==='HABILIDADES'?`${record.icon||'✦'} ${record.name} [${{damage:'DANO',heal:'CURA',buff:'BUFF'}[skillCategory(record)]}] — ${record.cost}% TP${skillCategory(record)==='buff'?' — +'+record.amount+' '+(buffLabel[record.target]||'atributo')+' / '+record.turns+' turnos':' — '+(record.power||0)+' '+(skillCategory(record)==='heal'?'HP recuperado':'dano')}`:`${record.type||'◆'} ${record.name} — x${record.quantity}`)+'\n'+(record.description||'Sem descrição');section.append(p)}appendix.append(section)}}
+ for(const [type,records] of [['INVENTÁRIO',state.items],['HABILIDADES',state.skills]]){const section=doc.createElement('div');section.style.cssText='background:#070919;border:1px solid #7585b5;padding:18px;margin:16px 0;color:white;break-inside:avoid;';const h=doc.createElement('h3');h.textContent='✦ '+type+' — DESCRIÇÕES';h.style.cssText='font:13px monospace;margin:0 0 14px;color:#9ceeff';section.append(h);if(!records.length){const p=doc.createElement('p');p.textContent='Nenhum registro adicionado.';section.append(p)}for(const record of records){const p=doc.createElement('p');p.style.cssText='font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid #383c59;padding:10px 0;line-height:1.5;';p.textContent=(type==='HABILIDADES'?`${record.icon||'✦'} ${record.name} [${{damage:'DANO',heal:'CURA',buff:'BUFF'}[skillCategory(record)]}] — ${record.cost}% TP${skillCategory(record)==='buff'?' — +'+record.amount+' '+(buffLabel[record.target]||'atributo')+' / '+record.turns+' turnos':' — '+(record.power||0)+' '+(skillCategory(record)==='heal'?'HP recuperado':'dano')}`:`${record.type||'◆'} ${record.name} — x${record.quantity}${normalizeItemRarity(record.rarity)==='common'?'':' · '+ITEM_RARITY_LABELS[normalizeItemRarity(record.rarity)]}`)+'\n'+(record.description||'Sem descrição');section.append(p)}appendix.append(section)}}
 async function captureSheet(){if(typeof html2canvas!=='function')throw new Error('Biblioteca de imagem indisponível. Verifique sua conexão.');await document.fonts.ready;return await html2canvas($('exportTarget'),{backgroundColor:'#090818',scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),useCORS:true,scrollY:-window.scrollY,onclone:doc=>{doc.querySelectorAll('.rpg-tabs,.export-actions,.editor-wrap,.entry-editor,.detail-actions,.footer,.controls,.skill-filters,.turn-btn,.buff-end').forEach(el=>el.style.display='none');doc.querySelectorAll('.tab-content').forEach(el=>{el.hidden=false;el.style.display='block';el.style.margin='24px 0'});doc.querySelectorAll('.petal').forEach(el=>el.style.animation='none');doc.querySelectorAll('.soul-svg').forEach(el=>el.style.animation='none');fillExportExtra(doc)}})}
 function exportFileName(ext){return ((state.name||'personagem').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,45)||'personagem')+'_DELTA_RPG.'+ext}
 $('exportPngBtn').addEventListener('click',async()=>{try{toast('Preparando imagem...');const canvas=await captureSheet();const a=document.createElement('a');a.download=exportFileName('png');a.href=canvas.toDataURL('image/png');document.body.append(a);a.click();a.remove();toast('Ficha exportada em PNG.')}catch(err){console.error(err);toast('Falha na imagem. Verifique conexão com a biblioteca de exportação.')}});
@@ -1063,7 +1074,7 @@ function cleanCharacter(input){
  v.tp=clamp(one(input.tp),0,100);
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
-  type:short(x.type||'◆',12),quantity:clamp(Math.trunc(x.quantity),1,9999),
+  type:short(x.type||'◆',12),rarity:normalizeItemRarity(x.rarity),quantity:clamp(Math.trunc(x.quantity),1,9999),
   ...(x.equipmentData&&typeof x.equipmentData==='object'?{equipmentData:normalizeGearSnapshot(x.equipmentData)}:{}),
   ...(typeof x.codexImage==='string'&&x.codexImage.length<=350000&&x.codexImage.startsWith('data:image/')?{codexImage:x.codexImage}:{})}));
  v.skills=(Array.isArray(input.skills)?input.skills:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
@@ -1271,7 +1282,7 @@ function normalizeEquipment(source){
    .filter(b=>b&&EQUIP_STATS.some(stat=>stat.key===b.stat))
    .map(b=>({stat:b.stat,value:clamp(Math.trunc(b.value),1,999)}));
   output[slot.key]={
-   name:String(entry.name||'').slice(0,65),
+   name:String(entry.name||'').slice(0,65),rarity:normalizeItemRarity(entry.rarity),
    weight:clamp(Math.round(Number(entry.weight||0)*10)/10,0,9999),
    bonuses,isDamage:entry.isDamage===true,damageDice:String(entry.damageDice||'').slice(0,40),
    inventoryId:String(entry.inventoryId||'').slice(0,80),
@@ -1306,6 +1317,7 @@ function renderEquipment(){
    const button=equipmentNode('button','equip-slot'+(item?' filled':'')+(selectedEquipmentSlot===slot.key?' selected':''));
    button.type='button';button.setAttribute('aria-pressed',String(selectedEquipmentSlot===slot.key));
    button.setAttribute('aria-label',slot.name+': '+(item?item.name:'vazio'));
+   if(item)button.dataset.rarity=normalizeItemRarity(item.rarity);
    button.append(equipmentNode('span','equip-slot-icon',slot.icon),
      equipmentNode('span','equip-slot-type',slot.name),
      equipmentNode('span','equip-slot-name',item?item.name:'[ VAZIO ]'));
@@ -1422,7 +1434,7 @@ function renderEquippedPreview(){
  for(const slot of EQUIP_SLOTS){
   const item=equipped(slot.key);if(!item)continue;
   const chip=equipmentNode('button','inventory-equipped-chip','✦ '+slot.name+' · '+item.name);
-  chip.type='button';
+  chip.type='button';chip.dataset.rarity=normalizeItemRarity(item.rarity);
   chip.title='Ver '+item.name+' em Equipamentos';
   chip.addEventListener('click',()=>{
     selectedEquipmentSlot=slot.key;switchTab('equipment');
@@ -1443,7 +1455,7 @@ function equipFromBag(itemId,slotKey){
  const slotItem={
   name:chosen.name,weight:snapshot.weight,bonuses:snapshot.bonuses,
   isDamage:snapshot.isDamage,damageDice:snapshot.damageDice,
-  inventoryType:chosen.type,inventoryId:chosen.id,description:chosen.description||''
+  inventoryType:chosen.type,inventoryId:chosen.id,rarity:normalizeItemRarity(chosen.rarity),description:chosen.description||''
  };
  if(chosen.quantity>1)chosen.quantity--;
  else state.items=state.items.filter(x=>x.id!==itemId);
@@ -1465,13 +1477,13 @@ function unequipToBag(slotKey){
   const xSnapshot=normalizeGearSnapshot(x?.equipmentData);
   return JSON.stringify(xSnapshot)===JSON.stringify(snapshot);
  };
- if(target && (target.name!==slotItem.name || target.type!==itemType || !equalGear(target)))target=null;
+ if(target && (target.name!==slotItem.name || target.type!==itemType || normalizeItemRarity(target.rarity)!==normalizeItemRarity(slotItem.rarity) || !equalGear(target)))target=null;
  if(target){target.quantity=clamp(Number(target.quantity)+1,1,9999);}
  else{
   let newId=originalId||makeId();
   if(state.items.some(x=>x.id===newId))newId=makeId();
   state.items.push({
-   id:newId,name:slotItem.name,type:itemType,quantity:1,
+   id:newId,name:slotItem.name,type:itemType,rarity:normalizeItemRarity(slotItem.rarity),quantity:1,
    description:slotItem.description||'',equipmentData:snapshot
   });
  }
@@ -1528,7 +1540,7 @@ $('equipmentForm').addEventListener('submit',event=>{
   bonuses,isDamage,damageDice:isDamage?dice:'',
   inventoryId:old?.inventoryId||'',inventoryType:old?.inventoryType||(
     slot.startsWith('artifact')?'✦':slot==='weapon'?'⚔':'⬡'),
-  description:old?.description||''};
+  description:old?.description||'',rarity:normalizeItemRarity(old?.rarity)};
  changeEquipment(slot,item);closeEquipmentEditor();renderLibrary('inventory');toast('Equipamento salvo! Bônus atualizados.');
 });
 
