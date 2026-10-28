@@ -203,3 +203,14 @@ Implementação isolada: `assets/initiative-room.js`, `assets/initiative-room.cs
 - Exportar ou importar o mural separadamente também continua disponível, afetando apenas o FILE atualmente aberto.
 
 O mural segue sujeito aos limites de armazenamento do navegador e, nas salas em tempo real, à conexão entre os participantes.
+
+
+## Mural de Documentos — formatos, fotos e pins personalizados (outubro de 2026)
+
+- O mural agora oferece quatro formatos: **Bilhete**, **Cartão**, **Etiqueta** e **Foto circular**. Os documentos continuam arrastáveis, redimensionáveis e salvos individualmente em cada FILE.
+- A **Foto circular** permite selecionar uma imagem do dispositivo. A foto é reduzida, convertida para JPEG e exibida recortada em um medalhão circular, com legenda. A imagem salva no campo `muralNotes[].image` via data URI compacta, integrada aos FILES, backups, importação/exportação e sincronização enquanto o limite de tamanho da ficha permitir.
+- Cada documento possui um **broche clicável** (no cabeçalho). Clicar nele percorre: alfinete clássico, **coração da alma**, **estrela** e **olho ornamental**. Os dois últimos usam recortes vetoriais transparentes feitos das imagens enviadas pelo criador do projeto — `assets/mural-pin-star.svg` e `assets/mural-pin-eye.svg`. Não são figuras geradas ou substituições estilizadas.
+- O **coração da alma** usa automaticamente a cor calculada a partir dos pontos extras de atributos daquele personagem no FILE ativo. A cor também acompanha mudanças nos atributos sem modificar os demais FILES.
+- Novos documentos começam com o coração como broche. Documentos antigos continuam com o alfinete clássico até que o usuário escolha outro. A seleção do broche e o formato são preservados ao salvar.
+- Os novos campos (`kind`, `pin`, `image`) são normalizados e validados pela mesma rotina de salvamento do personagem, sem afetar itens, habilidades, equipamentos, o mural antigo ou os controles de sala.
+- Fotos são compactadas no navegador, com limite por foto e limite total de imagens por mural para evitar exceder o armazenamento local e os pacotes das salas ao vivo.
