@@ -1,20 +1,20 @@
 /* DELTA RPG — arquivo secreto dos humanos do passado (v2).
    As imagens enviadas pelo usuário são a única arte dos personagens e das flores.
-   Texto de história reservado para uma atualização futura. */
+   Seis memórias exibem seus destinos; três aguardam histórias futuras. */
 (()=>{
  'use strict';
  if(window.__deltaPastHumansLoaded)return;
  window.__deltaPastHumansLoaded=true;
  const people=[
-  {id:'warrior',name:'O Guerreiro',tone:'#eb667e',roman:'I',portrait:'warrior'},
-  {id:'sorceress',name:'A Feiticeira',tone:'#f3c6d8',roman:'II',portrait:'sorceress'},
+  {id:'warrior',name:'O Guerreiro',tone:'#eb667e',roman:'I',portrait:'warrior',story:"Segundo a profecia, seria o último a cair pelas mãos da rainha. Porém, acabou sendo lançado ao vazio, onde surge a escuridão."},
+  {id:'sorceress',name:'A Feiticeira',tone:'#f3c6d8',roman:'II',portrait:'sorceress',story:"Segundo a profecia, ela enfrentaria diretamente a rainha, e esse confronto resultaria na vitória do grupo. Infelizmente, foi assassinada pelo Feiticeiro em um ato de loucura."},
   {id:'squire',name:'O Escudeiro',tone:'#8bc9ff',roman:'III'},
   {id:'alchemist',name:'O Alquimista',tone:'#f7b877',roman:'IV'},
-  {id:'oculus',name:'O Oculus',tone:'#72bfb6',roman:'V',portrait:'oculus'},
+  {id:'oculus',name:'O Oculus',tone:'#72bfb6',roman:'V',portrait:'oculus',story:"Segundo a profecia, ele enfrentaria Phikova diretamente. Nunca mais foi encontrado após essa batalha."},
   {id:'guide',name:'A Guia',tone:'#d88dba',roman:'VI'},
-  {id:'priest',name:'O Sacerdote',tone:'#91d8e8',roman:'VII',portrait:'priest'},
-  {id:'mundane',name:'O Mundano',tone:'#d98ce8',roman:'VIII',portrait:'mundane'},
-  {id:'sorcerer',name:'O Feiticeiro',tone:'#ff948d',roman:'IX',portrait:'sorcerer'}
+  {id:'priest',name:'O Sacerdote',tone:'#91d8e8',roman:'VII',portrait:'priest',story:"Segundo a profecia, morreria pelo bem maior. Foi evaporado ao ser engolido por um titã."},
+  {id:'mundane',name:'O Mundano',tone:'#d98ce8',roman:'VIII',portrait:'mundane',story:"Segundo a profecia, um monstro do Mundo da Luz ajudaria os heróis a alcançar a vitória. No entanto, a rainha o aprisionou na camada mais profunda, onde nenhuma cidade jamais chegou."},
+  {id:'sorcerer',name:'O Feiticeiro',tone:'#ff948d',roman:'IX',portrait:'sorcerer',story:"Segundo a profecia, ele seria responsável pela vitória dos heróis. Infelizmente, sua mente se corrompeu, e ele abandonou o grupo e seu objetivo."}
  ];
  const heart=document.querySelector('.portrait .soul-wrap');
  if(!heart)return;
@@ -29,9 +29,16 @@
   '<section class="delta-past-gallery" aria-label="Selecionar uma memória"><div class="delta-past-grid"></div></section>'+
   '<section class="delta-past-detail" aria-label="Visualização de uma memória" hidden>'+
     '<button class="delta-past-back" type="button" aria-label="Voltar às flores">‹</button>'+
-    '<div class="delta-past-detail-frame"><span id="deltaPastDetailFlower" class="delta-past-flower" aria-hidden="true"></span></div>'+
-    '<h2 id="deltaPastDetailTitle"></h2>'+
-    '<div class="delta-past-placeholder" aria-hidden="true"><i></i><i></i><i></i></div>'+
+    '<div class="delta-past-story-layout">'+
+       '<div class="delta-past-story-visual"><div class="delta-past-detail-frame"><span id="deltaPastDetailFlower" class="delta-past-flower" aria-hidden="true"></span></div></div>'+
+       '<div class="delta-past-story-content">'+
+         '<span class="delta-past-story-ornament" aria-hidden="true">✧ ─ ✦ ─ ✧</span>'+
+         '<h2 id="deltaPastDetailTitle"></h2>'+
+         '<span class="delta-past-story-divider" aria-hidden="true"></span>'+
+         '<p id="deltaPastDetailStory" class="delta-past-story-text" hidden></p>'+
+         '<div class="delta-past-placeholder" aria-hidden="true"><i></i><i></i><i></i></div>'+
+       '</div>'+
+     '</div>'+
   '</section>'+
   '<footer class="delta-past-footer" aria-hidden="true">✧　◇　✦　◇　✧</footer>'+
   '</div>';
@@ -56,6 +63,11 @@
   visual.className=person.id==='sorcerer'?'delta-past-crest-art':'delta-past-flower delta-past-'+person.id;
   visual.textContent=person.id==='sorcerer'?'✦':'';
   dialog.querySelector('#deltaPastDetailTitle').textContent=person.name;
+  const text=dialog.querySelector('#deltaPastDetailStory');
+  const placeholder=dialog.querySelector('.delta-past-detail .delta-past-placeholder');
+  text.textContent=person.story||'';
+  text.hidden=!person.story;
+  placeholder.hidden=Boolean(person.story);
   detail.classList.remove('delta-past-enter');
   void detail.offsetWidth;
   detail.classList.add('delta-past-enter');
