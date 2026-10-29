@@ -244,3 +244,8 @@ O campo **Ícone do item** exibe uma prévia compacta e abre, pelo botão **Troc
 ## Catálogo de ícones — navegação rápida (outubro de 2026)
 
 A janela de seleção passa a oferecer **Sugestões** com base na categoria do item, **Favoritos** (marcados pela estrela) e **Recentes**, além das categorias originais. Inclui filtro pela cor predominante aproximada dos sprites, busca global por termos combinados como `cristal azul`, botão para limpar busca e opção de redefinir todos os filtros. A prévia e o botão de confirmação permanecem fixos enquanto a grade é percorrida; o toque na estrela salva o favorito sem alterar o item. Favoritos e histórico são mantidos em armazenamento local independente do FILE, e a escolha aplicada continua sendo o mesmo identificador `iconAsset` do sprite antigo. Nenhuma imagem ou dado de personagem é alterado.
+
+
+## Menu secreto — histórias dos humanos (outubro de 2026)
+
+Na ficha, clique cinco vezes em até cinco segundos na **alma colorida** do personagem. A tela secreta abre com uma animação de transição **provisória** e apresenta as quatro flores recortadas das imagens fornecidas, com fundo transparente: **O Guerreiro** (rosa vermelha), **A Feiticeira** (flores brancas), **O Escudeiro** (flores azuis) e **O Alquimista** (flores claras e vermelhas). Clique em uma flor para abrir a visualização individual, sem texto de história por enquanto. O visual respeita a redução de movimento e permite fechar por Escape ou botão X; acessível via teclado. O segredo não altera FILES, alma, habilidades, equipamentos ou salas. Arte em atlas assets/secret/flowers-history.webp (2×2, transparência) e PNGs transparentes separados disponíveis no pacote de referência.
