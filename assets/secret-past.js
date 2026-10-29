@@ -7,10 +7,10 @@
  window.__deltaPastHumansLoaded=true;
  const people=[
   {id:'warrior',name:'O Guerreiro',tone:'#eb667e',roman:'I',portrait:'warrior'},
-  {id:'sorceress',name:'A Feiticeira',tone:'#f3c6d8',roman:'II'},
+  {id:'sorceress',name:'A Feiticeira',tone:'#f3c6d8',roman:'II',portrait:'sorceress'},
   {id:'squire',name:'O Escudeiro',tone:'#8bc9ff',roman:'III'},
   {id:'alchemist',name:'O Alquimista',tone:'#f7b877',roman:'IV'},
-  {id:'oculus',name:'O Oculus',tone:'#72bfb6',roman:'V'},
+  {id:'oculus',name:'O Oculus',tone:'#72bfb6',roman:'V',portrait:'oculus'},
   {id:'guide',name:'A Guia',tone:'#d88dba',roman:'VI'},
   {id:'priest',name:'O Sacerdote',tone:'#91d8e8',roman:'VII',portrait:'priest'},
   {id:'mundane',name:'O Mundano',tone:'#d98ce8',roman:'VIII',portrait:'mundane'},
