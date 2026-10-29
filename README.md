@@ -239,3 +239,8 @@ Na aba Inventário → Adicionar Item / Editar, o pequeno catálogo de ícones i
 ## Seletor de ícones em janela (outubro de 2026)
 
 O campo **Ícone do item** exibe uma prévia compacta e abre, pelo botão **Trocar ícone**, um diálogo modal nativo que escurece o fundo e impede interações acidentais com a ficha. Os 189 ícones do sprite original e os 6 ícones clássicos continuam disponíveis, com modo automático, categorias laterais, filtros, pesquisa e contador de resultados, cartões maiores, prévia da escolha e ações **Usar este ícone** / **Cancelar**. A escolha é temporária até ser confirmada, preservando a opção anterior se o usuário fechar pelo X, Escape ou backdrop. O diálogo devolve o foco ao acionador, é navegável por teclado e adapta os filtros para uma linha horizontal em telas estreitas. Nenhum campo da ficha, FILE, sincronização, categoria de raridade ou mapeamento do sprite foi modificado.
+
+
+## Catálogo de ícones — navegação rápida (outubro de 2026)
+
+A janela de seleção passa a oferecer **Sugestões** com base na categoria do item, **Favoritos** (marcados pela estrela) e **Recentes**, além das categorias originais. Inclui filtro pela cor predominante aproximada dos sprites, busca global por termos combinados como `cristal azul`, botão para limpar busca e opção de redefinir todos os filtros. A prévia e o botão de confirmação permanecem fixos enquanto a grade é percorrida; o toque na estrela salva o favorito sem alterar o item. Favoritos e histórico são mantidos em armazenamento local independente do FILE, e a escolha aplicada continua sendo o mesmo identificador `iconAsset` do sprite antigo. Nenhuma imagem ou dado de personagem é alterado.

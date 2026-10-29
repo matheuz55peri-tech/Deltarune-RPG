@@ -459,7 +459,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
 <link rel="stylesheet" href="./assets/item-rarity.css?v=2">
 <link rel="stylesheet" href="./assets/delta-icons.css?v=1">
-<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=2">
+<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=3">
 </head>
 <body>
 <dialog id="deltaItemIconDialog" class="delta-icon-modal" aria-labelledby="deltaItemIconDialogTitle">
@@ -468,22 +468,24 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="delta-icon-modal-heading">
         <span class="delta-icon-modal-kicker">DELTA RPG / INVENTÁRIO</span>
         <h2 id="deltaItemIconDialogTitle">ESCOLHER ÍCONE</h2>
-        <p>Encontre o visual ideal para seu item.</p>
+        <p>Pesquise, filtre por cor ou guarde seus ícones preferidos.</p>
       </div>
       <button type="button" class="delta-icon-modal-close" id="deltaItemIconClose" aria-label="Fechar seleção de ícones">×</button>
     </header>
     <div class="delta-icon-modal-toolbar">
-      <label class="delta-icon-modal-search-wrap">
+      <div class="delta-icon-modal-search-wrap">
         <span aria-hidden="true">⌕</span>
-        <input type="search" id="deltaItemIconSearch" placeholder="Buscar um ícone ou categoria..." autocomplete="off" aria-label="Buscar ícones do catálogo">
+        <input type="search" id="deltaItemIconSearch" placeholder="Buscar: cristal azul, poção, flor, espada..." autocomplete="off" aria-label="Buscar ícones por tipo ou cor">
+        <button type="button" class="delta-icon-search-clear" id="deltaItemIconClearSearch" aria-label="Limpar busca" title="Limpar busca" hidden>×</button>
         <kbd>/</kbd>
-      </label>
+      </div>
       <span id="deltaItemIconCount" class="delta-icon-modal-result-count" role="status" aria-live="polite"></span>
     </div>
     <div class="delta-icon-modal-body">
       <nav id="deltaItemIconFilters" class="delta-item-icon-filters" aria-label="Categorias de ícones"></nav>
       <section class="delta-icon-modal-results" aria-label="Ícones encontrados">
-        <div class="delta-icon-results-heading"><strong id="deltaItemIconCategoryTitle">Todos os ícones</strong><span>Toque em um ícone para pré-visualizar</span></div>
+        <div class="delta-icon-results-heading"><strong id="deltaItemIconCategoryTitle">Todos os ícones</strong><button type="button" id="deltaItemIconReset" class="delta-icon-reset">↺ LIMPAR FILTROS</button></div>
+        <div class="delta-icon-color-row"><span>FILTRAR POR COR</span><div id="deltaItemIconColors" class="delta-icon-colors" role="group" aria-label="Filtrar ícones pela cor predominante"></div></div>
         <div id="deltaItemIconChoices" class="delta-icon-choice-grid" role="group" aria-label="Selecionar um ícone"></div>
       </section>
     </div>
@@ -491,6 +493,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="delta-icon-selection">
         <span id="deltaItemIconDraftPreview" class="delta-icon-draft-preview" aria-hidden="true"></span>
         <span class="delta-icon-selection-copy"><small>ÍCONE ESCOLHIDO</small><strong id="deltaItemIconDraftLabel">Automático</strong></span>
+        <button type="button" id="deltaItemIconFavoriteCurrent" class="delta-icon-current-favorite" aria-label="Favoritar ícone escolhido" title="Adicionar aos favoritos">☆</button>
       </div>
       <div class="delta-icon-modal-actions">
         <button type="button" class="delta-icon-modal-cancel" id="deltaItemIconCancel">Cancelar</button>
@@ -999,8 +1002,30 @@ function iconNode(asset,className='',label=''){
  else icon.setAttribute('aria-hidden','true');
  return icon;
 }
-let deltaCatalogFilter='all';
-let deltaCatalogDraft='auto';
+let deltaCatalogFilter='all',deltaCatalogDraft='auto',deltaCatalogColor='all';
+const DELTA_ICON_COLOR_CODES='bbbbmbbbbbmbbbbbmbbrpbmrbgogbogorboropbrgbroobgpogrbooborbbboobobrobbpmpppypbbpppogpoyoppborrrrrrrmrborrorbbpprrobbbrrgorbpboobbrgrgogpobroyboppoorrobbbyborgoprrymobpprppobprrorrooorrrorbro';
+const DELTA_ICON_COLORS=Object.freeze([
+ {key:'all',title:'Todas',color:'#a4b8ce'},
+ {key:'b',title:'Azul',color:'#62b9ff'},
+ {key:'g',title:'Verde',color:'#65d59f'},
+ {key:'p',title:'Roxo',color:'#ad87ff'},
+ {key:'r',title:'Vermelho',color:'#ff7376'},
+ {key:'o',title:'Laranja',color:'#efa15a'},
+ {key:'y',title:'Dourado',color:'#ffe08b'},
+ {key:'m',title:'Rosa',color:'#f197d9'}
+]);
+const DELTA_ICON_PREF_KEY='delta-rpg-icon-picker-preferences-v1';
+function deltaIconLoadPrefs(){
+ try{
+  const v=JSON.parse(localStorage.getItem(DELTA_ICON_PREF_KEY)||'{}');
+  const arr=value=>Array.isArray(value)?[...new Set(value.filter(x=>x!=='auto'&&safeItemIcon(x)===x))].slice(0,100):[];
+  return {favorites:arr(v.favorites),recent:arr(v.recent).slice(0,12)};
+ }catch(_){return {favorites:[],recent:[]}}
+}
+let deltaIconPrefs=deltaIconLoadPrefs();
+function deltaIconSavePrefs(){
+ try{localStorage.setItem(DELTA_ICON_PREF_KEY,JSON.stringify(deltaIconPrefs))}catch(_){}
+}
 function deltaNormalizeIconSearch(value){
  return String(value||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
@@ -1010,10 +1035,14 @@ function deltaCatalogTitle(key){
  const index=catalogIndex(key);
  return index>=0?catalogIconLabel(index):'Automático';
 }
+function deltaCatalogColorFor(key){
+ const i=catalogIndex(key);
+ return i>=0 ? (DELTA_ICON_COLORS.find(c=>c.key===DELTA_ICON_COLOR_CODES[i])?.title||''):'';
+}
 function deltaCatalogPreview(key,container){
  if(!container)return;
  const form=$('itemForm');
- const actual=key==='auto' ? itemIconFor({type:form?.elements.namedItem('type')?.value,iconAsset:'auto'}) : key;
+ const actual=key==='auto'?itemIconFor({type:form?.elements.namedItem('type')?.value,iconAsset:'auto'}):key;
  container.replaceChildren(iconNode(actual,'delta-modal-preview-icon',deltaCatalogTitle(key)));
 }
 function itemIconButtonRender(){
@@ -1026,11 +1055,39 @@ function itemIconButtonRender(){
 function itemIconDraftRender(){
  deltaCatalogPreview(deltaCatalogDraft,$('deltaItemIconDraftPreview'));
  $('deltaItemIconDraftLabel').textContent=deltaCatalogTitle(deltaCatalogDraft);
+ const favorite=$('deltaItemIconFavoriteCurrent');
+ if(!favorite)return;
+ const isFavorite=deltaIconPrefs.favorites.includes(deltaCatalogDraft);
+ favorite.hidden=deltaCatalogDraft==='auto';
+ favorite.textContent=isFavorite?'★':'☆';
+ favorite.setAttribute('aria-pressed',String(isFavorite));
+ favorite.title=isFavorite?'Retirar dos favoritos':'Salvar nos favoritos';
+ favorite.setAttribute('aria-label',favorite.title);
+}
+function deltaSuggestedKeys(){
+ const category=$('itemForm')?.elements.namedItem('type')?.value||'◆';
+ const wanted=({'⚔':['weapons'],'✦':['minerals','others'],'♥':['containers','food'],'⬡':['weapons','others'],
+  '◆':['minerals','ingredients'],'✿':['ingredients','containers']})[category]||['others','minerals'];
+ const selected=[];
+ for(const key of deltaIconPrefs.favorites){
+  const grp=catalogGroup(catalogIndex(key));
+  if(grp&&wanted.includes(grp.key))selected.push(key);
+ }
+ for(const group of wanted){
+  const g=DELTA_CATALOG_GROUPS.find(x=>x.key===group);
+  if(g)for(let x=g.start;x<Math.min(g.start+g.count,g.start+10);x++)selected.push('sprite'+String(x).padStart(3,'0'));
+ }
+ return [...new Set(selected)].slice(0,26);
 }
 function deltaCatalogGroups(){
- return [{key:'all',title:'Todos',count:DELTA_CATALOG_TOTAL+Object.keys(DELTA_ITEM_ICONS).length+1},
+ return [
+  {key:'suggested',title:'✦ Sugeridos',count:deltaSuggestedKeys().length},
+  {key:'favorites',title:'★ Favoritos',count:deltaIconPrefs.favorites.length},
+  {key:'recent',title:'◷ Recentes',count:deltaIconPrefs.recent.length},
+  {key:'all',title:'Todos',count:DELTA_CATALOG_TOTAL+Object.keys(DELTA_ITEM_ICONS).length+1},
   {key:'classic',title:'Padrões',count:Object.keys(DELTA_ITEM_ICONS).length+1},
-  ...DELTA_CATALOG_GROUPS];
+  ...DELTA_CATALOG_GROUPS
+ ];
 }
 function itemIconFiltersRender(){
  const host=$('deltaItemIconFilters');
@@ -1045,48 +1102,88 @@ function itemIconFiltersRender(){
    deltaCatalogFilter=group.key;
    itemIconFiltersRender();
    itemIconOptionsRender();
-   const grid=$('deltaItemIconChoices');
-   if(grid)grid.scrollTop=0;
+   if($('deltaItemIconChoices'))$('deltaItemIconChoices').scrollTop=0;
   });
   fragment.append(button);
  }
  host.replaceChildren(fragment);
- $('deltaItemIconCategoryTitle').textContent=(deltaCatalogGroups().find(g=>g.key===deltaCatalogFilter)?.title||'Todos')+' os ícones';
+ $('deltaItemIconCategoryTitle').textContent=deltaCatalogGroups().find(g=>g.key===deltaCatalogFilter)?.title||'Todos';
+}
+function itemIconColorsRender(){
+ const host=$('deltaItemIconColors');if(!host)return;
+ const frag=document.createDocumentFragment();
+ for(const c of DELTA_ICON_COLORS){
+  const btn=makeEl('button','delta-icon-color-choice'+(deltaCatalogColor===c.key?' active':''),c.title);
+  btn.type='button';
+  btn.setAttribute('aria-label','Cor: '+c.title);
+  btn.setAttribute('aria-pressed',String(deltaCatalogColor===c.key));
+  btn.append(makeEl('span','delta-icon-color-dot'));
+  btn.querySelector('.delta-icon-color-dot').style.background=c.color;
+  btn.addEventListener('click',()=>{
+   deltaCatalogColor=c.key;
+   itemIconColorsRender();itemIconOptionsRender();
+   if($('deltaItemIconChoices'))$('deltaItemIconChoices').scrollTop=0;
+  });
+  frag.append(btn);
+ }
+ host.replaceChildren(frag);
+}
+function deltaIconMatchesSearch(key,search){
+ if(!search)return true;
+ const group=catalogGroup(catalogIndex(key));
+ const color=deltaCatalogColorFor(key);
+ const info=deltaNormalizeIconSearch(deltaCatalogTitle(key)+' '+(group?.title||'Padrões')+' '+(group?.aliases||'')+
+ ' '+color+' '+(catalogIndex(key)>=0?'#'+(catalogIndex(key)+1):'')+
+ (key==='auto'?' automatico padrao':''));
+ return search.split(/\s+/).every(word=>info.includes(word));
+}
+function deltaIconCandidateKeys(){
+ if(deltaCatalogFilter==='favorites')return [...deltaIconPrefs.favorites];
+ if(deltaCatalogFilter==='recent')return [...deltaIconPrefs.recent];
+ if(deltaCatalogFilter==='suggested')return deltaSuggestedKeys();
+ const choices=[];
+ if(deltaCatalogFilter==='all'||deltaCatalogFilter==='classic'){
+  choices.push('auto',...Object.keys(DELTA_ITEM_ICONS));
+ }
+ if(deltaCatalogFilter!=='classic'){
+  for(let i=0;i<DELTA_CATALOG_TOTAL;i++){
+   const group=catalogGroup(i);
+   if(deltaCatalogFilter!=='all'&&deltaCatalogFilter!==group?.key)continue;
+   choices.push('sprite'+String(i).padStart(3,'0'));
+  }
+ }
+ return choices;
+}
+function toggleDeltaIconFavorite(key){
+ if(key==='auto')return;
+ const i=deltaIconPrefs.favorites.indexOf(key);
+ if(i>=0)deltaIconPrefs.favorites.splice(i,1);
+ else deltaIconPrefs.favorites.unshift(key);
+ deltaIconPrefs.favorites=deltaIconPrefs.favorites.slice(0,100);
+ deltaIconSavePrefs();itemIconFiltersRender();itemIconOptionsRender();
 }
 function itemIconOptionsRender(){
  const host=$('deltaItemIconChoices'),searchElement=$('deltaItemIconSearch');
  if(!host)return;
  const search=deltaNormalizeIconSearch(searchElement?.value);
- const fragment=document.createDocumentFragment(),choices=[];
- if(deltaCatalogFilter==='all'||deltaCatalogFilter==='classic'){
-  const classics=[{key:'auto',label:'Automático'},...Object.entries(DELTA_ITEM_ICONS).map(pair=>({key:pair[0],label:pair[1]}))];
-  for(const opt of classics){
-   if(!search||deltaNormalizeIconSearch(opt.label+' padrão original '+(opt.key==='auto'?'categoria':'')).includes(search))choices.push(opt);
-  }
- }
- if(deltaCatalogFilter!=='classic'){
-  for(let i=0;i<DELTA_CATALOG_TOTAL;i++){
-   const group=catalogGroup(i);
-   if(!group||(deltaCatalogFilter!=='all'&&deltaCatalogFilter!==group.key))continue;
-   const label=catalogIconLabel(i);
-   const searchable=deltaNormalizeIconSearch(label+' '+group.title+' '+group.aliases);
-   if(search&&!searchable.includes(search))continue;
-   choices.push({key:'sprite'+String(i).padStart(3,'0'),label});
-  }
- }
- for(const option of choices){
-  const isSelected=deltaCatalogDraft===option.key;
+ const keys=deltaIconCandidateKeys().filter(key=>
+  (deltaCatalogColor==='all'||DELTA_ICON_COLOR_CODES[catalogIndex(key)]===deltaCatalogColor)
+  &&deltaIconMatchesSearch(key,search));
+ const fragment=document.createDocumentFragment();
+ for(const key of keys){
+  const label=deltaCatalogTitle(key),isSelected=deltaCatalogDraft===key;
+  const wrap=makeEl('div','delta-item-icon-cell');
   const btn=makeEl('button','delta-item-icon-option'+(isSelected?' selected':''));
-  btn.type='button';
-  btn.dataset.iconChoice=option.key;
-  btn.setAttribute('aria-label',option.label);
-  btn.setAttribute('aria-pressed',String(isSelected));
-  btn.title=option.label;
-  if(option.key==='auto')btn.append(makeEl('span','delta-auto-icon','AUTO'));
-  else btn.append(iconNode(option.key,'delta-item-icon-choice',option.label));
-  btn.append(makeEl('span','delta-item-icon-caption',option.label));
+  btn.type='button';btn.dataset.iconChoice=key;
+  btn.setAttribute('aria-label',label);
+  btn.setAttribute('aria-pressed',String(isSelected));btn.title=label;
+  if(key==='auto')btn.append(makeEl('span','delta-auto-icon','AUTO'));
+  else btn.append(iconNode(key,'delta-item-icon-choice',label));
+  btn.append(makeEl('span','delta-item-icon-caption',label));
+  const color=deltaCatalogColorFor(key);
+  if(color)btn.append(makeEl('span','delta-item-icon-subcaption',color));
   btn.addEventListener('click',()=>{
-   deltaCatalogDraft=option.key;
+   deltaCatalogDraft=key;
    for(const tile of host.querySelectorAll('[data-icon-choice]')){
     const active=tile.dataset.iconChoice===deltaCatalogDraft;
     tile.classList.toggle('selected',active);
@@ -1094,16 +1191,43 @@ function itemIconOptionsRender(){
    }
    itemIconDraftRender();
   });
-  fragment.append(btn);
+  wrap.append(btn);
+  if(key!=='auto'){
+   const marked=deltaIconPrefs.favorites.includes(key);
+   const star=makeEl('button','delta-icon-star'+(marked?' saved':''),marked?'★':'☆');
+   star.type='button';
+   star.setAttribute('aria-label',(marked?'Retirar ':'Adicionar ')+label+(marked?' dos favoritos':' aos favoritos'));
+   star.setAttribute('aria-pressed',String(marked));
+   star.title=marked?'Remover favorito':'Favoritar ícone';
+   star.addEventListener('click',()=>toggleDeltaIconFavorite(key));
+   wrap.append(star);
+  }
+  fragment.append(wrap);
  }
- if(!choices.length){
+ if(!keys.length){
   const empty=makeEl('div','delta-icon-empty');
-  empty.append(makeEl('strong','','Nenhum ícone encontrado'),makeEl('span','','Tente outro termo ou selecione uma categoria diferente.'));
+  const msg=deltaCatalogFilter==='favorites'&&!deltaIconPrefs.favorites.length?'Seus favoritos aparecerão aqui':
+   deltaCatalogFilter==='recent'&&!deltaIconPrefs.recent.length?'Nenhum ícone usado recentemente':
+   'Nenhum ícone encontrado';
+  empty.append(makeEl('strong','',msg),
+   makeEl('span','',deltaCatalogFilter==='favorites'?'Marque ☆ nos ícones para salvá-los aqui.':'Experimente outra cor, categoria ou termo de busca.'));
+  const clear=makeEl('button','delta-icon-empty-reset','VER TODOS OS ÍCONES');
+  clear.type='button';clear.addEventListener('click',deltaCatalogReset);
+  empty.append(clear);
   fragment.append(empty);
  }
  host.replaceChildren(fragment);
- $('deltaItemIconCount').textContent=choices.length+' '+(choices.length===1?'ícone':'ícones');
+ $('deltaItemIconCount').textContent=keys.length+' '+(keys.length===1?'ícone':'ícones');
+ const clearSearch=$('deltaItemIconClearSearch');
+ if(clearSearch)clearSearch.hidden=!search;
  itemIconDraftRender();
+}
+function deltaCatalogReset(){
+ deltaCatalogFilter='all';deltaCatalogColor='all';
+ $('deltaItemIconSearch').value='';
+ itemIconFiltersRender();itemIconColorsRender();itemIconOptionsRender();
+ if($('deltaItemIconChoices'))$('deltaItemIconChoices').scrollTop=0;
+ $('deltaItemIconSearch')?.focus({preventScroll:true});
 }
 function closeItemIconModal(){
  const dialog=$('deltaItemIconDialog');
@@ -1113,11 +1237,12 @@ function openItemIconModal(){
  const form=$('itemForm'),dialog=$('deltaItemIconDialog');
  if(!form||!dialog||form.hidden)return;
  deltaCatalogDraft=safeItemIcon(form.elements.namedItem('iconAsset').value);
- const idx=catalogIndex(deltaCatalogDraft);
- deltaCatalogFilter=idx>=0?(catalogGroup(idx)?.key||'all'):(deltaCatalogDraft==='auto'||DELTA_ITEM_ICONS[deltaCatalogDraft]?'classic':'all');
+ const index=catalogIndex(deltaCatalogDraft);
+ deltaCatalogFilter=index>=0?(catalogGroup(index)?.key||'all'):
+ (deltaCatalogDraft==='auto'?'suggested':'classic');
+ deltaCatalogColor='all';
  $('deltaItemIconSearch').value='';
- itemIconFiltersRender();
- itemIconOptionsRender();
+ itemIconFiltersRender();itemIconColorsRender();itemIconOptionsRender();
  if(!dialog.open)dialog.showModal();
  const selected=$('deltaItemIconChoices').querySelector('[aria-pressed="true"]');
  if(selected)selected.scrollIntoView({block:'nearest',inline:'nearest'});
@@ -1126,7 +1251,12 @@ function openItemIconModal(){
 function confirmItemIconModal(){
  const form=$('itemForm');
  if(!form||form.hidden){closeItemIconModal();return}
- form.elements.namedItem('iconAsset').value=safeItemIcon(deltaCatalogDraft);
+ const chosen=safeItemIcon(deltaCatalogDraft);
+ form.elements.namedItem('iconAsset').value=chosen;
+ if(chosen!=='auto'){
+  deltaIconPrefs.recent=[chosen,...deltaIconPrefs.recent.filter(x=>x!==chosen)].slice(0,12);
+  deltaIconSavePrefs();
+ }
  itemIconButtonRender();
  closeItemIconModal();
 }
@@ -1134,10 +1264,53 @@ $('deltaItemIconOpen')?.addEventListener('click',openItemIconModal);
 $('deltaItemIconClose')?.addEventListener('click',closeItemIconModal);
 $('deltaItemIconCancel')?.addEventListener('click',closeItemIconModal);
 $('deltaItemIconConfirm')?.addEventListener('click',confirmItemIconModal);
+$('deltaItemIconFavoriteCurrent')?.addEventListener('click',()=>toggleDeltaIconFavorite(deltaCatalogDraft));
+$('deltaItemIconReset')?.addEventListener('click',deltaCatalogReset);
+$('deltaItemIconClearSearch')?.addEventListener('click',()=>{
+ $('deltaItemIconSearch').value='';
+ itemIconOptionsRender();
+ $('deltaItemIconSearch').focus({preventScroll:true});
+});
 $('deltaItemIconDialog')?.addEventListener('click',event=>{
  if(event.target===$('deltaItemIconDialog'))closeItemIconModal();
 });
-$('deltaItemIconSearch')?.addEventListener('input',itemIconOptionsRender);
+$('deltaItemIconDialog')?.addEventListener('close',()=>{
+ if(!$('itemForm')?.hidden&&$('deltaItemIconOpen'))$('deltaItemIconOpen').focus({preventScroll:true});
+});
+$('deltaItemIconSearch')?.addEventListener('input',()=>{
+ if($('deltaItemIconSearch').value.trim()&&deltaCatalogFilter!=='all'){
+  deltaCatalogFilter='all';itemIconFiltersRender();
+ }
+ itemIconOptionsRender();
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&$('deltaItemIconDialog')?.open&&
+ !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){
+  event.preventDefault();$('deltaItemIconSearch')?.focus();
+ }
+});
+$('deltaItemIconSearch')?.addEventListener('keydown',event=>{
+ if(event.key==='Enter'){
+  event.preventDefault();
+  $('deltaItemIconChoices')?.querySelector('.delta-item-icon-option')?.focus();
+ }
+});
+$('deltaItemIconChoices')?.addEventListener('keydown',event=>{
+ if(!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+ const options=Array.from($('deltaItemIconChoices').querySelectorAll('.delta-item-icon-option'));
+ const index=options.indexOf(document.activeElement);
+ if(index<0)return;
+ const columns=Math.max(1,Math.round($('deltaItemIconChoices').clientWidth/options[index].offsetWidth));
+ let next=index;
+ if(event.key==='ArrowRight')next=Math.min(options.length-1,index+1);
+ if(event.key==='ArrowLeft')next=Math.max(0,index-1);
+ if(event.key==='ArrowDown')next=Math.min(options.length-1,index+columns);
+ if(event.key==='ArrowUp')next=Math.max(0,index-columns);
+ if(event.key==='Home')next=0;
+ if(event.key==='End')next=options.length-1;
+ if(next!==index){event.preventDefault();options[next].focus();}
+});
+$('itemForm')?.elements.namedItem('type')?.addEventListener('change',itemIconButtonRender);
 $('deltaItemIconSearch')?.addEventListener('keydown',event=>{
  if(event.key==='Enter'){
   event.preventDefault();

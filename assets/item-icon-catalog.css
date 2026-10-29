@@ -165,3 +165,114 @@
  .delta-icon-draft-preview .delta-icon-sprite{width:40px;height:40px}
 }
 @media(prefers-reduced-motion:reduce){.delta-icon-modal *, .delta-icon-open-btn{transition:none!important;transform:none!important}}
+
+/* DELTA RPG catálogo v3 — descoberta rápida, favoritos e cores */
+.delta-icon-modal .delta-icon-modal-results{
+ grid-template-rows:auto auto minmax(0,1fr);gap:10px;
+}
+.delta-icon-modal .delta-icon-modal-toolbar{gap:10px}
+.delta-icon-modal .delta-icon-search-clear{
+ width:30px;height:30px;flex:0 0 30px;border:0;border-radius:6px;
+ background:rgba(110,138,188,.21);color:#eef7ff;cursor:pointer;font-size:23px;line-height:1;
+}
+.delta-icon-modal .delta-icon-search-clear[hidden]{display:none}
+.delta-icon-modal .delta-icon-search-clear:hover{background:rgba(124,190,242,.4)}
+.delta-icon-modal .delta-icon-results-heading{min-height:32px}
+.delta-icon-modal .delta-icon-reset,.delta-icon-empty-reset{
+ cursor:pointer;border:1px solid rgba(146,205,252,.27);
+ background:rgba(45,81,126,.25);color:#aee8ff;font-size:10px;
+ font-weight:800;border-radius:6px;padding:7px 9px
+}
+.delta-icon-modal .delta-icon-reset:hover,.delta-icon-empty-reset:hover{
+ border-color:#90defb;background:rgba(68,130,180,.37)
+}
+.delta-icon-modal .delta-icon-color-row{
+ display:flex;align-items:center;gap:10px;min-height:37px;padding:5px 2px;
+}
+.delta-icon-modal .delta-icon-color-row>span{
+ font-size:9px;letter-spacing:.06em;font-weight:800;color:#9fb8d2;white-space:nowrap
+}
+.delta-icon-modal .delta-icon-colors{
+ display:flex;align-items:center;flex-wrap:nowrap;gap:5px;overflow-x:auto;
+ scrollbar-width:none;padding:1px 2px
+}
+.delta-icon-modal .delta-icon-color-choice{
+ display:flex;align-items:center;gap:6px;cursor:pointer;
+ border:1px solid rgba(146,170,216,.24);border-radius:100px;
+ padding:7px 9px;white-space:nowrap;background:rgba(13,23,44,.72);
+ color:#aebfda;font-size:10px;font-weight:750;
+}
+.delta-icon-modal .delta-icon-color-choice:hover,
+.delta-icon-modal .delta-icon-color-choice:focus-visible{
+ border-color:#a4deff;color:#eff9ff;outline:0
+}
+.delta-icon-modal .delta-icon-color-choice.active{
+ color:#fff;background:rgba(61,108,160,.36);border-color:#82d9ff;
+ box-shadow:inset 0 0 0 1px rgba(137,225,255,.16)
+}
+.delta-icon-modal .delta-icon-color-dot{
+ width:12px;height:12px;flex:none;border-radius:50%;
+ border:1px solid rgba(255,255,255,.3);box-shadow:0 0 6px rgba(0,0,0,.21)
+}
+.delta-icon-modal .delta-item-icon-filters{
+ gap:5px;
+}
+.delta-icon-modal .delta-icon-filter{
+ font-size:11px;padding:11px 10px
+}
+.delta-icon-modal .delta-icon-filter:nth-child(4){
+ margin-top:8px;padding-top:17px;border-top:1px solid rgba(139,186,231,.17);
+ border-top-left-radius:0;border-top-right-radius:0
+}
+.delta-icon-modal .delta-icon-choice-grid{
+ grid-template-columns:repeat(auto-fill,minmax(99px,1fr));gap:9px;
+}
+.delta-icon-modal .delta-item-icon-cell{
+ position:relative;min-width:0;display:flex;
+}
+.delta-icon-modal .delta-item-icon-option{
+ width:100%;height:100%;min-height:111px;padding:8px 5px 10px;gap:6px;
+}
+.delta-icon-modal .delta-item-icon-subcaption{
+ font-size:9px;line-height:1.2;color:#96aacf;font-weight:700;
+}
+.delta-icon-modal .delta-icon-star{
+ position:absolute;right:5px;top:5px;z-index:1;display:grid;place-items:center;
+ width:24px;height:24px;border:1px solid rgba(165,189,228,.22);border-radius:6px;
+ background:rgba(5,10,27,.78);color:#b5bed4;cursor:pointer;font-size:16px;line-height:1;
+ opacity:.6;transition:opacity .16s,background .16s,color .16s
+}
+.delta-icon-modal .delta-icon-star.saved{
+ color:#ffdb79;background:rgba(43,35,20,.94);border-color:rgba(244,202,90,.55);opacity:1
+}
+.delta-icon-modal .delta-item-icon-cell:hover .delta-icon-star,
+.delta-icon-modal .delta-icon-star:focus-visible{opacity:1}
+.delta-icon-modal .delta-icon-star:hover{color:#ffe68b;background:rgba(71,61,41,.92);opacity:1}
+.delta-icon-modal .delta-icon-current-favorite{
+ display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;cursor:pointer;
+ border:1px solid rgba(220,203,125,.31);border-radius:7px;
+ color:#f5d573;font-size:23px;background:rgba(65,47,20,.24);
+}
+.delta-icon-modal .delta-icon-current-favorite[hidden]{display:none}
+.delta-icon-modal .delta-icon-current-favorite:hover{border-color:#f9d97e;background:rgba(111,79,25,.35)}
+.delta-icon-modal .delta-icon-selection{gap:10px}
+.delta-icon-modal .delta-icon-empty-reset{margin-top:4px}
+@media(max-width:740px){
+ .delta-icon-modal .delta-icon-results-heading{gap:8px}
+ .delta-icon-modal .delta-icon-color-row{display:block}
+ .delta-icon-modal .delta-icon-color-row>span{display:block;margin-bottom:7px}
+ .delta-icon-modal .delta-icon-colors{padding:1px 1px 4px}
+ .delta-icon-modal .delta-icon-filter:nth-child(4){margin-top:0;padding-top:8px;border-top:1px solid transparent;border-radius:7px}
+ .delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:7px}
+ .delta-icon-modal .delta-item-icon-option{min-height:99px}
+ .delta-icon-modal .delta-icon-star{opacity:1}
+}
+@media(max-width:460px){
+ .delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .delta-icon-modal .delta-item-icon-option{min-height:108px}
+ .delta-icon-modal .delta-icon-results-heading{font-size:11px}
+ .delta-icon-modal .delta-icon-reset{font-size:9px;padding:7px 5px}
+ .delta-icon-modal .delta-icon-color-row{padding-bottom:0}
+ .delta-icon-modal .delta-icon-color-choice{padding:7px 8px}
+ .delta-icon-modal .delta-icon-current-favorite{width:30px;height:30px;flex-basis:30px}
+}
