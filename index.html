@@ -459,9 +459,46 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
 <link rel="stylesheet" href="./assets/item-rarity.css?v=2">
 <link rel="stylesheet" href="./assets/delta-icons.css?v=1">
-<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=1">
+<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=2">
 </head>
 <body>
+<dialog id="deltaItemIconDialog" class="delta-icon-modal" aria-labelledby="deltaItemIconDialogTitle">
+  <div class="delta-icon-modal-shell">
+    <header class="delta-icon-modal-header">
+      <div class="delta-icon-modal-heading">
+        <span class="delta-icon-modal-kicker">DELTA RPG / INVENTÁRIO</span>
+        <h2 id="deltaItemIconDialogTitle">ESCOLHER ÍCONE</h2>
+        <p>Encontre o visual ideal para seu item.</p>
+      </div>
+      <button type="button" class="delta-icon-modal-close" id="deltaItemIconClose" aria-label="Fechar seleção de ícones">×</button>
+    </header>
+    <div class="delta-icon-modal-toolbar">
+      <label class="delta-icon-modal-search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input type="search" id="deltaItemIconSearch" placeholder="Buscar um ícone ou categoria..." autocomplete="off" aria-label="Buscar ícones do catálogo">
+        <kbd>/</kbd>
+      </label>
+      <span id="deltaItemIconCount" class="delta-icon-modal-result-count" role="status" aria-live="polite"></span>
+    </div>
+    <div class="delta-icon-modal-body">
+      <nav id="deltaItemIconFilters" class="delta-item-icon-filters" aria-label="Categorias de ícones"></nav>
+      <section class="delta-icon-modal-results" aria-label="Ícones encontrados">
+        <div class="delta-icon-results-heading"><strong id="deltaItemIconCategoryTitle">Todos os ícones</strong><span>Toque em um ícone para pré-visualizar</span></div>
+        <div id="deltaItemIconChoices" class="delta-icon-choice-grid" role="group" aria-label="Selecionar um ícone"></div>
+      </section>
+    </div>
+    <footer class="delta-icon-modal-footer">
+      <div class="delta-icon-selection">
+        <span id="deltaItemIconDraftPreview" class="delta-icon-draft-preview" aria-hidden="true"></span>
+        <span class="delta-icon-selection-copy"><small>ÍCONE ESCOLHIDO</small><strong id="deltaItemIconDraftLabel">Automático</strong></span>
+      </div>
+      <div class="delta-icon-modal-actions">
+        <button type="button" class="delta-icon-modal-cancel" id="deltaItemIconCancel">Cancelar</button>
+        <button type="button" class="delta-icon-modal-confirm" id="deltaItemIconConfirm">✦ USAR ESTE ÍCONE</button>
+      </div>
+    </footer>
+  </div>
+</dialog>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="theme-atmosphere" aria-hidden="true"></div>
   <div class="container">
@@ -612,10 +649,11 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <div class="editor-label editor-wide delta-item-picker-field">
           <span>ÍCONE DO ITEM <span class="rarity-optional">(OPCIONAL)</span></span>
           <input type="hidden" name="iconAsset" value="auto">
-          <div id="deltaItemIconFilters" class="delta-item-icon-filters" role="group" aria-label="Categorias de ícones"></div>
-          <input type="search" class="editor-input delta-item-icon-search" id="deltaItemIconSearch" placeholder="Buscar ícones..." aria-label="Buscar ícones" autocomplete="off">
-          <div id="deltaItemIconChoices" class="delta-icon-choice-grid" role="group" aria-label="Ícone do item"></div>
-          <p class="delta-catalog-hint">189 novos ícones em pixel art, recortados e sem fundo. Escolha um para personalizar este item.</p>
+          <button type="button" class="delta-icon-open-btn" id="deltaItemIconOpen" aria-haspopup="dialog" aria-controls="deltaItemIconDialog">
+            <span id="deltaItemIconButtonPreview" class="delta-icon-open-thumb" aria-hidden="true"></span>
+            <span class="delta-icon-open-copy"><strong id="deltaItemIconButtonLabel">Automático</strong><small>Escolha entre 196 opções organizadas em categorias</small></span>
+            <span class="delta-icon-open-cta">TROCAR ÍCONE <span aria-hidden="true">✧</span></span>
+          </button>
         </div>
         <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Lendário</option><option value="unique">ÚNICO</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
@@ -962,47 +1000,166 @@ function iconNode(asset,className='',label=''){
  return icon;
 }
 let deltaCatalogFilter='all';
+let deltaCatalogDraft='auto';
+function deltaNormalizeIconSearch(value){
+ return String(value||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function deltaCatalogTitle(key){
+ if(key==='auto')return 'Automático (pela categoria)';
+ if(Object.prototype.hasOwnProperty.call(DELTA_ITEM_ICONS,key))return DELTA_ITEM_ICONS[key];
+ const index=catalogIndex(key);
+ return index>=0?catalogIconLabel(index):'Automático';
+}
+function deltaCatalogPreview(key,container){
+ if(!container)return;
+ const form=$('itemForm');
+ const actual=key==='auto' ? itemIconFor({type:form?.elements.namedItem('type')?.value,iconAsset:'auto'}) : key;
+ container.replaceChildren(iconNode(actual,'delta-modal-preview-icon',deltaCatalogTitle(key)));
+}
+function itemIconButtonRender(){
+ const form=$('itemForm');
+ if(!form)return;
+ const chosen=safeItemIcon(form.elements.namedItem('iconAsset').value);
+ deltaCatalogPreview(chosen,$('deltaItemIconButtonPreview'));
+ $('deltaItemIconButtonLabel').textContent=deltaCatalogTitle(chosen);
+}
+function itemIconDraftRender(){
+ deltaCatalogPreview(deltaCatalogDraft,$('deltaItemIconDraftPreview'));
+ $('deltaItemIconDraftLabel').textContent=deltaCatalogTitle(deltaCatalogDraft);
+}
+function deltaCatalogGroups(){
+ return [{key:'all',title:'Todos',count:DELTA_CATALOG_TOTAL+Object.keys(DELTA_ITEM_ICONS).length+1},
+  {key:'classic',title:'Padrões',count:Object.keys(DELTA_ITEM_ICONS).length+1},
+  ...DELTA_CATALOG_GROUPS];
+}
 function itemIconFiltersRender(){
- const host=$('deltaItemIconFilters');if(!host)return;
+ const host=$('deltaItemIconFilters');
+ if(!host)return;
  const fragment=document.createDocumentFragment();
- for(const group of [{key:'all',title:'Todos'},...DELTA_CATALOG_GROUPS]){
-  const button=makeEl('button','delta-icon-filter'+(deltaCatalogFilter===group.key?' active':''),group.title+(group.count?' ('+group.count+')':''));
-  button.type='button';button.setAttribute('aria-pressed',String(deltaCatalogFilter===group.key));
-  button.addEventListener('click',()=>{deltaCatalogFilter=group.key;itemIconFiltersRender();itemIconOptionsRender()});fragment.append(button);
+ for(const group of deltaCatalogGroups()){
+  const button=makeEl('button','delta-icon-filter'+(deltaCatalogFilter===group.key?' active':''),group.title);
+  button.type='button';
+  button.setAttribute('aria-pressed',String(deltaCatalogFilter===group.key));
+  button.append(makeEl('span','delta-icon-filter-count',String(group.count)));
+  button.addEventListener('click',()=>{
+   deltaCatalogFilter=group.key;
+   itemIconFiltersRender();
+   itemIconOptionsRender();
+   const grid=$('deltaItemIconChoices');
+   if(grid)grid.scrollTop=0;
+  });
+  fragment.append(button);
  }
  host.replaceChildren(fragment);
+ $('deltaItemIconCategoryTitle').textContent=(deltaCatalogGroups().find(g=>g.key===deltaCatalogFilter)?.title||'Todos')+' os ícones';
 }
 function itemIconOptionsRender(){
- const host=$('deltaItemIconChoices'),form=$('itemForm');if(!host||!form)return;
- const selected=safeItemIcon(form.elements.namedItem('iconAsset')?.value);
- const search=String($('deltaItemIconSearch')?.value||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const host=$('deltaItemIconChoices'),searchElement=$('deltaItemIconSearch');
+ if(!host)return;
+ const search=deltaNormalizeIconSearch(searchElement?.value);
  const fragment=document.createDocumentFragment(),choices=[];
- if(deltaCatalogFilter==='all'&&!search){
-  choices.push({key:'auto',label:'AUTO'});
-  for(const key of Object.keys(DELTA_ITEM_ICONS))choices.push({key,label:DELTA_ITEM_ICONS[key]});
+ if(deltaCatalogFilter==='all'||deltaCatalogFilter==='classic'){
+  const classics=[{key:'auto',label:'Automático'},...Object.entries(DELTA_ITEM_ICONS).map(pair=>({key:pair[0],label:pair[1]}))];
+  for(const opt of classics){
+   if(!search||deltaNormalizeIconSearch(opt.label+' padrão original '+(opt.key==='auto'?'categoria':'')).includes(search))choices.push(opt);
+  }
  }
- for(let index=0;index<DELTA_CATALOG_TOTAL;index++){
-  const group=catalogGroup(index);
-  if(deltaCatalogFilter!=='all'&&deltaCatalogFilter!==group.key)continue;
-  const label=catalogIconLabel(index);
-  const find=(label+' '+group.title+' '+group.aliases).toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  if(search&&!find.includes(search))continue;
-  choices.push({key:'sprite'+String(index).padStart(3,'0'),label});
+ if(deltaCatalogFilter!=='classic'){
+  for(let i=0;i<DELTA_CATALOG_TOTAL;i++){
+   const group=catalogGroup(i);
+   if(!group||(deltaCatalogFilter!=='all'&&deltaCatalogFilter!==group.key))continue;
+   const label=catalogIconLabel(i);
+   const searchable=deltaNormalizeIconSearch(label+' '+group.title+' '+group.aliases);
+   if(search&&!searchable.includes(search))continue;
+   choices.push({key:'sprite'+String(i).padStart(3,'0'),label});
+  }
  }
  for(const option of choices){
-  const isSelected=selected===option.key,btn=makeEl('button','delta-item-icon-option'+(isSelected?' selected':''));
-  btn.type='button';btn.setAttribute('aria-label',option.label);
-  btn.setAttribute('aria-pressed',String(isSelected));btn.title=option.label;
+  const isSelected=deltaCatalogDraft===option.key;
+  const btn=makeEl('button','delta-item-icon-option'+(isSelected?' selected':''));
+  btn.type='button';
+  btn.dataset.iconChoice=option.key;
+  btn.setAttribute('aria-label',option.label);
+  btn.setAttribute('aria-pressed',String(isSelected));
+  btn.title=option.label;
   if(option.key==='auto')btn.append(makeEl('span','delta-auto-icon','AUTO'));
   else btn.append(iconNode(option.key,'delta-item-icon-choice',option.label));
   btn.append(makeEl('span','delta-item-icon-caption',option.label));
-  btn.addEventListener('click',()=>{form.elements.namedItem('iconAsset').value=option.key;itemIconOptionsRender()});
+  btn.addEventListener('click',()=>{
+   deltaCatalogDraft=option.key;
+   for(const tile of host.querySelectorAll('[data-icon-choice]')){
+    const active=tile.dataset.iconChoice===deltaCatalogDraft;
+    tile.classList.toggle('selected',active);
+    tile.setAttribute('aria-pressed',String(active));
+   }
+   itemIconDraftRender();
+  });
   fragment.append(btn);
  }
- if(!choices.length)fragment.append(makeEl('p','delta-icon-empty','Nenhum ícone encontrado.'));
+ if(!choices.length){
+  const empty=makeEl('div','delta-icon-empty');
+  empty.append(makeEl('strong','','Nenhum ícone encontrado'),makeEl('span','','Tente outro termo ou selecione uma categoria diferente.'));
+  fragment.append(empty);
+ }
  host.replaceChildren(fragment);
+ $('deltaItemIconCount').textContent=choices.length+' '+(choices.length===1?'ícone':'ícones');
+ itemIconDraftRender();
 }
+function closeItemIconModal(){
+ const dialog=$('deltaItemIconDialog');
+ if(dialog?.open)dialog.close();
+}
+function openItemIconModal(){
+ const form=$('itemForm'),dialog=$('deltaItemIconDialog');
+ if(!form||!dialog||form.hidden)return;
+ deltaCatalogDraft=safeItemIcon(form.elements.namedItem('iconAsset').value);
+ const idx=catalogIndex(deltaCatalogDraft);
+ deltaCatalogFilter=idx>=0?(catalogGroup(idx)?.key||'all'):(deltaCatalogDraft==='auto'||DELTA_ITEM_ICONS[deltaCatalogDraft]?'classic':'all');
+ $('deltaItemIconSearch').value='';
+ itemIconFiltersRender();
+ itemIconOptionsRender();
+ if(!dialog.open)dialog.showModal();
+ const selected=$('deltaItemIconChoices').querySelector('[aria-pressed="true"]');
+ if(selected)selected.scrollIntoView({block:'nearest',inline:'nearest'});
+ $('deltaItemIconSearch').focus({preventScroll:true});
+}
+function confirmItemIconModal(){
+ const form=$('itemForm');
+ if(!form||form.hidden){closeItemIconModal();return}
+ form.elements.namedItem('iconAsset').value=safeItemIcon(deltaCatalogDraft);
+ itemIconButtonRender();
+ closeItemIconModal();
+}
+$('deltaItemIconOpen')?.addEventListener('click',openItemIconModal);
+$('deltaItemIconClose')?.addEventListener('click',closeItemIconModal);
+$('deltaItemIconCancel')?.addEventListener('click',closeItemIconModal);
+$('deltaItemIconConfirm')?.addEventListener('click',confirmItemIconModal);
+$('deltaItemIconDialog')?.addEventListener('click',event=>{
+ if(event.target===$('deltaItemIconDialog'))closeItemIconModal();
+});
 $('deltaItemIconSearch')?.addEventListener('input',itemIconOptionsRender);
+$('deltaItemIconSearch')?.addEventListener('keydown',event=>{
+ if(event.key==='Enter'){
+  event.preventDefault();
+  $('deltaItemIconChoices')?.querySelector('.delta-item-icon-option')?.focus();
+ }
+});
+$('deltaItemIconChoices')?.addEventListener('keydown',event=>{
+ if(!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+ const options=Array.from($('deltaItemIconChoices').querySelectorAll('.delta-item-icon-option'));
+ const index=options.indexOf(document.activeElement);
+ if(index<0)return;
+ const columns=Math.max(1,Math.round($('deltaItemIconChoices').clientWidth/options[index].offsetWidth));
+ let next=index;
+ if(event.key==='ArrowRight')next=Math.min(options.length-1,index+1);
+ if(event.key==='ArrowLeft')next=Math.max(0,index-1);
+ if(event.key==='ArrowDown')next=Math.min(options.length-1,index+columns);
+ if(event.key==='ArrowUp')next=Math.max(0,index-columns);
+ if(event.key==='Home')next=0;
+ if(event.key==='End')next=options.length-1;
+ if(next!==index){event.preventDefault();options[next].focus();}
+});
+$('itemForm')?.elements.namedItem('type')?.addEventListener('change',itemIconButtonRender);
 const kind={skills:{collection:'skills',selected:'selectedSkill',list:'skillsList',detail:'skillDetail',form:'skillForm',heading:'skillFormHeading',primary:'name'},inventory:{collection:'items',selected:'selectedItem',list:'inventoryList',detail:'itemDetail',form:'itemForm',heading:'itemFormHeading',primary:'name'}};
 function selectEntry(type,id){state[kind[type].selected]=id;renderLibrary(type);persist()}
 function createBlank(type){const area=$(kind[type].detail);area.replaceChildren();const info=makeEl('div','empty-state');info.append(makeEl('strong','',type==='skills'?'✦ NENHUMA HABILIDADE':'✦ NENHUM ITEM'),makeEl('span','',type==='skills'?'Clique em ADICIONAR HABILIDADE para criar sua primeira técnica.':'Clique em ADICIONAR ITEM para montar seu inventário.'));area.append(info)}
@@ -1101,9 +1258,7 @@ function openEditor(type,id=null){const conf=kind[type],form=$(conf.form),entry=
  if(type==='inventory'){
   if(!entry)form.elements.namedItem('quantity').value='1';
   form.elements.namedItem('iconAsset').value=safeItemIcon(entry?.iconAsset);
-  deltaCatalogFilter='all';
-  if($('deltaItemIconSearch'))$('deltaItemIconSearch').value='';
-  itemIconFiltersRender();itemIconOptionsRender();
+  itemIconButtonRender();
  }form.scrollIntoView({behavior:'smooth',block:'nearest'});form.elements.namedItem('name').focus()}
 function updateSkillFields(){const v=$('skillCategory').value,isBuff=v==='buff';$('skillPowerWrap').hidden=isBuff;$('skillBuffTargetWrap').hidden=!isBuff;$('skillBuffAmountWrap').hidden=!isBuff;$('skillBuffTurnsWrap').hidden=!isBuff}
 function updateSkillTypePreview(){
@@ -1117,7 +1272,7 @@ $('skillCategory').addEventListener('change',()=>{
 });
 $('skillVisualType').addEventListener('change',updateSkillTypePreview);
 document.querySelectorAll('.skill-filter').forEach(btn=>btn.addEventListener('click',()=>setSkillFilter(btn.dataset.filter)));
-function closeEditor(type){$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
+function closeEditor(type){if(type==='inventory')closeItemIconModal();$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
 function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.form),id=type==='skills'?skillEditId:itemEditId,name=String(form.elements.namedItem('name').value||'').trim().slice(0,55),description=String(form.elements.namedItem('description').value||'').slice(0,3000);if(!name){toast('Digite o nome.');return}
  let record;if(type==='skills')record={id:id||makeId(),name,description,icon:({heal:'♥',damage:'⚔',buff:'✦'}[form.elements.namedItem('category').value]||'✦'),abilityType:safeAbilityType(form.elements.namedItem('abilityType').value,form.elements.namedItem('category').value),cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else{
   const previous=state.items.find(x=>x.id===id);

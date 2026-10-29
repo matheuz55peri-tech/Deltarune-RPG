@@ -1,4 +1,5 @@
-/* Recortes PNG transparentes, 10 x 19 quadrados de 96px. */
+/* DELTA RPG — catálogo em janela modal.
+   Sprite preservado; ícones continuam nos mesmos índices e FILES. */
 .delta-icon-sprite.delta-catalog-icon{
  background-image:url("./item-icons-sprite.png?v=1")!important;
  background-repeat:no-repeat!important;
@@ -7,15 +8,160 @@
  background-color:transparent!important;
  image-rendering:pixelated!important
 }
-.delta-item-icon-filters{display:flex;flex-wrap:wrap;gap:6px}
-.delta-icon-filter{cursor:pointer;border:1px solid rgba(153,195,237,.32);border-radius:4px;background:rgba(9,16,38,.8);color:#c5d6ed;font-size:10px;font-weight:800;padding:8px 10px}
-.delta-icon-filter:is(:hover,:focus-visible){border-color:#a9e8ff;color:#fff}
-.delta-icon-filter.active{border-color:#8be8ff;background:rgba(35,93,124,.43);color:#fff}
-.delta-item-icon-search{width:100%;font-size:12px}
-.delta-item-picker-field .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px;max-height:410px;overflow-y:auto;padding:8px;border:1px solid rgba(153,195,237,.24);border-radius:5px;background:rgba(5,10,28,.23);scrollbar-width:thin;overscroll-behavior:contain}
-.delta-item-picker-field .delta-item-icon-option{min-height:78px;padding:6px 3px;gap:4px}
-.delta-item-picker-field .delta-item-icon-caption{font-size:9px;overflow-wrap:anywhere}
-.delta-item-picker-field .delta-item-icon-choice{width:46px;height:46px}
-.delta-icon-empty{grid-column:1/-1;padding:16px;color:#ccd3e7;font-size:12px}
-.delta-catalog-hint{color:#a8bdd6;font-size:11px;font-weight:500;letter-spacing:0;line-height:1.5}
-@media(max-width:480px){.delta-item-picker-field .delta-icon-choice-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:345px}.delta-item-picker-field .delta-item-icon-caption{font-size:8px}}
+.delta-item-picker-field{display:grid;gap:8px}
+.delta-icon-open-btn{
+ width:100%;min-height:88px;display:flex;align-items:center;gap:15px;
+ padding:12px 15px;text-align:left;cursor:pointer;
+ border:1px solid rgba(153,203,238,.36);border-radius:10px;
+ background:linear-gradient(118deg,rgba(36,54,90,.42),rgba(6,12,30,.76));
+ color:#f5f6ff;transition:border-color .18s,background .18s,box-shadow .18s
+}
+.delta-icon-open-btn:hover,.delta-icon-open-btn:focus-visible{
+ border-color:#82e3ff;box-shadow:0 0 0 2px rgba(101,224,255,.16),0 8px 22px rgba(0,0,0,.15);
+ outline:none
+}
+.delta-icon-open-thumb,.delta-icon-draft-preview{
+ width:66px;height:66px;flex:none;display:grid;place-items:center;
+ border:1px solid rgba(148,218,244,.24);border-radius:10px;background:rgba(7,13,29,.7)
+}
+.delta-icon-open-thumb .delta-icon-sprite{width:54px;height:54px}
+.delta-icon-open-copy{display:grid;gap:8px;min-width:0;flex:1;letter-spacing:normal}
+.delta-icon-open-copy strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.delta-icon-open-copy small{font-size:11px;font-weight:500;line-height:1.4;color:#a8c2d8}
+.delta-icon-open-cta{font-size:10px;line-height:1.5;white-space:nowrap;color:#a5e9fa;font-weight:800}
+.delta-icon-modal{
+ width:min(1040px,calc(100vw - 30px));max-width:none;
+ height:min(840px,90dvh);max-height:90dvh;
+ padding:0!important;margin:auto!important;
+ color:#f1f2fc;background:#0d1123;
+ border:1px solid rgba(171,208,255,.45);border-radius:14px;
+ box-shadow:0 34px 100px rgba(0,0,0,.72),0 0 40px rgba(54,136,199,.14);
+ overflow:hidden;overscroll-behavior:contain
+}
+.delta-icon-modal:not([open]){display:none}
+.delta-icon-modal::backdrop{background:rgba(0,0,0,.8);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.delta-icon-modal-shell{height:100%;max-height:90dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;min-width:0}
+.delta-icon-modal-header{
+ display:flex;justify-content:space-between;align-items:center;gap:16px;
+ padding:21px 26px 17px;border-bottom:1px solid rgba(168,196,238,.12);
+ background:linear-gradient(105deg,rgba(26,48,89,.5),rgba(13,17,35,1) 76%)
+}
+.delta-icon-modal-kicker{font-size:10px;font-weight:800;letter-spacing:.15em;color:#8fd7fb}
+.delta-icon-modal-heading h2{font:clamp(14px,2.2vw,21px)/1.4 'Press Start 2P',monospace;margin:9px 0 8px;color:#fff}
+.delta-icon-modal-heading p{font-size:12px;line-height:1.5;color:#b5bfd9;margin:0}
+.delta-icon-modal-close{
+ width:42px;height:42px;flex:none;border:1px solid rgba(194,206,246,.26);border-radius:8px;
+ background:rgba(11,16,37,.75);color:#d7dff5;font-size:28px;cursor:pointer;line-height:1
+}
+.delta-icon-modal-close:hover,.delta-icon-modal-close:focus-visible{border-color:#bceaff;background:rgba(59,93,130,.34)}
+.delta-icon-modal-toolbar{
+ display:flex;align-items:center;gap:16px;padding:15px 25px;
+ border-bottom:1px solid rgba(168,196,238,.13)
+}
+.delta-icon-modal-search-wrap{display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:0 13px;border-radius:8px;background:#080c1b;border:1px solid rgba(166,193,239,.26);color:#a6ddf8}
+.delta-icon-modal-search-wrap:focus-within{border-color:#86dfff;box-shadow:0 0 0 3px rgba(106,201,255,.09)}
+.delta-icon-modal-search-wrap span{font-size:23px;line-height:1}
+.delta-icon-modal-search-wrap input{flex:1;min-width:0;height:46px;border:0;outline:none;background:transparent!important;color:#f6f9ff!important;font-size:13px}
+.delta-icon-modal-search-wrap input::placeholder{color:#8599b8;opacity:1}
+.delta-icon-modal-search-wrap kbd{font:11px monospace;border:1px solid rgba(193,211,247,.27);padding:3px 6px;border-radius:3px;color:#a7b0cc}
+.delta-icon-modal-result-count{white-space:nowrap;color:#b7d4e5;font-size:11px;font-weight:800}
+.delta-icon-modal-body{min-height:0;display:grid;grid-template-columns:188px minmax(0,1fr)}
+.delta-icon-modal .delta-item-icon-filters{
+ display:flex;flex-direction:column;align-items:stretch;gap:6px;
+ padding:18px 12px 18px 18px;overflow-y:auto;
+ border-right:1px solid rgba(159,190,236,.16);
+ background:rgba(5,9,22,.46);scrollbar-width:thin
+}
+.delta-icon-modal .delta-icon-filter{
+ display:flex;justify-content:space-between;align-items:center;gap:8px;
+ width:100%;padding:12px 11px;min-height:44px;
+ color:#bdcae6;background:transparent;border:1px solid transparent;border-radius:7px;
+ cursor:pointer;font-size:12px;font-weight:750;text-align:left
+}
+.delta-icon-modal .delta-icon-filter:hover,.delta-icon-modal .delta-icon-filter:focus-visible{color:#fff;background:rgba(69,93,151,.2);outline:none;border-color:rgba(148,183,235,.25)}
+.delta-icon-modal .delta-icon-filter.active{color:#e5fbff;background:rgba(55,135,183,.28);border-color:rgba(105,210,246,.42);box-shadow:inset 3px 0 0 #65d9ff}
+.delta-icon-filter-count{color:#8597b6;font-size:10px;font-weight:700}
+.delta-icon-filter.active .delta-icon-filter-count{color:#a4eafa}
+.delta-icon-modal-results{display:grid;grid-template-rows:auto minmax(0,1fr);min-width:0;min-height:0;padding:15px 17px 16px;gap:12px}
+.delta-icon-results-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 5px;color:#e4ebff;font-size:13px}
+.delta-icon-results-heading span{font-size:10px;color:#91a3c3}
+.delta-icon-modal .delta-icon-choice-grid{
+ display:grid;align-content:start;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+ gap:9px;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 7px 14px 4px;
+ border:0;background:transparent;scrollbar-width:thin;overscroll-behavior:contain
+}
+.delta-icon-modal .delta-item-icon-option{
+ display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;
+ min-height:100px;padding:10px 5px;color:#dce6f6;
+ background:rgba(24,33,60,.68);border:1px solid rgba(136,160,206,.2);
+ border-radius:9px;cursor:pointer;
+ transition:background .15s,border-color .15s,transform .15s,box-shadow .15s
+}
+.delta-icon-modal .delta-item-icon-option:hover,.delta-icon-modal .delta-item-icon-option:focus-visible{
+ border-color:rgba(143,226,255,.83);background:rgba(43,75,119,.47);
+ outline:none;transform:translateY(-1px)
+}
+.delta-icon-modal .delta-item-icon-option.selected{
+ border-color:#92e9ff;background:rgba(52,110,145,.37);
+ box-shadow:0 0 0 1px rgba(96,221,255,.4),inset 0 0 18px rgba(70,164,206,.17)
+}
+.delta-icon-modal .delta-item-icon-choice{width:56px;height:56px}
+.delta-icon-modal .delta-item-icon-caption{font-size:10px;font-weight:700;line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.delta-icon-modal .delta-auto-icon{display:grid;place-items:center;width:56px;height:56px;border:1px dashed rgba(183,218,247,.5);border-radius:8px;color:#d1eafa;font:10px 'Press Start 2P',monospace}
+.delta-icon-empty{display:grid;gap:12px;justify-items:center;align-content:center;grid-column:1/-1;min-height:180px;padding:20px;color:#abbdd4;text-align:center;font-size:12px}
+.delta-icon-empty strong{color:#f5f7ff;font-size:14px}
+.delta-icon-modal-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 22px;
+ border-top:1px solid rgba(151,204,243,.2);
+ background:linear-gradient(90deg,#111b35,#0c142d)
+}
+.delta-icon-selection{display:flex;align-items:center;gap:12px;min-width:0}
+.delta-icon-draft-preview{width:64px;height:64px}
+.delta-icon-draft-preview .delta-icon-sprite{width:54px;height:54px}
+.delta-icon-selection-copy{display:grid;gap:6px;min-width:0}
+.delta-icon-selection-copy small{font-size:9px;color:#9cb8d2;font-weight:700;letter-spacing:.08em}
+.delta-icon-selection-copy strong{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.delta-icon-modal-actions{display:flex;gap:10px;flex:none}
+.delta-icon-modal-actions button{border-radius:8px;cursor:pointer;font-size:11px;font-weight:850;padding:12px 17px;min-height:42px}
+.delta-icon-modal-cancel{border:1px solid rgba(175,200,235,.32);color:#d5e1f4;background:transparent}
+.delta-icon-modal-cancel:hover{background:rgba(121,150,194,.13)}
+.delta-icon-modal-confirm{border:1px solid #89e1ff;color:#061929;background:linear-gradient(110deg,#79d8fa,#b6e9ff)}
+.delta-icon-modal-confirm:hover{filter:brightness(1.1)}
+.delta-icon-modal :focus-visible{outline:2px solid #b6ebff;outline-offset:2px}
+@media(max-width:740px){
+ .delta-icon-modal{width:calc(100vw - 16px);height:min(92dvh,900px);max-height:92dvh}
+ .delta-icon-modal-shell{max-height:92dvh}
+ .delta-icon-modal-header{padding:17px}
+ .delta-icon-modal-toolbar{padding:10px 16px}
+ .delta-icon-modal-body{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+ .delta-icon-modal .delta-item-icon-filters{flex-direction:row;gap:7px;overflow:auto;white-space:nowrap;padding:10px 14px;border-right:0;border-bottom:1px solid rgba(160,189,231,.15)}
+ .delta-icon-modal .delta-icon-filter{width:auto;flex:none;min-height:38px;padding:8px 12px;gap:8px}
+ .delta-icon-modal-results{padding:10px 12px 13px}
+ .delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:7px}
+ .delta-icon-modal .delta-item-icon-option{min-height:90px;padding:7px 3px}
+ .delta-icon-modal .delta-item-icon-choice{width:49px;height:49px}
+ .delta-icon-modal .delta-item-icon-caption{font-size:9px}
+ .delta-icon-modal-footer{padding:11px 14px}
+}
+@media(max-width:460px){
+ .delta-icon-modal-header{padding:13px 15px}
+ .delta-icon-modal-heading h2{font-size:13px}
+ .delta-icon-modal-heading p{font-size:11px}
+ .delta-icon-modal-toolbar{padding:10px}
+ .delta-icon-modal-search-wrap kbd{display:none}
+ .delta-icon-modal-result-count{font-size:10px}
+ .delta-icon-results-heading span{display:none}
+ .delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ .delta-icon-modal .delta-item-icon-option{min-height:79px;gap:3px}
+ .delta-icon-modal .delta-item-icon-choice{width:44px;height:44px}
+ .delta-icon-modal .delta-item-icon-caption{font-size:8px}
+ .delta-icon-open-btn{flex-wrap:wrap}
+ .delta-icon-open-cta{width:100%;text-align:right}
+ .delta-icon-modal-actions{gap:6px}
+ .delta-icon-modal-actions button{padding:10px 9px;font-size:9px;min-height:40px}
+ .delta-icon-selection-copy small{font-size:8px}
+ .delta-icon-selection-copy strong{font-size:10px}
+ .delta-icon-draft-preview{width:46px;height:46px}
+ .delta-icon-draft-preview .delta-icon-sprite{width:40px;height:40px}
+}
+@media(prefers-reduced-motion:reduce){.delta-icon-modal *, .delta-icon-open-btn{transition:none!important;transform:none!important}}

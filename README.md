@@ -234,3 +234,8 @@ As nove imagens fornecidas foram recortadas com transparência e organizadas em 
 ## Catálogo de ícones pixel art (outubro de 2026)
 
 Na aba Inventário → Adicionar Item / Editar, o pequeno catálogo de ícones inclui os seis antigos e **189 novos** retirados das imagens enviadas, todos recortados e centralizados sobre transparência. Filtros: Minérios (86), Armas (12), Comidas (8), Recipientes (32), Ingredientes (25) e Outros (26); possui busca e seleção visual. O arquivo `assets/item-icons-sprite.png` organiza as 189 imagens em células independentes de 96px (10 colunas x 19 linhas) para melhorar o carregamento. Os IDs `sprite000` a `sprite188` são armazenados no campo existente `iconAsset`, preservado em FILES, equipamentos, backups, importação/exportação e salas. Os itens antigos continuam funcionando e os ícones personalizados não são sobrepostos pelo importador do Codex.
+
+
+## Seletor de ícones em janela (outubro de 2026)
+
+O campo **Ícone do item** exibe uma prévia compacta e abre, pelo botão **Trocar ícone**, um diálogo modal nativo que escurece o fundo e impede interações acidentais com a ficha. Os 189 ícones do sprite original e os 6 ícones clássicos continuam disponíveis, com modo automático, categorias laterais, filtros, pesquisa e contador de resultados, cartões maiores, prévia da escolha e ações **Usar este ícone** / **Cancelar**. A escolha é temporária até ser confirmada, preservando a opção anterior se o usuário fechar pelo X, Escape ou backdrop. O diálogo devolve o foco ao acionador, é navegável por teclado e adapta os filtros para uma linha horizontal em telas estreitas. Nenhum campo da ficha, FILE, sincronização, categoria de raridade ou mapeamento do sprite foi modificado.
