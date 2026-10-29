@@ -91,7 +91,7 @@ function decorateList(){
  if(!inventory)return;
  const lines=inventory.querySelectorAll('.inventory-line'),items=state.items||[];
  for(let i=0;i<lines.length&&i<items.length;i++){
-  const it=items[i];if(!it?.codexImage)continue;
+  const it=items[i];if(!it?.codexImage||safeItemIcon(it.iconAsset)!=='auto')continue;
   const row=lines[i].querySelector('.entry-row.inventory-row');if(!row)continue;
   const icon=row.querySelector('.entry-icon');if(!icon||icon.dataset.codexId===it.id)continue;
   icon.replaceWith(buildIcon(it,true))

@@ -1,0 +1,21 @@
+/* Recortes PNG transparentes, 10 x 19 quadrados de 96px. */
+.delta-icon-sprite.delta-catalog-icon{
+ background-image:url("./item-icons-sprite.png?v=1")!important;
+ background-repeat:no-repeat!important;
+ background-size:1000% 1900%!important;
+ background-position:var(--catalog-x) var(--catalog-y)!important;
+ background-color:transparent!important;
+ image-rendering:pixelated!important
+}
+.delta-item-icon-filters{display:flex;flex-wrap:wrap;gap:6px}
+.delta-icon-filter{cursor:pointer;border:1px solid rgba(153,195,237,.32);border-radius:4px;background:rgba(9,16,38,.8);color:#c5d6ed;font-size:10px;font-weight:800;padding:8px 10px}
+.delta-icon-filter:is(:hover,:focus-visible){border-color:#a9e8ff;color:#fff}
+.delta-icon-filter.active{border-color:#8be8ff;background:rgba(35,93,124,.43);color:#fff}
+.delta-item-icon-search{width:100%;font-size:12px}
+.delta-item-picker-field .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px;max-height:410px;overflow-y:auto;padding:8px;border:1px solid rgba(153,195,237,.24);border-radius:5px;background:rgba(5,10,28,.23);scrollbar-width:thin;overscroll-behavior:contain}
+.delta-item-picker-field .delta-item-icon-option{min-height:78px;padding:6px 3px;gap:4px}
+.delta-item-picker-field .delta-item-icon-caption{font-size:9px;overflow-wrap:anywhere}
+.delta-item-picker-field .delta-item-icon-choice{width:46px;height:46px}
+.delta-icon-empty{grid-column:1/-1;padding:16px;color:#ccd3e7;font-size:12px}
+.delta-catalog-hint{color:#a8bdd6;font-size:11px;font-weight:500;letter-spacing:0;line-height:1.5}
+@media(max-width:480px){.delta-item-picker-field .delta-icon-choice-grid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:345px}.delta-item-picker-field .delta-item-icon-caption{font-size:8px}}

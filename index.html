@@ -459,6 +459,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
 <link rel="stylesheet" href="./assets/item-rarity.css?v=2">
 <link rel="stylesheet" href="./assets/delta-icons.css?v=1">
+<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=1">
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -611,7 +612,10 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <div class="editor-label editor-wide delta-item-picker-field">
           <span>ÍCONE DO ITEM <span class="rarity-optional">(OPCIONAL)</span></span>
           <input type="hidden" name="iconAsset" value="auto">
+          <div id="deltaItemIconFilters" class="delta-item-icon-filters" role="group" aria-label="Categorias de ícones"></div>
+          <input type="search" class="editor-input delta-item-icon-search" id="deltaItemIconSearch" placeholder="Buscar ícones..." aria-label="Buscar ícones" autocomplete="off">
           <div id="deltaItemIconChoices" class="delta-icon-choice-grid" role="group" aria-label="Ícone do item"></div>
+          <p class="delta-catalog-hint">189 novos ícones em pixel art, recortados e sem fundo. Escolha um para personalizar este item.</p>
         </div>
         <label class="editor-label">RARIDADE <span class="rarity-optional">(OPCIONAL)</span><select class="editor-input" name="rarity"><option value="common">Comum</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Lendário</option><option value="unique">ÚNICO</option></select></label>
         <label class="editor-label">QUANTIDADE<input required class="editor-input" type="number" name="quantity" min="1" max="9999" value="1"></label>
@@ -928,34 +932,77 @@ function safeAbilityType(raw,category='damage'){
  if(Object.prototype.hasOwnProperty.call(DELTA_SKILL_TYPES,key))return key;
  return category==='heal'?'heal':category==='buff'?'defense':'attack';
 }
-function safeItemIcon(raw){const key=String(raw||'');return Object.prototype.hasOwnProperty.call(DELTA_ITEM_ICONS,key)?key:'auto'}
+const DELTA_CATALOG_GROUPS=Object.freeze([
+ {key:'minerals',title:'Minérios',singular:'Minério',start:0,count:86,aliases:'cristal gema pedra minério'},
+ {key:'weapons',title:'Armas',singular:'Arma',start:86,count:12,aliases:'espada arco machado martelo arma'},
+ {key:'food',title:'Comidas',singular:'Comida',start:98,count:8,aliases:'comida alimento fruta carne'},
+ {key:'containers',title:'Recipientes',singular:'Recipiente',start:106,count:32,aliases:'poção frasco pote saco bolsa garrafa'},
+ {key:'ingredients',title:'Ingredientes',singular:'Ingrediente',start:138,count:25,aliases:'ingrediente flor planta erva'},
+ {key:'others',title:'Outros',singular:'Outro',start:163,count:26,aliases:'dinheiro moedas pergaminho outros'}
+]);
+const DELTA_CATALOG_TOTAL=189;
+function catalogIndex(key){const m=/^sprite([0-9]{3})$/.exec(String(key||''));return m&&Number(m[1])<DELTA_CATALOG_TOTAL?Number(m[1]):-1}
+function catalogGroup(i){return DELTA_CATALOG_GROUPS.find(g=>i>=g.start&&i<g.start+g.count)}
+function catalogIconLabel(i){const g=catalogGroup(i);return g?g.singular+' '+String(i-g.start+1).padStart(2,'0'):'Ícone'}
+function safeItemIcon(raw){const key=String(raw||'');return Object.prototype.hasOwnProperty.call(DELTA_ITEM_ICONS,key)||catalogIndex(key)>=0?key:'auto'}
 function itemIconFor(entry){
  const chosen=safeItemIcon(entry?.iconAsset);
  return chosen!=='auto'?chosen:(DELTA_ITEM_TYPE_DEFAULT[entry?.type||entry?.inventoryType]||'fabric');
 }
 function iconNode(asset,className='',label=''){
- const icon=makeEl('span','delta-icon-sprite '+className);
- icon.dataset.deltaIcon=Object.prototype.hasOwnProperty.call(DELTA_ICON_COORDS,asset)?asset:'fabric';
- if(label){icon.setAttribute('role','img');icon.setAttribute('aria-label',label)}
+ const index=catalogIndex(asset);
+ const icon=makeEl('span','delta-icon-sprite '+className+(index>=0?' delta-catalog-icon':''));
+ if(index>=0){
+  icon.dataset.catalogIcon=asset;
+  icon.style.setProperty('--catalog-x',(index%10/9*100).toFixed(6)+'%');
+  icon.style.setProperty('--catalog-y',(Math.floor(index/10)/18*100).toFixed(6)+'%');
+ }else icon.dataset.deltaIcon=Object.prototype.hasOwnProperty.call(DELTA_ICON_COORDS,asset)?asset:'fabric';
+ if(label||index>=0){icon.setAttribute('role','img');icon.setAttribute('aria-label',label||catalogIconLabel(index))}
  else icon.setAttribute('aria-hidden','true');
  return icon;
 }
-function itemIconOptionsRender(){
- const host=$('deltaItemIconChoices'),form=$('itemForm');
- if(!host||!form)return;
- const selected=safeItemIcon(form.elements.namedItem('iconAsset')?.value);
- host.replaceChildren();
- for(const key of ['auto',...Object.keys(DELTA_ITEM_ICONS)]){
-  const button=makeEl('button','delta-item-icon-option'+(key===selected?' selected':''));
-  button.type='button';button.setAttribute('aria-pressed',String(key===selected));
-  button.setAttribute('aria-label',key==='auto'?'Automático':DELTA_ITEM_ICONS[key]);
-  if(key==='auto')button.append(makeEl('span','delta-auto-icon','AUTO'));
-  else button.append(iconNode(key,'delta-item-icon-choice'));
-  button.append(makeEl('span','delta-item-icon-caption',key==='auto'?'AUTO':DELTA_ITEM_ICONS[key]));
-  button.addEventListener('click',()=>{form.elements.namedItem('iconAsset').value=key;itemIconOptionsRender()});
-  host.append(button);
+let deltaCatalogFilter='all';
+function itemIconFiltersRender(){
+ const host=$('deltaItemIconFilters');if(!host)return;
+ const fragment=document.createDocumentFragment();
+ for(const group of [{key:'all',title:'Todos'},...DELTA_CATALOG_GROUPS]){
+  const button=makeEl('button','delta-icon-filter'+(deltaCatalogFilter===group.key?' active':''),group.title+(group.count?' ('+group.count+')':''));
+  button.type='button';button.setAttribute('aria-pressed',String(deltaCatalogFilter===group.key));
+  button.addEventListener('click',()=>{deltaCatalogFilter=group.key;itemIconFiltersRender();itemIconOptionsRender()});fragment.append(button);
  }
+ host.replaceChildren(fragment);
 }
+function itemIconOptionsRender(){
+ const host=$('deltaItemIconChoices'),form=$('itemForm');if(!host||!form)return;
+ const selected=safeItemIcon(form.elements.namedItem('iconAsset')?.value);
+ const search=String($('deltaItemIconSearch')?.value||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const fragment=document.createDocumentFragment(),choices=[];
+ if(deltaCatalogFilter==='all'&&!search){
+  choices.push({key:'auto',label:'AUTO'});
+  for(const key of Object.keys(DELTA_ITEM_ICONS))choices.push({key,label:DELTA_ITEM_ICONS[key]});
+ }
+ for(let index=0;index<DELTA_CATALOG_TOTAL;index++){
+  const group=catalogGroup(index);
+  if(deltaCatalogFilter!=='all'&&deltaCatalogFilter!==group.key)continue;
+  const label=catalogIconLabel(index);
+  const find=(label+' '+group.title+' '+group.aliases).toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(search&&!find.includes(search))continue;
+  choices.push({key:'sprite'+String(index).padStart(3,'0'),label});
+ }
+ for(const option of choices){
+  const isSelected=selected===option.key,btn=makeEl('button','delta-item-icon-option'+(isSelected?' selected':''));
+  btn.type='button';btn.setAttribute('aria-label',option.label);
+  btn.setAttribute('aria-pressed',String(isSelected));btn.title=option.label;
+  if(option.key==='auto')btn.append(makeEl('span','delta-auto-icon','AUTO'));
+  else btn.append(iconNode(option.key,'delta-item-icon-choice',option.label));
+  btn.append(makeEl('span','delta-item-icon-caption',option.label));
+  btn.addEventListener('click',()=>{form.elements.namedItem('iconAsset').value=option.key;itemIconOptionsRender()});
+  fragment.append(btn);
+ }
+ if(!choices.length)fragment.append(makeEl('p','delta-icon-empty','Nenhum ícone encontrado.'));
+ host.replaceChildren(fragment);
+}
+$('deltaItemIconSearch')?.addEventListener('input',itemIconOptionsRender);
 const kind={skills:{collection:'skills',selected:'selectedSkill',list:'skillsList',detail:'skillDetail',form:'skillForm',heading:'skillFormHeading',primary:'name'},inventory:{collection:'items',selected:'selectedItem',list:'inventoryList',detail:'itemDetail',form:'itemForm',heading:'itemFormHeading',primary:'name'}};
 function selectEntry(type,id){state[kind[type].selected]=id;renderLibrary(type);persist()}
 function createBlank(type){const area=$(kind[type].detail);area.replaceChildren();const info=makeEl('div','empty-state');info.append(makeEl('strong','',type==='skills'?'✦ NENHUMA HABILIDADE':'✦ NENHUM ITEM'),makeEl('span','',type==='skills'?'Clique em ADICIONAR HABILIDADE para criar sua primeira técnica.':'Clique em ADICIONAR ITEM para montar seu inventário.'));area.append(info)}
@@ -1054,7 +1101,9 @@ function openEditor(type,id=null){const conf=kind[type],form=$(conf.form),entry=
  if(type==='inventory'){
   if(!entry)form.elements.namedItem('quantity').value='1';
   form.elements.namedItem('iconAsset').value=safeItemIcon(entry?.iconAsset);
-  itemIconOptionsRender();
+  deltaCatalogFilter='all';
+  if($('deltaItemIconSearch'))$('deltaItemIconSearch').value='';
+  itemIconFiltersRender();itemIconOptionsRender();
  }form.scrollIntoView({behavior:'smooth',block:'nearest'});form.elements.namedItem('name').focus()}
 function updateSkillFields(){const v=$('skillCategory').value,isBuff=v==='buff';$('skillPowerWrap').hidden=isBuff;$('skillBuffTargetWrap').hidden=!isBuff;$('skillBuffAmountWrap').hidden=!isBuff;$('skillBuffTurnsWrap').hidden=!isBuff}
 function updateSkillTypePreview(){
