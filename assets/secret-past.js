@@ -1,4 +1,4 @@
-/* DELTA RPG — arquivo secreto dos humanos do passado (v2).
+/* DELTA RPG — arquivo secreto dos humanos do passado (v7).
    As imagens enviadas pelo usuário são a única arte dos personagens e das flores.
    Seis memórias exibem seus destinos; três aguardam histórias futuras. */
 (()=>{
@@ -29,9 +29,19 @@
   '<section class="delta-past-gallery" aria-label="Selecionar uma memória"><div class="delta-past-grid"></div></section>'+
   '<section class="delta-past-detail" aria-label="Visualização de uma memória" hidden>'+
     '<button class="delta-past-back" type="button" aria-label="Voltar às flores">‹</button>'+
+    '<div class="delta-past-ambient" aria-hidden="true"></div>'+
     '<div class="delta-past-story-layout">'+
-       '<div class="delta-past-story-visual"><div class="delta-past-detail-frame"><span id="deltaPastDetailFlower" class="delta-past-flower" aria-hidden="true"></span></div></div>'+
+       '<div class="delta-past-story-visual">'+
+         '<div class="delta-past-hero-glow" aria-hidden="true"></div>'+
+         '<div class="delta-past-hero-halo" aria-hidden="true"></div>'+
+         '<div class="delta-past-hero-echo" aria-hidden="true"></div>'+
+         '<div class="delta-past-hero-portrait" aria-hidden="true"></div>'+
+         '<div class="delta-past-hero-rune" aria-hidden="true">✧</div>'+
+         '<div class="delta-past-detail-frame"><span id="deltaPastDetailFlower" class="delta-past-flower" aria-hidden="true"></span></div>'+
+         '<span class="delta-past-hero-index" id="deltaPastHeroIndex" aria-hidden="true">I</span>'+
+       '</div>'+
        '<div class="delta-past-story-content">'+
+         '<div class="delta-past-story-meta"><span>ARQUIVO DAS MEMÓRIAS</span><span id="deltaPastStoryIndex">REGISTRO I</span></div>'+
          '<span class="delta-past-story-ornament" aria-hidden="true">✧ ─ ✦ ─ ✧</span>'+
          '<h2 id="deltaPastDetailTitle"></h2>'+
          '<span class="delta-past-story-divider" aria-hidden="true"></span>'+
@@ -52,13 +62,17 @@
  function showGallery(){
   gallery.hidden=false;detail.hidden=true;
   detail.removeAttribute('data-portrait');
+  detail.removeAttribute('data-person');
  }
  function showPerson(person,card){
   returnCard=card||null;
   gallery.hidden=true;detail.hidden=false;
   detail.style.setProperty('--delta-past-accent',person.tone);
+  detail.dataset.person=person.id;
   if(person.portrait)detail.dataset.portrait=person.portrait;
   else detail.removeAttribute('data-portrait');
+  dialog.querySelector('#deltaPastStoryIndex').textContent='REGISTRO '+person.roman;
+  dialog.querySelector('#deltaPastHeroIndex').textContent=person.roman;
   const visual=dialog.querySelector('#deltaPastDetailFlower');
   visual.className=person.id==='sorcerer'?'delta-past-crest-art':'delta-past-flower delta-past-'+person.id;
   visual.textContent=person.id==='sorcerer'?'✦':'';
