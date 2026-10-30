@@ -27,6 +27,22 @@
   '<header class="delta-past-header"><span aria-hidden="true">✧　✦　✧</span><button type="button" class="delta-past-close" aria-label="Fechar">×</button></header>'+
   '<div class="delta-past-rule" aria-hidden="true">✧</div>'+
   '<section class="delta-past-gallery" aria-label="Selecionar uma memória"><div class="delta-past-grid"></div></section>'+
+  '<section class="delta-past-lock" aria-label="Desbloquear um registro de memórias" hidden>'+
+    '<div class="delta-past-lock-crest" aria-hidden="true">✧ ✦ ✧</div>'+
+    '<div class="delta-past-lock-subtitle">ARQUIVO SELADO</div>'+
+    '<h2 class="delta-past-lock-title"></h2>'+
+    '<div class="delta-past-lock-index"></div>'+
+    '<p class="delta-past-lock-description">Esta memória está protegida. Insira a palavra-chave correspondente para acessar sua história.</p>'+
+    '<form class="delta-past-lock-form" autocomplete="off">'+
+      '<label for="deltaPastLockInput">CHAVE DE ACESSO</label>'+
+      '<div class="delta-past-lock-fields">'+
+        '<input id="deltaPastLockInput" type="password" name="lore-key" placeholder="Digite a senha" maxlength="40" required spellcheck="false" autocapitalize="none" autocomplete="off" />'+
+        '<button type="submit">DESBLOQUEAR <span aria-hidden="true">✦</span></button>'+
+      '</div>'+
+      '<p class="delta-past-lock-message" role="status" aria-live="polite"></p>'+
+    '</form>'+
+    '<button type="button" class="delta-past-lock-back">‹ VOLTAR ÀS MEMÓRIAS</button>'+
+  '</section>'+
   '<section class="delta-past-detail" aria-label="Visualização de uma memória" hidden>'+
     '<button class="delta-past-back" type="button" aria-label="Voltar às flores">‹</button>'+
     '<div class="delta-past-ambient" aria-hidden="true"></div>'+
@@ -64,6 +80,25 @@
  const grid=dialog.querySelector('.delta-past-grid');
  const close=dialog.querySelector('.delta-past-close');
  const back=dialog.querySelector('.delta-past-back');
+ const lock=dialog.querySelector('.delta-past-lock');
+ const lockForm=dialog.querySelector('.delta-past-lock-form');
+ const lockInput=dialog.querySelector('#deltaPastLockInput');
+ const lockMessage=dialog.querySelector('.delta-past-lock-message');
+ const lockTitle=dialog.querySelector('.delta-past-lock-title');
+ const lockIndex=dialog.querySelector('.delta-past-lock-index');
+ const lockBack=dialog.querySelector('.delta-past-lock-back');
+ const lorePasswords={
+  warrior:'Pierro',
+  sorceress:'Raja',
+  squire:'Vyke',
+  alchemist:'Yuju',
+  oculus:'Frioskva',
+  guide:'Eleonor',
+  priest:'Arthur',
+  mundane:'Gyo',
+  sorcerer:'Bafra'
+ };
+ let pendingPerson=null,pendingCard=null;
  let taps=0,lastTap=0,returnCard=null;
  const secretGate=dialog.querySelector('.delta-past-squire-gate');
  const secretInput=dialog.querySelector('.delta-past-gate-input');
@@ -108,11 +143,15 @@
  function showGallery(){
   resetCipher();
   secretInput.disabled=false;
+  pendingPerson=null;pendingCard=null;
+  lock.hidden=true;lockInput.value='';lockMessage.textContent='';
   gallery.hidden=false;detail.hidden=true;
   detail.removeAttribute('data-portrait');
   detail.removeAttribute('data-person');
  }
  function showPerson(person,card){
+  lock.hidden=true;lockInput.value='';lockMessage.textContent='';
+  pendingPerson=null;pendingCard=null;
   resetCipher();secretInput.disabled=false;
   returnCard=card||null;
   gallery.hidden=true;detail.hidden=false;
@@ -148,6 +187,41 @@
   detail.classList.add('delta-past-enter');
   back.focus({preventScroll:true});
  }
+ function showLock(person,card){
+  // A senha deste registro abre a lore. A cifra Eixo do Escudeiro é independente.
+  resetCipher();secretInput.disabled=false;
+  pendingPerson=person;pendingCard=card;
+  gallery.hidden=true;detail.hidden=true;lock.hidden=false;
+  lock.style.setProperty('--delta-past-accent',person.tone);
+  lockTitle.textContent=person.name;
+  lockIndex.textContent='REGISTRO '+person.roman;
+  lockInput.value='';lockMessage.textContent='';
+  lockForm.classList.remove('delta-past-lock-error');
+  lock.classList.remove('delta-past-lock-enter');
+  void lock.offsetWidth;
+  lock.classList.add('delta-past-lock-enter');
+  lockInput.focus({preventScroll:true});
+ }
+ lockForm.addEventListener('submit',event=>{
+  event.preventDefault();
+  if(!pendingPerson)return;
+  const required=lorePasswords[pendingPerson.id];
+  if(lockInput.value.trim().toLocaleLowerCase('pt-BR')!==required.toLocaleLowerCase('pt-BR')){
+   lockMessage.textContent='Chave incorreta. Esta memória permanece selada.';
+   lockForm.classList.remove('delta-past-lock-error');
+   void lockForm.offsetWidth;
+   lockForm.classList.add('delta-past-lock-error');
+   lockInput.select();
+   return;
+  }
+  const person=pendingPerson,card=pendingCard;
+  showPerson(person,card);
+ });
+ lockBack.addEventListener('click',()=>{
+  const card=pendingCard;
+  showGallery();
+  (card||grid.querySelector('button'))?.focus({preventScroll:true});
+ });
  people.forEach(person=>{
   const card=document.createElement('button');card.type='button';
   card.className='delta-past-card';
@@ -168,7 +242,7 @@
   numeral.textContent=person.roman;numeral.setAttribute('aria-hidden','true');
   const title=document.createElement('span');title.className='delta-past-card-name';title.textContent=person.name;
   card.append(ornament,art,numeral,title);
-  card.addEventListener('click',()=>showPerson(person,card));
+  card.addEventListener('click',()=>showLock(person,card));
   grid.append(card);
  });
  function open(){
