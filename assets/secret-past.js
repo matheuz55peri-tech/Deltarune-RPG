@@ -8,10 +8,10 @@
  const people=[
   {id:'warrior',name:'O Guerreiro',tone:'#eb667e',roman:'I',portrait:'warrior',story:"Segundo a profecia, seria o último a cair pelas mãos da rainha. Porém, acabou sendo lançado ao vazio, onde surge a escuridão."},
   {id:'sorceress',name:'A Feiticeira',tone:'#f3c6d8',roman:'II',portrait:'sorceress',story:"Segundo a profecia, ela enfrentaria diretamente a rainha, e esse confronto resultaria na vitória do grupo. Infelizmente, foi assassinada pelo Feiticeiro em um ato de loucura."},
-  {id:'squire',name:'O Escudeiro',tone:'#8bc9ff',roman:'III',story:"Segundo a profecia, ele se tornaria um Revenant, mas foi decapitado em batalha por #####."},
-  {id:'alchemist',name:'O Alquimista',tone:'#f7b877',roman:'IV',story:"Segundo a profecia, ele descobriu uma maneira de fazer seus inimigos esquecerem acontecimentos, mas foi torturado pela rainha, que desejava obter seus conhecimentos."},
+  {id:'squire',name:'O Escudeiro',tone:'#8bc9ff',roman:'III',portrait:'squire',story:"Segundo a profecia, ele se tornaria um Revenant, mas foi decapitado em batalha por #####."},
+  {id:'alchemist',name:'O Alquimista',tone:'#f7b877',roman:'IV',portrait:'alchemist',story:"Segundo a profecia, ele descobriu uma maneira de fazer seus inimigos esquecerem acontecimentos, mas foi torturado pela rainha, que desejava obter seus conhecimentos."},
   {id:'oculus',name:'O Oculus',tone:'#72bfb6',roman:'V',portrait:'oculus',story:"Segundo a profecia, ele enfrentaria Phikova diretamente. Nunca mais foi encontrado após essa batalha."},
-  {id:'guide',name:'A Guia',tone:'#d88dba',roman:'VI',story:"Segundo a profecia, ela deveria guiar seu grupo até a grande catedral, onde revelaria o verdadeiro objetivo de todos. Infelizmente, uma Fonte foi aberta em seu corpo."},
+  {id:'guide',name:'A Guia',tone:'#d88dba',roman:'VI',portrait:'guide',story:"Segundo a profecia, ela deveria guiar seu grupo até a grande catedral, onde revelaria o verdadeiro objetivo de todos. Infelizmente, uma Fonte foi aberta em seu corpo."},
   {id:'priest',name:'O Sacerdote',tone:'#91d8e8',roman:'VII',portrait:'priest',story:"Segundo a profecia, morreria pelo bem maior. Foi evaporado ao ser engolido por um titã."},
   {id:'mundane',name:'O Mundano',tone:'#d98ce8',roman:'VIII',portrait:'mundane',story:"Segundo a profecia, um monstro do Mundo da Luz ajudaria os heróis a alcançar a vitória. No entanto, a rainha o aprisionou na camada mais profunda, onde nenhuma cidade jamais chegou."},
   {id:'sorcerer',name:'O Feiticeiro',tone:'#ff948d',roman:'IX',portrait:'sorcerer',story:"Segundo a profecia, ele seria responsável pela vitória dos heróis. Infelizmente, sua mente se corrompeu, e ele abandonou o grupo e seu objetivo."}
