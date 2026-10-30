@@ -70,7 +70,7 @@
  const secretStatus=dialog.querySelector('.delta-past-gate-status');
  const secretGlyphs='✦✧◇◆◈◉◌◍⟡⋄⌁╳';
  // O texto original traz apenas #####; sem um nome real fornecido, não inventamos a identidade.
- const secretSquireName='[IDENTIDADE A DEFINIR]';
+ const secretSquireName='Forn';
  let cipherTimer=null,cipherSpan=null;
  function stopCipher(){
   if(cipherTimer!==null){clearInterval(cipherTimer);cipherTimer=null;}
