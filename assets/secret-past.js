@@ -49,6 +49,12 @@
          '<div class="delta-past-placeholder" aria-hidden="true"><i></i><i></i><i></i></div>'+
        '</div>'+
      '</div>'+
+    '<form class="delta-past-squire-gate" hidden autocomplete="off" aria-label="Código secreto do Escudeiro">'+
+      '<span class="delta-past-gate-mark" aria-hidden="true">✦</span>'+
+      '<input class="delta-past-gate-input" type="password" name="cifra" spellcheck="false" autocapitalize="none" autocomplete="off" maxlength="40" placeholder="••••" aria-label="Digite a senha secreta">'+
+      '<button type="submit" aria-label="Revelar o nome oculto">↵</button>'+
+      '<span class="delta-past-gate-status" role="status" aria-live="polite"></span>'+
+    '</form>'+
   '</section>'+
   '<footer class="delta-past-footer" aria-hidden="true">✧　◇　✦　◇　✧</footer>'+
   '</div>';
@@ -59,12 +65,55 @@
  const close=dialog.querySelector('.delta-past-close');
  const back=dialog.querySelector('.delta-past-back');
  let taps=0,lastTap=0,returnCard=null;
+ const secretGate=dialog.querySelector('.delta-past-squire-gate');
+ const secretInput=dialog.querySelector('.delta-past-gate-input');
+ const secretStatus=dialog.querySelector('.delta-past-gate-status');
+ const secretGlyphs='✦✧◇◆◈◉◌◍⟡⋄⌁╳';
+ // O texto original traz apenas #####; sem um nome real fornecido, não inventamos a identidade.
+ const secretSquireName='[IDENTIDADE A DEFINIR]';
+ let cipherTimer=null,cipherSpan=null;
+ function stopCipher(){
+  if(cipherTimer!==null){clearInterval(cipherTimer);cipherTimer=null;}
+ }
+ function resetCipher(){
+  stopCipher();cipherSpan=null;
+  secretGate.hidden=true;secretInput.value='';
+  secretStatus.textContent='';secretGate.classList.remove('delta-past-gate-error');
+  detail.classList.remove('delta-past-secret-revealed');
+ }
+ function scrambleCipher(){
+  if(!cipherSpan)return;
+  cipherSpan.textContent=Array.from({length:8},()=>secretGlyphs[Math.floor(Math.random()*secretGlyphs.length)]).join('');
+ }
+ secretGate.addEventListener('submit',event=>{
+  event.preventDefault();
+  if(detail.dataset.person!=='squire'||!cipherSpan)return;
+  if(secretInput.value.trim().toLocaleLowerCase('pt-BR')!=='eixo'){
+   secretStatus.textContent='Código incorreto';
+   secretGate.classList.remove('delta-past-gate-error');
+   void secretGate.offsetWidth;
+   secretGate.classList.add('delta-past-gate-error');
+   secretInput.select();
+   return;
+  }
+  stopCipher();
+  cipherSpan.textContent=secretSquireName;
+  cipherSpan.setAttribute('aria-label','Identidade decifrada: '+secretSquireName);
+  cipherSpan.classList.add('delta-past-cipher-open');
+  detail.classList.add('delta-past-secret-revealed');
+  secretStatus.textContent='Registro decifrado';
+  secretInput.value='';
+  secretInput.disabled=true;
+ });
  function showGallery(){
+  resetCipher();
+  secretInput.disabled=false;
   gallery.hidden=false;detail.hidden=true;
   detail.removeAttribute('data-portrait');
   detail.removeAttribute('data-person');
  }
  function showPerson(person,card){
+  resetCipher();secretInput.disabled=false;
   returnCard=card||null;
   gallery.hidden=true;detail.hidden=false;
   detail.style.setProperty('--delta-past-accent',person.tone);
@@ -80,6 +129,18 @@
   const text=dialog.querySelector('#deltaPastDetailStory');
   const placeholder=dialog.querySelector('.delta-past-detail .delta-past-placeholder');
   text.textContent=person.story||'';
+  if(person.id==='squire' && person.story && person.story.includes('#####')){
+   const parts=person.story.split('#####');
+   cipherSpan=document.createElement('span');
+   cipherSpan.className='delta-past-cipher';
+   cipherSpan.setAttribute('aria-label','Identidade censurada');
+   text.replaceChildren(document.createTextNode(parts[0]),cipherSpan,document.createTextNode(parts.slice(1).join('#####')));
+   secretGate.hidden=false;
+   scrambleCipher();
+   if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    cipherTimer=setInterval(()=>{if(dialog.open&&!document.hidden)scrambleCipher();},145);
+   }
+  }
   text.hidden=!person.story;
   placeholder.hidden=Boolean(person.story);
   detail.classList.remove('delta-past-enter');
@@ -138,6 +199,7 @@
  });
  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
  dialog.addEventListener('close',()=>{
+  resetCipher();secretInput.disabled=false;
   dialog.classList.remove('delta-past-opening');
   heart.focus({preventScroll:true});
  });
