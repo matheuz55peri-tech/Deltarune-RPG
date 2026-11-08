@@ -264,7 +264,7 @@
   },{passive:true});
   document.addEventListener('pointerout',e=>{
     const el=e.target?.closest?.('button,a,[role="tab"],.file-card');
-    if(el===lastHoverElement && !el.contains(e.relatedTarget))lastHoverElement=null;
+    if(el && el===lastHoverElement && !el.contains(e.relatedTarget))lastHoverElement=null;
   },{passive:true});
   document.addEventListener('click',e=>{
     const target=e.target?.closest?.('button,a,[role="tab"]');
@@ -279,7 +279,7 @@
   if (document.getElementById('deltaGardenRainScript')) return;
   const script = document.createElement('script');
   script.id = 'deltaGardenRainScript';
-  script.src = './assets/themes/garden-rain.js?v=2';
+  script.src = './assets/themes/garden-rain.js?v=3';
   script.defer = true;
   document.head.appendChild(script);
 })();

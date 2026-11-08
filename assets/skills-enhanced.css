@@ -1,0 +1,27 @@
+/* Painel de habilidades — acompanha as cores de cada mundo. */
+#tab-skills .library-head{align-items:center;gap:18px}
+#tab-skills .library-meta{line-height:1.6}
+.skill-combat-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:1px;margin:20px 0 17px;border:1px solid var(--stroke,rgba(166,201,239,.35));background:var(--stroke,rgba(166,201,239,.35));box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.skill-combat-stat{display:flex;flex-direction:column;justify-content:center;gap:7px;min-width:0;padding:14px 17px;background:var(--panel,rgba(12,12,32,.92))}
+.skill-combat-stat span{font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--muted,#b7c7db)}
+.skill-combat-stat strong{font-size:17px;line-height:1.2;color:var(--cyan,#a9edff)}
+#tab-skills .skill-turn-btn{margin:0;border:0;min-height:64px;padding:12px 18px;background:rgba(49,75,110,.6);color:var(--paper,#fff)}
+#tab-skills .skill-turn-btn:hover,#tab-skills .skill-turn-btn:focus-visible{background:rgba(75,115,150,.8);outline:2px solid var(--cyan,#bdefff);outline-offset:-3px}
+#tab-skills .skill-filters{gap:8px;margin-bottom:16px}
+#tab-skills .skill-filter{min-height:40px}
+#tab-skills .entry-row{min-height:58px;transition:background .15s,border-color .15s}
+#tab-skills .entry-name{min-width:0;gap:9px}
+#tab-skills .entry-name>span:not(.delta-icon-sprite):not(.skill-row-cooldown){overflow-wrap:anywhere}
+#tab-skills .skill-row-cooldown{margin-left:auto;padding:4px 6px;border:1px solid rgba(255,220,134,.35);background:rgba(95,68,30,.35);color:#ffe1a4;font-size:9px;white-space:nowrap}
+#tab-skills .entry-detail{min-width:0}
+#tab-skills .detail-head{align-items:center}
+#tab-skills .detail-icon.delta-icon-sprite{width:76px;height:76px;min-width:76px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.skill-outcome{display:grid;gap:7px;margin:15px 0;padding:13px 15px;border:1px solid var(--stroke,rgba(155,213,235,.4));background:rgba(7,20,36,.5);line-height:1.5}
+.skill-outcome-label{font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--cyan,#a9edff)}
+.skill-outcome strong{font-size:12px;color:var(--paper,#fff)}
+.skill-cooldown-info,.skill-cooldown-hint{color:var(--muted,#b7c7db);font-size:11px;line-height:1.6}
+.skill-cooldown-hint{margin:0;padding:0 0 4px}
+.skill-optional{font-size:9px;color:var(--muted,#b7c7db)}
+#tab-skills .detail-actions .library-btn:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:700px){.skill-combat-bar{grid-template-columns:repeat(3,minmax(0,1fr))}.skill-combat-stat{padding:12px 10px}.skill-combat-stat span{font-size:9px}.skill-combat-stat strong{font-size:14px}#tab-skills .skill-turn-btn{grid-column:1/-1;min-height:44px}#tab-skills .detail-icon.delta-icon-sprite{width:58px;height:58px;min-width:58px}}
+@media(prefers-reduced-motion:reduce){#tab-skills .entry-row{transition:none}}

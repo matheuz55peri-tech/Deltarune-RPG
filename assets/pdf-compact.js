@@ -96,6 +96,16 @@
       text(v.sub,v.x+4,y+25.1,7,C.muted,false);
     }
     y+=32;
+    if(data.proficiencies?.length){
+      section('Perícias',C.tp);
+      for(const group of data.proficiencies){
+        const entries=group.skills.map(s=>clean(s.label)+': '+num(s.value)).join('   /   ');
+        const lines=small(entries,INNER-14,8);const height=10+lines.length*4;ensure(height+2);
+        panel(M,y,INNER,height);text(group.label,M+4,y+6,8,C.muted,true);
+        lines.forEach((l,i)=>text(l,M+4,y+12+i*4,8,C.white));y+=height+2;
+      }
+      y+=2;
+    }
     if(data.buffs?.length){
       section('Efeitos ativos',C.buff);
       const rows=data.buffs.map(b=>clean(b.name)+'  /  +'+num(b.amount)+' '+clean(b.target)+'  /  '+num(b.remaining)+' turnos');
@@ -154,7 +164,9 @@
           const d=small(e.description||'Sem descrição',colW-9,7.8);
           const details=kind==='buff'?'+'+num(e.amount||0)+' '+clean(e.target||'atributo')+'  /  '+num(e.turns||0)+' turnos':
             kind==='heal'?'Cura '+num(e.power||0)+' HP':'Dano '+num(e.power||0);
-          return {entry:e,desc:d,details,height:Math.max(22,16+d.length*3.4)};
+          const cooldown=e.cooldown>0?'  /  Recarga '+num(e.cooldown)+' turnos':'';
+          const detailLines=small(details+cooldown,colW-9,7.4);
+          return {entry:e,desc:d,details:detailLines,height:Math.max(22,16+(detailLines.length-1)*3.4+d.length*3.4)};
         });
         const rowH=Math.max(...layouts.map(a=>a.height));
         if(rowH>236){throw new Error('Descrição de habilidade muito longa para caber em um único cartão do PDF.')}
@@ -165,8 +177,8 @@
           const nm=small(v.entry.name||'SEM NOME',colW-28,9)[0]||'SEM NOME';
           text(nm,x+4,y+6.2,9,C.white,true);
           text(num(v.entry.cost||0)+'% TP',x+colW-23,y+6.2,8,catColor,true);
-          text(v.details,x+4,y+11.5,7.4,catColor);
-          v.desc.forEach((ln,k)=>text(ln,x+4,y+16.1+k*3.4,7.8,C.muted));
+          v.details.forEach((ln,k)=>text(ln,x+4,y+11.5+k*3.4,7.4,catColor));
+          v.desc.forEach((ln,k)=>text(ln,x+4,y+16.1+(v.details.length-1+k)*3.4,7.8,C.muted));
         });
         y+=rowH+3;
       }

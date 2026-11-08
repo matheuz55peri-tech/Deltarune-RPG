@@ -16,7 +16,7 @@
     style.textContent = [
       '#delta-garden-rain{position:fixed;inset:0;width:100%;height:100%;',
       'z-index:2147483646;pointer-events:none!important;user-select:none;',
-      'image-rendering:pixelated;opacity:.91;display:none;contain:strict}',
+      'image-rendering:pixelated;opacity:.78;display:none;contain:strict}',
       'html[data-theme="garden"] #delta-garden-rain{display:block}'
     ].join('');
     document.head.append(style);
@@ -37,9 +37,9 @@
       return {
         x: rand(3,w+12), y,
         hit: initial ? Math.max(hit, y + rand(5,h*.22)) : hit,
-        near, alpha: near ? rand(.32,.65) : rand(.13,.33),
-        speed: near ? rand(86,135) : rand(51,89),
-        length: near ? rand(4,8)|0 : rand(2,5)|0,
+        near, alpha: near ? rand(.25,.48) : rand(.09,.23),
+        speed: near ? rand(82,130) : rand(48,85),
+        length: near ? rand(6,11)|0 : rand(3,7)|0,
         drift: rand(-3.4,-.6)
       };
     }
@@ -50,7 +50,7 @@
         x: bounded(x,1,w-1),y:bounded(y,1,h-1),
         age:0, duration: clicked ? .83 : rand(.48,.8),
         max:clicked ? 19 : rand(7,12)*force,
-        bright:clicked ? .86 : rand(.35,.62),
+        bright:clicked ? .72 : rand(.25,.48),
         clicked
       });
     }
@@ -63,7 +63,7 @@
       const count=bounded(Math.round(w*h/1800),38,155);
       drops.length=0; ripples.length=0;
       for(let i=0;i<count;i++)drops.push(drop(true));
-      draw(0);
+      if(!reduced.matches)draw(0);
     }
 
     // Círculos formados por pequenos quadrados, sem blur nem linhas suaves.
@@ -97,11 +97,14 @@
           }
         }
         const x=Math.round(d.x),y=Math.round(d.y);
-        ctx.globalAlpha=d.alpha;
-        ctx.fillStyle=d.near?'#98f3ff':'#6cbccc';
+        // A cauda translúcida e a ponta luminosa dão profundidade à chuva.
+        ctx.fillStyle=d.near?'#8fddec':'#6ca9c3';
+        ctx.globalAlpha=d.alpha*.34;
         ctx.fillRect(x,y,1,d.length);
-        ctx.globalAlpha=d.alpha*.72;
-        ctx.fillStyle='#e3fdff';
+        ctx.globalAlpha=d.alpha;
+        ctx.fillRect(x,y+Math.floor(d.length*.45),1,Math.ceil(d.length*.55));
+        ctx.globalAlpha=d.alpha*.85;
+        ctx.fillStyle='#e0fbff';
         ctx.fillRect(x,y+d.length-1,d.near?2:1,1);
       }
 
@@ -125,6 +128,11 @@
           ctx.fillStyle='#f4ffff';
           ctx.fillRect(x,y,2,1);
           ctx.fillRect(x-1,y-2,1,1);
+          // Pequenos respingos sobem antes de a onda se espalhar.
+          const jump=Math.round(p*10);
+          ctx.globalAlpha=fade*.65;
+          ctx.fillRect(x-2-jump,y-1-jump,1,1);
+          ctx.fillRect(x+2+jump,y-2-jump,1,1);
         }
       }
       ctx.globalAlpha=1;
@@ -146,7 +154,7 @@
       }else if(!enabled&&active){
         active=false;cancelAnimationFrame(raf);last=0;
       }
-      if(reduced.matches && isGarden())draw(0);
+      if(reduced.matches){ripples.length=0;ctx.clearRect(0,0,w,h)}
     }
 
     // Pointerdown é acionado no celular e em botões/menus também.

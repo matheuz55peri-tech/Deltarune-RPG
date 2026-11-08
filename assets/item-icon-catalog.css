@@ -276,3 +276,17 @@
  .delta-icon-modal .delta-icon-color-choice{padding:7px 8px}
  .delta-icon-modal .delta-icon-current-favorite{width:30px;height:30px;flex-basis:30px}
 }
+
+/* Catálogo: cartões mais legíveis e uma seleção mais evidente. */
+.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.delta-icon-modal .delta-item-icon-option{position:relative;min-height:145px;padding:12px 7px 10px;background:linear-gradient(160deg,rgba(44,61,97,.7),rgba(15,23,43,.94))}
+.delta-icon-modal .delta-item-icon-choice{width:76px;height:76px;filter:drop-shadow(0 5px 6px rgba(0,0,0,.38))}
+.delta-icon-modal .delta-auto-icon{width:76px;height:76px}
+.delta-icon-modal .delta-item-icon-caption{font-size:11px;color:#e8f4ff}
+.delta-icon-modal .delta-item-icon-option.selected::after{content:'✓';position:absolute;left:7px;top:7px;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#a8edff;color:#062438;font-size:12px;font-weight:900}
+.delta-icon-modal .delta-icon-star{width:30px;height:30px;opacity:.85}
+.delta-icon-modal .delta-icon-draft-preview{background:radial-gradient(circle,rgba(80,153,185,.28),rgba(7,13,29,.8) 72%)}
+@media(max-width:740px){.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.delta-icon-modal .delta-item-icon-option{min-height:132px}.delta-icon-modal .delta-item-icon-choice,.delta-icon-modal .delta-auto-icon{width:66px;height:66px}}
+@media(max-width:460px){.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.delta-icon-modal .delta-item-icon-option{min-height:116px;padding:9px 3px}.delta-icon-modal .delta-item-icon-choice,.delta-icon-modal .delta-auto-icon{width:54px;height:54px}.delta-icon-modal .delta-item-icon-caption{font-size:10px}}
+.delta-icon-modal .delta-icon-modal-results{grid-template-columns:minmax(0,1fr)}
+.delta-icon-modal .delta-icon-color-row{min-width:0}
