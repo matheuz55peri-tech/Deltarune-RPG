@@ -1,5 +1,5 @@
 /* Perícias na ficha: grupos recolhíveis para manter a leitura leve. */
-.proficiencies{margin-top:18px;padding:24px 26px}
+.proficiencies{margin-top:22px;padding:20px 0 0;border-top:1px solid rgba(190,193,239,.22)}
 .proficiency-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .proficiency-head .box-title{margin:0}
 .proficiency-head p{margin:10px 0 0;color:#b9b7d3;font-size:12px;line-height:1.6}
@@ -7,7 +7,7 @@
 .proficiency-budget span{color:#a9bdd6;font-size:10px;letter-spacing:.08em;font-weight:700}
 .proficiency-budget strong{color:var(--cyan,#a9edff);font-size:17px;white-space:nowrap}
 .proficiency-warning{margin:14px 0 0;color:#ffbd9d;font-size:12px;line-height:1.5}
-.proficiency-groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;align-items:start}
+.proficiency-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;align-items:start}
 .proficiency-group{min-width:0;border:1px solid rgba(190,193,239,.25);background:rgba(6,9,27,.58)}
 .proficiency-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 10px;cursor:pointer;list-style:none;font-size:10px;font-weight:800;letter-spacing:.05em}
 .proficiency-group-head::-webkit-details-marker{display:none}
@@ -28,5 +28,5 @@
 .proficiency-controls button:disabled{opacity:.35;cursor:not-allowed}
 .proficiency-value{min-width:22px;text-align:center;color:#d7f7ff;font-weight:800;font-size:12px}
 @media(max-width:900px){.proficiency-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:480px){.proficiencies{padding:20px 16px}.proficiency-head{gap:12px}.proficiency-groups{gap:7px}.proficiency-group-head{font-size:9px;padding:12px 8px}.proficiency-list{padding:5px 7px}.proficiency-row{font-size:11px}.proficiency-controls{gap:2px}.proficiency-controls button{width:24px}}
+@media(max-width:480px){.proficiency-head{gap:12px}.proficiency-groups{grid-template-columns:1fr;gap:7px}.proficiency-group-head{font-size:9px;padding:12px 8px}.proficiency-list{padding:5px 7px}.proficiency-row{font-size:11px}.proficiency-controls{gap:2px}.proficiency-controls button{width:24px}}
 @media(max-width:480px){.proficiency-group[open]{grid-column:1/-1}}

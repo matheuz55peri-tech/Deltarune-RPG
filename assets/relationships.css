@@ -1,0 +1,45 @@
+.relationships-shell{padding:25px;min-height:440px}
+.relationships-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px;flex-wrap:wrap}
+.relationships-head .box-title{margin:0}
+.relationships-intro{margin:10px 0 0;color:#bab2d7;font-size:12px;line-height:1.7}
+.relationship-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.relationship-empty{grid-column:1/-1;min-height:200px;display:grid;place-items:center;border:1px dashed rgba(190,193,239,.3);color:#aaa4c1;text-align:center;padding:24px}
+.relationship-card{min-width:0;padding:18px;border:1px solid rgba(190,193,239,.3);background:rgba(6,9,27,.56)}
+.relationship-card-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
+.relationship-identity{min-width:0}
+.relationship-identity h3{margin:0;color:#f5dcff;font:13px 'Press Start 2P',monospace;line-height:1.8;overflow-wrap:anywhere}
+.relationship-identity p{margin:4px 0 0;color:#a8c8d6;font-size:12px;line-height:1.5}
+.relationship-card-actions{display:flex;gap:6px;flex-shrink:0}
+.relationship-action{min-height:34px;padding:7px 9px;border:1px solid rgba(161,208,240,.42);background:rgba(19,31,54,.72);color:#e8f4ff;font:9px 'Press Start 2P',monospace;cursor:pointer}
+.relationship-action:hover:not(:disabled){border-color:#ff8baa;background:rgba(98,24,51,.55)}
+.relationship-action:disabled{opacity:.55;cursor:default}
+.relationship-action:focus-visible,.relationship-heart:focus-visible,.relationship-field input:focus-visible,.relationship-field textarea:focus-visible{outline:2px solid #a9edff;outline-offset:2px}
+.relationship-description{margin:15px 0 0;color:#cec9df;font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.relationship-hearts{display:flex;align-items:center;gap:7px;margin:17px 0;padding:10px 12px;border-top:1px solid rgba(190,193,239,.18);border-bottom:1px solid rgba(190,193,239,.18)}
+.relationship-level-label,.relationship-level-count{color:#a7a5c4;font:9px 'Press Start 2P',monospace}
+.relationship-level-label{margin-right:auto}
+.relationship-level-count{min-width:34px;text-align:right}
+.relationship-heart{width:34px;height:34px;padding:0;border:1px solid rgba(255,113,151,.4);background:rgba(48,17,37,.45);color:#a897a9;font-size:20px;line-height:1;cursor:pointer}
+.relationship-heart.active{border-color:#ff7393;background:rgba(130,24,58,.32);color:#ff7495;text-shadow:0 0 10px rgba(255,91,134,.55)}
+.relationship-rewards{display:grid;gap:12px}
+.relationship-reward{min-width:0;padding:10px 0 0;border-top:1px solid rgba(190,193,239,.15);opacity:.52}
+.relationship-reward.unlocked{opacity:1}
+.relationship-reward-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px;color:#9692ae;font-size:10px}
+.relationship-reward.unlocked .relationship-reward-head{color:#97f2cf}
+.relationship-reward-head strong{font:9px 'Press Start 2P',monospace;line-height:1.7}
+.relationship-reward-head span{font:8px 'Press Start 2P',monospace;white-space:nowrap}
+.relationship-field{display:grid;gap:6px;margin-top:8px;color:#b8b2cd;font-size:9px;font-weight:800;letter-spacing:.04em}
+.relationship-field input,.relationship-field textarea,.relationship-fields input,.relationship-fields textarea{width:100%;min-width:0;border:1px solid rgba(174,184,221,.32);background:rgba(6,7,21,.78);color:#fff;padding:10px 11px;font-family:inherit;font-size:12px;line-height:1.6}
+.relationship-field textarea,.relationship-fields textarea{min-height:76px;resize:vertical}
+.relationship-check{display:flex;align-items:center;gap:9px;margin-top:8px;color:#ddd8ee;font-size:11px}
+.relationship-check input{width:17px;height:17px;accent-color:#74efbd}
+.relationship-claim{margin-top:10px;color:#9cf4d0;border-color:rgba(120,241,190,.52)}
+.relationship-editor{margin-top:22px;padding-top:20px;border-top:1px solid rgba(190,193,239,.2)}
+.relationship-editor[hidden]{display:none}
+.relationship-editor h3{margin:0 0 16px;color:#ffd9e5;font:11px 'Press Start 2P',monospace;line-height:1.8}
+.relationship-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.relationship-fields label{display:grid;gap:7px;color:#b8b2cd;font-size:9px;font-weight:800;letter-spacing:.04em}
+.relationship-fields .relationship-wide{grid-column:1/-1}
+.relationship-form-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
+@media(max-width:720px){.relationships-shell{padding:20px}.relationship-list{grid-template-columns:1fr}}
+@media(max-width:480px){.relationships-shell{padding:17px}.relationship-card{padding:14px}.relationship-card-head{flex-wrap:wrap}.relationship-fields{grid-template-columns:1fr}.relationship-fields .relationship-wide{grid-column:auto}.relationship-reward-head strong{font-size:8px}.relationship-action{font-size:8px;padding:7px}.relationship-heart{width:32px;height:32px}}
