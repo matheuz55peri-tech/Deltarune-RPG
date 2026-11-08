@@ -1,0 +1,661 @@
+diff --git a/assets/item-icon-catalog.css b/assets/item-icon-catalog.css
+index 9cc9275..c3fb212 100644
+--- a/assets/item-icon-catalog.css
++++ b/assets/item-icon-catalog.css
+@@ -276,3 +276,17 @@
+  .delta-icon-modal .delta-icon-color-choice{padding:7px 8px}
+  .delta-icon-modal .delta-icon-current-favorite{width:30px;height:30px;flex-basis:30px}
+ }
++
++/* Catálogo: cartões mais legíveis e uma seleção mais evidente. */
++.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
++.delta-icon-modal .delta-item-icon-option{position:relative;min-height:145px;padding:12px 7px 10px;background:linear-gradient(160deg,rgba(44,61,97,.7),rgba(15,23,43,.94))}
++.delta-icon-modal .delta-item-icon-choice{width:76px;height:76px;filter:drop-shadow(0 5px 6px rgba(0,0,0,.38))}
++.delta-icon-modal .delta-auto-icon{width:76px;height:76px}
++.delta-icon-modal .delta-item-icon-caption{font-size:11px;color:#e8f4ff}
++.delta-icon-modal .delta-item-icon-option.selected::after{content:'✓';position:absolute;left:7px;top:7px;display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#a8edff;color:#062438;font-size:12px;font-weight:900}
++.delta-icon-modal .delta-icon-star{width:30px;height:30px;opacity:.85}
++.delta-icon-modal .delta-icon-draft-preview{background:radial-gradient(circle,rgba(80,153,185,.28),rgba(7,13,29,.8) 72%)}
++@media(max-width:740px){.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.delta-icon-modal .delta-item-icon-option{min-height:132px}.delta-icon-modal .delta-item-icon-choice,.delta-icon-modal .delta-auto-icon{width:66px;height:66px}}
++@media(max-width:460px){.delta-icon-modal .delta-icon-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.delta-icon-modal .delta-item-icon-option{min-height:116px;padding:9px 3px}.delta-icon-modal .delta-item-icon-choice,.delta-icon-modal .delta-auto-icon{width:54px;height:54px}.delta-icon-modal .delta-item-icon-caption{font-size:10px}}
++.delta-icon-modal .delta-icon-modal-results{grid-template-columns:minmax(0,1fr)}
++.delta-icon-modal .delta-icon-color-row{min-width:0}
+diff --git a/assets/pdf-compact.js b/assets/pdf-compact.js
+index 79c0a96..4953794 100644
+--- a/assets/pdf-compact.js
++++ b/assets/pdf-compact.js
+@@ -96,6 +96,16 @@
+       text(v.sub,v.x+4,y+25.1,7,C.muted,false);
+     }
+     y+=32;
++    if(data.proficiencies?.length){
++      section('Perícias',C.tp);
++      for(const group of data.proficiencies){
++        const entries=group.skills.map(s=>clean(s.label)+': '+num(s.value)).join('   /   ');
++        const lines=small(entries,INNER-14,8);const height=10+lines.length*4;ensure(height+2);
++        panel(M,y,INNER,height);text(group.label,M+4,y+6,8,C.muted,true);
++        lines.forEach((l,i)=>text(l,M+4,y+12+i*4,8,C.white));y+=height+2;
++      }
++      y+=2;
++    }
+     if(data.buffs?.length){
+       section('Efeitos ativos',C.buff);
+       const rows=data.buffs.map(b=>clean(b.name)+'  /  +'+num(b.amount)+' '+clean(b.target)+'  /  '+num(b.remaining)+' turnos');
+@@ -154,7 +164,9 @@
+           const d=small(e.description||'Sem descrição',colW-9,7.8);
+           const details=kind==='buff'?'+'+num(e.amount||0)+' '+clean(e.target||'atributo')+'  /  '+num(e.turns||0)+' turnos':
+             kind==='heal'?'Cura '+num(e.power||0)+' HP':'Dano '+num(e.power||0);
+-          return {entry:e,desc:d,details,height:Math.max(22,16+d.length*3.4)};
++          const cooldown=e.cooldown>0?'  /  Recarga '+num(e.cooldown)+' turnos':'';
++          const detailLines=small(details+cooldown,colW-9,7.4);
++          return {entry:e,desc:d,details:detailLines,height:Math.max(22,16+(detailLines.length-1)*3.4+d.length*3.4)};
+         });
+         const rowH=Math.max(...layouts.map(a=>a.height));
+         if(rowH>236){throw new Error('Descrição de habilidade muito longa para caber em um único cartão do PDF.')}
+@@ -165,8 +177,8 @@
+           const nm=small(v.entry.name||'SEM NOME',colW-28,9)[0]||'SEM NOME';
+           text(nm,x+4,y+6.2,9,C.white,true);
+           text(num(v.entry.cost||0)+'% TP',x+colW-23,y+6.2,8,catColor,true);
+-          text(v.details,x+4,y+11.5,7.4,catColor);
+-          v.desc.forEach((ln,k)=>text(ln,x+4,y+16.1+k*3.4,7.8,C.muted));
++          v.details.forEach((ln,k)=>text(ln,x+4,y+11.5+k*3.4,7.4,catColor));
++          v.desc.forEach((ln,k)=>text(ln,x+4,y+16.1+(v.details.length-1+k)*3.4,7.8,C.muted));
+         });
+         y+=rowH+3;
+       }
+diff --git a/assets/themes/garden-rain.js b/assets/themes/garden-rain.js
+index 587e72a..b8f5c6e 100644
+--- a/assets/themes/garden-rain.js
++++ b/assets/themes/garden-rain.js
+@@ -16,7 +16,7 @@
+     style.textContent = [
+       '#delta-garden-rain{position:fixed;inset:0;width:100%;height:100%;',
+       'z-index:2147483646;pointer-events:none!important;user-select:none;',
+-      'image-rendering:pixelated;opacity:.91;display:none;contain:strict}',
++      'image-rendering:pixelated;opacity:.78;display:none;contain:strict}',
+       'html[data-theme="garden"] #delta-garden-rain{display:block}'
+     ].join('');
+     document.head.append(style);
+@@ -37,9 +37,9 @@
+       return {
+         x: rand(3,w+12), y,
+         hit: initial ? Math.max(hit, y + rand(5,h*.22)) : hit,
+-        near, alpha: near ? rand(.32,.65) : rand(.13,.33),
+-        speed: near ? rand(86,135) : rand(51,89),
+-        length: near ? rand(4,8)|0 : rand(2,5)|0,
++        near, alpha: near ? rand(.25,.48) : rand(.09,.23),
++        speed: near ? rand(82,130) : rand(48,85),
++        length: near ? rand(6,11)|0 : rand(3,7)|0,
+         drift: rand(-3.4,-.6)
+       };
+     }
+@@ -50,7 +50,7 @@
+         x: bounded(x,1,w-1),y:bounded(y,1,h-1),
+         age:0, duration: clicked ? .83 : rand(.48,.8),
+         max:clicked ? 19 : rand(7,12)*force,
+-        bright:clicked ? .86 : rand(.35,.62),
++        bright:clicked ? .72 : rand(.25,.48),
+         clicked
+       });
+     }
+@@ -63,7 +63,7 @@
+       const count=bounded(Math.round(w*h/1800),38,155);
+       drops.length=0; ripples.length=0;
+       for(let i=0;i<count;i++)drops.push(drop(true));
+-      draw(0);
++      if(!reduced.matches)draw(0);
+     }
+ 
+     // Círculos formados por pequenos quadrados, sem blur nem linhas suaves.
+@@ -97,11 +97,14 @@
+           }
+         }
+         const x=Math.round(d.x),y=Math.round(d.y);
+-        ctx.globalAlpha=d.alpha;
+-        ctx.fillStyle=d.near?'#98f3ff':'#6cbccc';
++        // A cauda translúcida e a ponta luminosa dão profundidade à chuva.
++        ctx.fillStyle=d.near?'#8fddec':'#6ca9c3';
++        ctx.globalAlpha=d.alpha*.34;
+         ctx.fillRect(x,y,1,d.length);
+-        ctx.globalAlpha=d.alpha*.72;
+-        ctx.fillStyle='#e3fdff';
++        ctx.globalAlpha=d.alpha;
++        ctx.fillRect(x,y+Math.floor(d.length*.45),1,Math.ceil(d.length*.55));
++        ctx.globalAlpha=d.alpha*.85;
++        ctx.fillStyle='#e0fbff';
+         ctx.fillRect(x,y+d.length-1,d.near?2:1,1);
+       }
+ 
+@@ -125,6 +128,11 @@
+           ctx.fillStyle='#f4ffff';
+           ctx.fillRect(x,y,2,1);
+           ctx.fillRect(x-1,y-2,1,1);
++          // Pequenos respingos sobem antes de a onda se espalhar.
++          const jump=Math.round(p*10);
++          ctx.globalAlpha=fade*.65;
++          ctx.fillRect(x-2-jump,y-1-jump,1,1);
++          ctx.fillRect(x+2+jump,y-2-jump,1,1);
+         }
+       }
+       ctx.globalAlpha=1;
+@@ -146,7 +154,7 @@
+       }else if(!enabled&&active){
+         active=false;cancelAnimationFrame(raf);last=0;
+       }
+-      if(reduced.matches && isGarden())draw(0);
++      if(reduced.matches){ripples.length=0;ctx.clearRect(0,0,w,h)}
+     }
+ 
+     // Pointerdown é acionado no celular e em botões/menus também.
+diff --git a/assets/themes/theme-expansion.js b/assets/themes/theme-expansion.js
+index b9fd666..6c8bf60 100644
+--- a/assets/themes/theme-expansion.js
++++ b/assets/themes/theme-expansion.js
+@@ -264,7 +264,7 @@
+   },{passive:true});
+   document.addEventListener('pointerout',e=>{
+     const el=e.target?.closest?.('button,a,[role="tab"],.file-card');
+-    if(el===lastHoverElement && !el.contains(e.relatedTarget))lastHoverElement=null;
++    if(el && el===lastHoverElement && !el.contains(e.relatedTarget))lastHoverElement=null;
+   },{passive:true});
+   document.addEventListener('click',e=>{
+     const target=e.target?.closest?.('button,a,[role="tab"]');
+@@ -279,7 +279,7 @@
+   if (document.getElementById('deltaGardenRainScript')) return;
+   const script = document.createElement('script');
+   script.id = 'deltaGardenRainScript';
+-  script.src = './assets/themes/garden-rain.js?v=2';
++  script.src = './assets/themes/garden-rain.js?v=3';
+   script.defer = true;
+   document.head.appendChild(script);
+ })();
+diff --git a/index.html b/index.html
+index 24528a1..4896b37 100644
+--- a/index.html
++++ b/index.html
+@@ -442,8 +442,8 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+ <link rel="stylesheet" href="./assets/secret-loot.css?v=21">
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+-<script src="./assets/pdf-compact.js?v=10" defer></script>
+-<script src="./assets/themes/theme-expansion.js?v=9" defer></script>
++<script src="./assets/pdf-compact.js?v=12" defer></script>
++<script src="./assets/themes/theme-expansion.js?v=10" defer></script>
+ <link rel="stylesheet" href="./assets/themes-v9.css?v=9">
+ <link rel="stylesheet" href="./assets/theme-cosmos.css?v=9">
+ <link rel="stylesheet" href="./assets/theme-waterfall.css?v=9">
+@@ -459,7 +459,9 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+ <link rel="stylesheet" href="./assets/initiative-room.css?v=1">
+ <link rel="stylesheet" href="./assets/item-rarity.css?v=2">
+ <link rel="stylesheet" href="./assets/delta-icons.css?v=1">
+-<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=3">
++<link rel="stylesheet" href="./assets/item-icon-catalog.css?v=4">
++<link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
++<link rel="stylesheet" href="./assets/proficiencies.css?v=1">
+ <link rel="stylesheet" href="./assets/secret-past.css?v=6">
+ <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
+ </head>
+@@ -618,6 +620,11 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+           <div class="derived"><div class="chip">BÔNUS DE INT <strong id="intBonus">+5%</strong></div><div class="chip">BÔNUS DE AGI <strong id="agiBonus">+2%</strong></div><div class="chip">GANHO POR AÇÃO <strong id="gainChip">10,7 TP</strong></div></div>
+         </article>
+       </section>
++      <section class="rpg-box proficiencies" aria-labelledby="proficiencyTitle">
++        <div class="proficiency-head"><div><h2 class="box-title pixel" id="proficiencyTitle">✦ PERÍCIAS</h2><p>Distribua 2 pontos para cada ponto de atributo acima de 1. Buffs e equipamentos não contam.</p></div><div class="proficiency-budget" aria-live="polite"><span>PONTOS DISPONÍVEIS</span><strong id="proficiencyBudget">0 / 0</strong></div></div>
++        <p id="proficiencyWarning" class="proficiency-warning" role="status" hidden></p>
++        <div class="proficiency-groups" id="proficiencyGroups"></div>
++      </section>
+       <section class="rpg-box resources" id="status" aria-label="Recursos do personagem">
+         <div class="box-head"><h2 class="box-title pixel">✦ STATUS & ENERGIA</h2><span class="box-code">BATALHA // HUD</span></div>
+         <p class="resource-intro">As barras atualizam automaticamente quando você muda os atributos ou usa os recursos.</p>
+@@ -708,6 +715,12 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+       <div><div class="box-title pixel">✦ HABILIDADES / MAGIAS</div><p class="library-meta">Estilo DELTA · habilidades de Dano, Cura ou Buff · TP indicado em porcentagem.</p></div>
+       <button class="library-btn" id="addSkillBtn" type="button">＋ ADICIONAR HABILIDADE</button>
+     </div>
++    <div class="skill-combat-bar" aria-label="Resumo de combate">
++      <div class="skill-combat-stat"><span>♥ VIDA</span><strong id="skillCombatHp">—</strong></div>
++      <div class="skill-combat-stat"><span>✦ TP ATUAL</span><strong id="skillCombatTp">—</strong></div>
++      <div class="skill-combat-stat"><span>⏳ EM RECARGA</span><strong id="skillCombatCooldowns">0</strong></div>
++      <button type="button" class="library-btn skill-turn-btn" id="skillPassTurn">⏳ PASSAR TURNO</button>
++    </div>
+     <div class="skill-filters" role="group" aria-label="Filtrar habilidades">
+       <button class="skill-filter active" type="button" data-filter="all" aria-pressed="true">TODAS</button>
+       <button class="skill-filter filter-damage" type="button" data-filter="damage" aria-pressed="false">⚔ DANO</button>
+@@ -726,6 +739,8 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+       <div class="editor-fields">
+         <label class="editor-label first-input">NOME DA HABILIDADE<input required class="editor-input" name="name" maxlength="55" placeholder="Ex.: Rude Buster" autocomplete="off"></label>
+         <label class="editor-label">CUSTO DE TP (%)<input required class="editor-input" name="cost" type="number" min="0" max="100" step="1" value="20"></label>
++        <label class="editor-label">RECARGA (TURNOS) <span class="skill-optional">OPCIONAL</span><input class="editor-input" name="cooldown" type="number" min="0" max="99" value="0" step="1" aria-describedby="skillCooldownHint"></label>
++        <p class="skill-cooldown-hint editor-wide" id="skillCooldownHint">0 permite usar sem espera. Após o uso, passe os turnos indicados para usar novamente.</p>
+         <label class="editor-label">EFEITO NA FICHA<select class="editor-input" name="category" id="skillCategory"><option value="damage">Dano</option><option value="heal">Cura</option><option value="buff">Buff</option></select></label>
+         <label class="editor-label">TIPO DE HABILIDADE
+           <span class="delta-skill-type-picker"><select class="editor-input" id="skillVisualType" name="abilityType">
+@@ -743,7 +758,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
+       </div>
+       <div class="editor-actions"><button class="library-btn" type="submit">✦ SALVAR HABILIDADE</button><button class="library-btn secondary" id="cancelSkillBtn" type="button">CANCELAR</button></div>
+     </form>
+-    <p class="library-help">✦ Cada habilidade usa TP máximo como base (100). Cura recupera HP, Buff dura turnos e Dano mostra o valor ao utilizar.</p>
++    <p class="library-help">✦ Cada habilidade usa TP máximo como base (100). Cura recupera HP, Buff dura turnos e Dano mostra o valor ao utilizar. A recarga opcional diminui ao passar turno.</p>
+   </div>
+ </section>
+ 
+@@ -762,7 +777,16 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Nu
+ const one=v=>Math.round(v*10)/10;
+ const fmt=v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:1});
+ const MAX_TP=100;
+-const baseState=()=>({name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
++// Perícias adaptadas aos quatro atributos desta ficha.
++const PROFICIENCY_GROUPS=[
++ {key:'strength',label:'FORÇA',skills:[['athletics','Atletismo'],['brawling','Briga'],['intimidation','Intimidação']]},
++ {key:'defense',label:'DEFESA',skills:[['endurance','Resistência'],['vigor','Vigor'],['concentration','Concentração']]},
++ {key:'intelligence',label:'INTELIGÊNCIA',skills:[['investigation','Investigação'],['arcana','Arcanismo'],['perception','Percepção']]},
++ {key:'agility',label:'AGILIDADE',skills:[['acrobatics','Acrobacia'],['stealth','Furtividade'],['sleight','Prestidigitação']]}
++];
++const PROFICIENCY_KEYS=PROFICIENCY_GROUPS.flatMap(g=>g.skills.map(([key])=>key));
++function normalizeProficiencies(input){return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,clamp(Math.trunc(input?.[key]??0),0,784)]))}
++const baseState=()=>({proficiencies:normalizeProficiencies(null),name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
+ let state=baseState();
+ try{
+   const data=JSON.parse(localStorage.getItem(KEY)||'null');
+@@ -789,6 +813,7 @@ try{
+   }
+ }catch(err){console.warn('Não foi possível carregar o registro local',err)}
+ for(const k of ['strength','defense','intelligence','agility'])state[k]=clamp(Math.trunc(state[k]),1,99);
++state.proficiencies=normalizeProficiencies(state.proficiencies);
+ state.level=clamp(Math.trunc(state.level),1,99);
+ state.hp=clamp(Math.round(state.hp),0,Number.MAX_SAFE_INTEGER);
+ state.tp=clamp(one(state.tp),0,MAX_TP);
+@@ -796,7 +821,7 @@ state.items=Array.isArray(state.items)?state.items:[];
+ state.skills=Array.isArray(state.skills)?state.skills:[];
+ state.activeBuffs=Array.isArray(state.activeBuffs)?state.activeBuffs.filter(x=>x&&typeof x==='object').map(x=>({...x,amount:clamp(Math.trunc(x.amount),0,999),remaining:clamp(Math.trunc(x.remaining),1,99)})).filter(x=>x.amount>0):[];
+ state.hp=clamp(state.hp,0,20+4*(state.defense+state.activeBuffs.filter(b=>b.target==='defense').reduce((n,b)=>n+b.amount,0)));
+-state.skills=state.skills.map(s=>({...s,category:['damage','heal','buff'].includes(s.category)?s.category:(s.icon==='♥'?'heal':'damage'),power:clamp(Math.trunc(s.power??0),0,9999),target:s.target||'strength',amount:clamp(Math.trunc(s.amount??2),1,999),turns:clamp(Math.trunc(s.turns??3),1,99)}));
++state.skills=state.skills.map(s=>({...s,category:['damage','heal','buff'].includes(s.category)?s.category:(s.icon==='♥'?'heal':'damage'),power:clamp(Math.trunc(s.power??0),0,9999),target:s.target||'strength',amount:clamp(Math.trunc(s.amount??2),1,999),turns:clamp(Math.trunc(s.turns??3),1,99),cooldown:clamp(Math.trunc(s.cooldown||0),0,99),cooldownRemaining:clamp(Math.trunc(s.cooldownRemaining||0),0,clamp(Math.trunc(s.cooldown||0),0,99))}));
+ state.name=String(state.name||'').slice(0,32);
+ if(!['sheet','inventory','skills'].includes(state.activeTab))state.activeTab='sheet';
+ const attrBonus=key=>state.activeBuffs.filter(x=>x.target===key).reduce((sum,x)=>sum+x.amount,0);
+@@ -810,7 +835,7 @@ function refreshShield(){const shield=shieldHp(),visible=shield>0;const row=$('s
+ function renderBuffs(){const el=$('activeBuffs');el.replaceChildren();if(!state.activeBuffs.length){el.append(makeEl('span','buff-empty','Nenhum buff ativo.'));return}
+  for(const buff of state.activeBuffs){const pill=makeEl('div','buff-pill');const label=makeEl('span','',buff.name+' · ');const score=makeEl('strong','',`+${fmt(buff.amount)} ${buffLabel[buff.target]||'BÔNUS'}`);const rounds=makeEl('span','',` · ${buff.remaining} turno${buff.remaining===1?'':'s'}`);const end=makeEl('button','buff-end','ENCERRAR');end.type='button';end.setAttribute('aria-label','Encerrar buff '+buff.name);end.addEventListener('click',()=>{removeBuff(buff.id);toast('Buff encerrado.');});pill.append(label,score,rounds,end);el.append(pill)}}
+ function removeBuff(id){const old=maxHp(),missing=old-state.hp;state.activeBuffs=state.activeBuffs.filter(x=>x.id!==id);state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist()}
+-function nextTurn(){if(!state.activeBuffs.length){toast('Nenhum buff ativo.');return}const old=maxHp(),missing=old-state.hp;for(const b of state.activeBuffs)b.remaining--;state.activeBuffs=state.activeBuffs.filter(b=>b.remaining>0);state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist();toast('Turno avançado; buffs atualizados.')}
++function nextTurn(){if(!state.activeBuffs.length&&!state.skills.some(s=>s.cooldownRemaining>0)){toast('Nenhum buff ou recarga ativo.');return}const old=maxHp(),missing=old-state.hp;for(const b of state.activeBuffs)b.remaining--;state.activeBuffs=state.activeBuffs.filter(b=>b.remaining>0);for(const skill of state.skills)skill.cooldownRemaining=Math.max(0,(skill.cooldownRemaining||0)-1);state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();renderLibrary('skills');persist();toast('Turno avançado; buffs e recargas atualizados.')}
+ const extraPoints=key=>Math.max(0,state[key]-1);
+ const FILE_STORE_KEY='delta-rpg-save-files-v1';
+ let fileSlots=[],activeSaveId=null,filesReady=false;
+@@ -825,6 +850,42 @@ let toastTimeout;
+ function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2300)}
+ const SOUL_PALETTE={strength:[255,48,105],defense:[52,213,118],intelligence:[57,127,249],agility:[255,216,73]};
+ const SOUL_KEYS=Object.keys(SOUL_PALETTE);
++const proficiencyTotal=()=>SOUL_KEYS.reduce((sum,key)=>sum+extraPoints(key)*2,0);
++const proficiencySpent=()=>PROFICIENCY_KEYS.reduce((sum,key)=>sum+state.proficiencies[key],0);
++function setupProficiencies(){
++ const host=$('proficiencyGroups');
++ for(const group of PROFICIENCY_GROUPS){
++  const details=makeEl('details','proficiency-group');details.dataset.group=group.key;
++  const summary=makeEl('summary','proficiency-group-head');summary.append(makeEl('span','',group.label),makeEl('span','proficiency-group-total','0 PTS'));details.append(summary);
++  const list=makeEl('div','proficiency-list');
++  for(const [key,label] of group.skills){
++   const row=makeEl('div','proficiency-row');row.dataset.proficiency=key;
++   const name=makeEl('span','proficiency-name',label);const controls=makeEl('div','proficiency-controls');
++   const minus=makeEl('button','','−');minus.type='button';minus.dataset.action='minus';minus.setAttribute('aria-label','Diminuir '+label);
++   const value=makeEl('output','proficiency-value','0');value.setAttribute('aria-label','Pontos em '+label);
++   const plus=makeEl('button','','+');plus.type='button';plus.dataset.action='plus';plus.setAttribute('aria-label','Aumentar '+label);
++   controls.append(minus,value,plus);row.append(name,controls);list.append(row);
++  }
++  details.append(list);host.append(details);
++ }
++ host.addEventListener('click',event=>{
++  const button=event.target.closest('button[data-action]');if(!button)return;
++  const key=button.closest('[data-proficiency]').dataset.proficiency;
++  if(button.dataset.action==='plus' && proficiencySpent()>=proficiencyTotal())return;
++  state.proficiencies[key]=Math.max(0,state.proficiencies[key]+(button.dataset.action==='plus'?1:-1));
++  renderProficiencies();persist();
++ });
++}
++function renderProficiencies(){
++ const total=proficiencyTotal(),spent=proficiencySpent(),remaining=total-spent;
++ $('proficiencyBudget').textContent=(remaining<0?'0':remaining)+' / '+total;
++ const warning=$('proficiencyWarning');warning.hidden=remaining>=0;warning.textContent=remaining<0?'Pontos excedidos: '+(-remaining)+'. Reduza perícias ou aumente atributos para ajustar.':'';
++ for(const group of PROFICIENCY_GROUPS){
++  const el=$('proficiencyGroups').querySelector('[data-group="'+group.key+'"]');
++  el.querySelector('.proficiency-group-total').textContent=group.skills.reduce((sum,[key])=>sum+state.proficiencies[key],0)+' PTS';
++  for(const [key] of group.skills){const row=el.querySelector('[data-proficiency="'+key+'"]'),value=state.proficiencies[key];row.querySelector('output').textContent=value;row.querySelector('[data-action="minus"]').disabled=value===0;row.querySelector('[data-action="plus"]').disabled=remaining<=0;}
++ }
++}
+ const petalSvg=encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff6eb8" d="M5 1h5v1h2v2h1v4h-1v2h-2v1H8v1H6v-1H4v-1H3V9H2V6h1V4h1V3h1z"/><path fill="#ffd0e8" d="M7 2h2v1h1v1h1v3h-1v1H9v1H7V8H6V7H5V5h1V4h1z"/></svg>');
+ function makePetals(targetId,count){const host=$(targetId);host.replaceChildren();for(let i=0;i<count;i++){const el=document.createElement('span');el.className='petal';el.style.backgroundImage=`url("data:image/svg+xml,${petalSvg}")`;el.style.left=(12+Math.random()*110)+'px';el.style.top=(-12+Math.random()*24)+'px';el.style.animationDuration=(3.5+Math.random()*2.3)+'s';el.style.animationDelay=(-Math.random()*5)+'s';el.style.setProperty('--drift',(-26+Math.random()*52)+'px');host.appendChild(el)}}
+ // Mistura de pigmentos RGB: quatro cores-base; combinações criam rosa, ocre,
+@@ -920,7 +981,7 @@ function renderStatus(animateSoul=false){
+  const hpPct=100*state.hp/maxHp();$('hpFill').style.width=hpPct+'%';$('hpPercent').textContent=Math.round(hpPct)+'%';
+  $('hpBar').setAttribute('aria-valuemax',String(maxHp()));$('hpBar').setAttribute('aria-valuenow',String(state.hp));
+  $('tpFill').style.width=state.tp+'%';$('tpPercent').textContent=Math.round(state.tp)+'%';$('tpBar').setAttribute('aria-valuenow',String(state.tp));
+- updateSoul(animateSoul);refreshShield();renderBuffs();if(state.selectedSkill)renderDetails('skills')
++ updateSoul(animateSoul);refreshShield();renderBuffs();renderSkillCombatBar();renderProficiencies();if(state.selectedSkill)renderDetails('skills')
+ }
+ function changeStat(stat,value){const missing=maxHp()-state.hp;state[stat]=clamp(Math.trunc(value),1,99);if(stat==='defense')state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus(true);persist()}
+ for(const stat of SOUL_KEYS){$(stat).addEventListener('input',e=>{if(e.target.value!=='')changeStat(stat,e.target.value)});$(stat).addEventListener('change',e=>changeStat(stat,e.target.value))}
+@@ -938,6 +999,7 @@ $('damageBtn').addEventListener('click',()=>{const damage=clamp(Math.round($('da
+ $('healAmountBtn').addEventListener('click',()=>{const amount=clamp(Math.round($('healAmount').value),1,9999);toast(`+${fmt(applyHealing(amount))} HP recuperado`)});
+ $('healSkillsBtn').addEventListener('click',()=>{setSkillFilter('heal');switchTab('skills');toast('Mostrando habilidades de cura.')});
+ $('passTurnBtn').addEventListener('click',nextTurn);
++$('skillPassTurn').addEventListener('click',nextTurn);
+ $('healBtn').addEventListener('click',()=>{state.hp=maxHp();renderStatus();persist();toast('HP restaurado!')});
+ $('actionBtn').addEventListener('click',()=>{state.tp=clamp(one(state.tp+gain()),0,100);renderStatus();persist();toast(`+${fmt(gain())} TP por ação`)});
+ $('spendBtn').addEventListener('click',()=>{const cost=clamp(one($('tpCost').value),0,100);state.tp=clamp(one(state.tp-cost),0,100);renderStatus();persist();toast(`−${fmt(cost)} TP`)});
+@@ -1097,7 +1159,7 @@ function itemIconFiltersRender(){
+  const fragment=document.createDocumentFragment();
+  for(const group of deltaCatalogGroups()){
+   const button=makeEl('button','delta-icon-filter'+(deltaCatalogFilter===group.key?' active':''),group.title);
+-  button.type='button';
++  button.type='button';button.dataset.iconFilter=group.key;
+   button.setAttribute('aria-pressed',String(deltaCatalogFilter===group.key));
+   button.append(makeEl('span','delta-icon-filter-count',String(group.count)));
+   button.addEventListener('click',()=>{
+@@ -1105,6 +1167,7 @@ function itemIconFiltersRender(){
+    itemIconFiltersRender();
+    itemIconOptionsRender();
+    if($('deltaItemIconChoices'))$('deltaItemIconChoices').scrollTop=0;
++   host.querySelector('[data-icon-filter="'+group.key+'"]')?.focus({preventScroll:true});
+   });
+   fragment.append(button);
+  }
+@@ -1116,7 +1179,7 @@ function itemIconColorsRender(){
+  const frag=document.createDocumentFragment();
+  for(const c of DELTA_ICON_COLORS){
+   const btn=makeEl('button','delta-icon-color-choice'+(deltaCatalogColor===c.key?' active':''),c.title);
+-  btn.type='button';
++  btn.type='button';btn.dataset.iconColor=c.key;
+   btn.setAttribute('aria-label','Cor: '+c.title);
+   btn.setAttribute('aria-pressed',String(deltaCatalogColor===c.key));
+   btn.append(makeEl('span','delta-icon-color-dot'));
+@@ -1125,6 +1188,7 @@ function itemIconColorsRender(){
+    deltaCatalogColor=c.key;
+    itemIconColorsRender();itemIconOptionsRender();
+    if($('deltaItemIconChoices'))$('deltaItemIconChoices').scrollTop=0;
++   host.querySelector('[data-icon-color="'+c.key+'"]')?.focus({preventScroll:true});
+   });
+   frag.append(btn);
+  }
+@@ -1197,11 +1261,15 @@ function itemIconOptionsRender(){
+   if(key!=='auto'){
+    const marked=deltaIconPrefs.favorites.includes(key);
+    const star=makeEl('button','delta-icon-star'+(marked?' saved':''),marked?'★':'☆');
+-   star.type='button';
++   star.type='button';star.dataset.iconFavorite=key;
+    star.setAttribute('aria-label',(marked?'Retirar ':'Adicionar ')+label+(marked?' dos favoritos':' aos favoritos'));
+    star.setAttribute('aria-pressed',String(marked));
+    star.title=marked?'Remover favorito':'Favoritar ícone';
+-   star.addEventListener('click',()=>toggleDeltaIconFavorite(key));
++   star.addEventListener('click',()=>{
++    toggleDeltaIconFavorite(key);
++    const next=host.querySelector('[data-icon-favorite="'+key+'"]');
++    (next||$('deltaItemIconFilters').querySelector('[aria-pressed="true"]')).focus({preventScroll:true});
++   });
+    wrap.append(star);
+   }
+   fragment.append(wrap);
+@@ -1302,34 +1370,14 @@ $('deltaItemIconChoices')?.addEventListener('keydown',event=>{
+  const options=Array.from($('deltaItemIconChoices').querySelectorAll('.delta-item-icon-option'));
+  const index=options.indexOf(document.activeElement);
+  if(index<0)return;
+- const columns=Math.max(1,Math.round($('deltaItemIconChoices').clientWidth/options[index].offsetWidth));
++ const firstTop=options[0].getBoundingClientRect().top;
++ const nextRow=options.findIndex(option=>option.getBoundingClientRect().top>firstTop+1);
++ const rowSize=nextRow<0?options.length:nextRow;
+  let next=index;
+  if(event.key==='ArrowRight')next=Math.min(options.length-1,index+1);
+  if(event.key==='ArrowLeft')next=Math.max(0,index-1);
+- if(event.key==='ArrowDown')next=Math.min(options.length-1,index+columns);
+- if(event.key==='ArrowUp')next=Math.max(0,index-columns);
+- if(event.key==='Home')next=0;
+- if(event.key==='End')next=options.length-1;
+- if(next!==index){event.preventDefault();options[next].focus();}
+-});
+-$('itemForm')?.elements.namedItem('type')?.addEventListener('change',itemIconButtonRender);
+-$('deltaItemIconSearch')?.addEventListener('keydown',event=>{
+- if(event.key==='Enter'){
+-  event.preventDefault();
+-  $('deltaItemIconChoices')?.querySelector('.delta-item-icon-option')?.focus();
+- }
+-});
+-$('deltaItemIconChoices')?.addEventListener('keydown',event=>{
+- if(!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+- const options=Array.from($('deltaItemIconChoices').querySelectorAll('.delta-item-icon-option'));
+- const index=options.indexOf(document.activeElement);
+- if(index<0)return;
+- const columns=Math.max(1,Math.round($('deltaItemIconChoices').clientWidth/options[index].offsetWidth));
+- let next=index;
+- if(event.key==='ArrowRight')next=Math.min(options.length-1,index+1);
+- if(event.key==='ArrowLeft')next=Math.max(0,index-1);
+- if(event.key==='ArrowDown')next=Math.min(options.length-1,index+columns);
+- if(event.key==='ArrowUp')next=Math.max(0,index-columns);
++ if(event.key==='ArrowDown')next=Math.min(options.length-1,index+rowSize);
++ if(event.key==='ArrowUp')next=Math.max(0,index-rowSize);
+  if(event.key==='Home')next=0;
+  if(event.key==='End')next=options.length-1;
+  if(next!==index){event.preventDefault();options[next].focus();}
+@@ -1338,6 +1386,11 @@ $('itemForm')?.elements.namedItem('type')?.addEventListener('change',itemIconBut
+ const kind={skills:{collection:'skills',selected:'selectedSkill',list:'skillsList',detail:'skillDetail',form:'skillForm',heading:'skillFormHeading',primary:'name'},inventory:{collection:'items',selected:'selectedItem',list:'inventoryList',detail:'itemDetail',form:'itemForm',heading:'itemFormHeading',primary:'name'}};
+ function selectEntry(type,id){state[kind[type].selected]=id;renderLibrary(type);persist()}
+ function createBlank(type){const area=$(kind[type].detail);area.replaceChildren();const info=makeEl('div','empty-state');info.append(makeEl('strong','',type==='skills'?'✦ NENHUMA HABILIDADE':'✦ NENHUM ITEM'),makeEl('span','',type==='skills'?'Clique em ADICIONAR HABILIDADE para criar sua primeira técnica.':'Clique em ADICIONAR ITEM para montar seu inventário.'));area.append(info)}
++function renderSkillCombatBar(){
++ $('skillCombatHp').textContent=fmt(state.hp)+' / '+fmt(maxHp());
++ $('skillCombatTp').textContent=fmt(state.tp)+'%';
++ $('skillCombatCooldowns').textContent=String(state.skills.filter(s=>s.cooldownRemaining>0).length);
++}
+ function skillCategory(entry){return ['damage','heal','buff'].includes(entry.category)?entry.category:(entry.icon==='♥'?'heal':'damage')}
+ function setSkillFilter(filter){skillFilter=filter;document.querySelectorAll('.skill-filter').forEach(btn=>{const active=btn.dataset.filter===filter;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active))});renderLibrary('skills')}
+ function renderLibrary(type){
+@@ -1347,7 +1400,7 @@ function renderLibrary(type){
+  for(const entry of rows){const category=type==='skills'?skillCategory(entry):null;const selected=entry.id===state[config.selected];const button=makeEl('button','entry-row '+(type==='inventory'?'inventory-row ':'')+(category?'category-'+category+' ':'')+(selected?'selected':''));button.type='button';button.setAttribute('aria-pressed',String(selected));
+   if(type==='inventory')button.dataset.rarity=normalizeItemRarity(entry.rarity);
+   if(type==='skills')button.append(makeEl('span','entry-cost',fmt(entry.cost)+'%'));else button.append(iconNode(itemIconFor(entry),'entry-icon'));
+-  const name=makeEl('span','entry-name');if(type==='skills')name.append(iconNode(safeAbilityType(entry.abilityType,category),'entry-icon'));name.append(makeEl('span','',entry.name));if(type==='inventory'&&normalizeItemRarity(entry.rarity)!=='common')name.append(makeEl('span','item-rarity-pill',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));button.append(name);if(type==='inventory'){
++  const name=makeEl('span','entry-name');if(type==='skills')name.append(iconNode(safeAbilityType(entry.abilityType,category),'entry-icon'));name.append(makeEl('span','',entry.name));if(type==='skills'&&entry.cooldownRemaining>0)name.append(makeEl('span','skill-row-cooldown','⏳ '+entry.cooldownRemaining+'T'));if(type==='inventory'&&normalizeItemRarity(entry.rarity)!=='common')name.append(makeEl('span','item-rarity-pill',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));button.append(name);if(type==='inventory'){
+     if(entry.equipmentData?.bonuses?.length)name.append(makeEl('span','inventory-item-bonus-mark','✦ '+entry.equipmentData.bonuses.length+' bônus'));
+     button.append(makeEl('span','entry-quantity','x'+entry.quantity));
+   }button.addEventListener('click',()=>selectEntry(type,entry.id));
+@@ -1360,11 +1413,12 @@ function renderLibrary(type){
+    quick.addEventListener('click',()=>equipFromBag(entry.id,firstAvailableSlot(entry)));
+    wrapper.append(button,quick);list.append(wrapper);
+   }else list.append(button)
+- }renderDetails(type);if(type==='inventory')renderEquippedPreview()
++ }renderDetails(type);if(type==='inventory')renderEquippedPreview();else renderSkillCombatBar()
+ }
+ function useSkill(entry){
+  const cost=clamp(one(entry.cost),0,MAX_TP);if(state.tp<cost){toast('TP insuficiente.');return}
+- const category=skillCategory(entry);state.tp=one(state.tp-cost);
++ if(entry.cooldownRemaining>0){toast('Habilidade em recarga.');return}
++ const category=skillCategory(entry);state.tp=one(state.tp-cost);entry.cooldownRemaining=clamp(Math.trunc(entry.cooldown||0),0,99);
+  if(category==='heal'){
+    const restored=applyHealing(entry.power||0);toast(`${entry.name}: +${fmt(restored)} HP, −${fmt(cost)} TP`);
+  }else if(category==='buff'){
+@@ -1372,6 +1426,7 @@ function useSkill(entry){
+    state.activeBuffs.push({id:makeId(),skillId:entry.id,name:entry.name,target:entry.target||'strength',amount:clamp(Math.trunc(entry.amount),1,999),remaining:clamp(Math.trunc(entry.turns),1,99)});
+    state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus();persist();toast(`${entry.name}: buff aplicado!`);
+  }else{renderStatus();persist();toast(`${entry.name}: ${fmt(entry.power||0)} de dano · −${fmt(cost)} TP`)}
++ renderLibrary('skills');
+ }
+ function renderDetails(type){const config=kind[type],area=$(config.detail);area.replaceChildren();area.classList.remove('category-heal','category-damage','category-buff');
+  const entry=state[config.collection].find(x=>x.id===state[config.selected]);
+@@ -1384,7 +1439,14 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
+   if(category==='heal')area.append(makeEl('div','library-meta',`♥ Recupera até ${fmt(entry.power||0)} HP.`));
+   if(category==='damage')area.append(makeEl('div','library-meta',`⚔ Dano informado: ${fmt(entry.power||0)}. Aplique o dano ao alvo no seu RPG.`));
+   if(category==='buff')area.append(makeEl('div','library-meta',`✦ +${fmt(entry.amount||0)} ${buffLabel[entry.target]||'atributo'} · duração ${entry.turns||3} turno(s).`));
+-  if(state.tp<entry.cost)area.append(makeEl('div','library-meta','TP insuficiente para usar agora.'))
++  const outcome=makeEl('div','skill-outcome');
++  outcome.append(makeEl('span','skill-outcome-label','✦ PRÓXIMA AÇÃO'));
++  const cooldown=entry.cooldownRemaining||0;
++  let note=cooldown>0?`Em recarga: ${cooldown} turno(s) restante(s).`:state.tp<entry.cost?`Faltam ${fmt(entry.cost-state.tp)}% de TP.`:`Após usar: ${fmt(state.tp-entry.cost)}% de TP.`;
++  if(!cooldown&&state.tp>=entry.cost&&category==='heal')note+=` Cura real: ${fmt(Math.min(entry.power||0,maxHp()-state.hp))} HP.`;
++  if(!cooldown&&state.tp>=entry.cost&&category==='buff'&&state.activeBuffs.some(b=>b.skillId===entry.id))note+=' O buff ativo será renovado.';
++  outcome.append(makeEl('strong','',note));area.append(outcome);
++  if(entry.cooldown>0)area.append(makeEl('div','skill-cooldown-info',`⏳ Recarga após uso: ${entry.cooldown} turno(s).`));
+  }else{
+   area.append(makeEl('span','item-rarity-detail',ITEM_RARITY_LABELS[normalizeItemRarity(entry.rarity)]));
+   area.append(makeEl('div','detail-cost',`QUANTIDADE: ${entry.quantity}`));
+@@ -1415,7 +1477,7 @@ function renderDetails(type){const config=kind[type],area=$(config.detail);area.
+   }else panel.append(makeEl('div','inventory-equip-hint','Todos os espaços estão ocupados. Desequipe um item antes de equipar outro.'));
+   area.append(panel);
+  }
+- const actions=makeEl('div','detail-actions');if(type==='skills'){const cast=makeEl('button','library-btn',category==='heal'?'♥ CURAR':category==='buff'?'✦ ATIVAR BUFF':'⚔ UTILIZAR');cast.type='button';cast.disabled=state.tp<entry.cost;cast.addEventListener('click',()=>useSkill(entry));actions.append(cast)}
++ const actions=makeEl('div','detail-actions');if(type==='skills'){const cast=makeEl('button','library-btn',category==='heal'?'♥ CURAR':category==='buff'?'✦ ATIVAR BUFF':'⚔ UTILIZAR');cast.type='button';cast.disabled=state.tp<entry.cost||entry.cooldownRemaining>0;cast.addEventListener('click',()=>useSkill(entry));actions.append(cast)}
+  const edit=makeEl('button','library-btn secondary','EDITAR');edit.type='button';edit.addEventListener('click',()=>openEditor(type,entry.id));const del=makeEl('button','library-btn danger','REMOVER');del.type='button';del.addEventListener('click',()=>removeEntry(type,entry.id));actions.append(edit,del);area.append(actions)
+ }
+ function openEditor(type,id=null){const conf=kind[type],form=$(conf.form),entry=state[conf.collection].find(x=>x.id===id);form.hidden=false;form.reset();if(type==='skills'){skillEditId=id;$('skillFormHeading').textContent=id?'✦ EDITAR HABILIDADE':'✦ ADICIONAR HABILIDADE'}else{itemEditId=id;$('itemFormHeading').textContent=id?'✦ EDITAR ITEM':'✦ ADICIONAR ITEM'}
+@@ -1449,7 +1511,7 @@ $('skillVisualType').addEventListener('change',updateSkillTypePreview);
+ document.querySelectorAll('.skill-filter').forEach(btn=>btn.addEventListener('click',()=>setSkillFilter(btn.dataset.filter)));
+ function closeEditor(type){if(type==='inventory')closeItemIconModal();$(kind[type].form).hidden=true;if(type==='skills')skillEditId=null;else itemEditId=null}
+ function saveEntry(type,e){e.preventDefault();const conf=kind[type],form=$(conf.form),id=type==='skills'?skillEditId:itemEditId,name=String(form.elements.namedItem('name').value||'').trim().slice(0,55),description=String(form.elements.namedItem('description').value||'').slice(0,3000);if(!name){toast('Digite o nome.');return}
+- let record;if(type==='skills')record={id:id||makeId(),name,description,icon:({heal:'♥',damage:'⚔',buff:'✦'}[form.elements.namedItem('category').value]||'✦'),abilityType:safeAbilityType(form.elements.namedItem('abilityType').value,form.elements.namedItem('category').value),cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99)};else{
++ let record;if(type==='skills')record={id:id||makeId(),name,description,icon:({heal:'♥',damage:'⚔',buff:'✦'}[form.elements.namedItem('category').value]||'✦'),abilityType:safeAbilityType(form.elements.namedItem('abilityType').value,form.elements.namedItem('category').value),cost:clamp(Math.trunc(form.elements.namedItem('cost').value),0,100),category:form.elements.namedItem('category').value,power:clamp(Math.trunc(form.elements.namedItem('power').value),0,9999),target:form.elements.namedItem('target').value,amount:clamp(Math.trunc(form.elements.namedItem('amount').value),1,999),turns:clamp(Math.trunc(form.elements.namedItem('turns').value),1,99),cooldown:clamp(Math.trunc(form.elements.namedItem('cooldown').value),0,99),cooldownRemaining:clamp(Math.trunc(state.skills.find(x=>x.id===id)?.cooldownRemaining||0),0,clamp(Math.trunc(form.elements.namedItem('cooldown').value),0,99))};else{
+   const previous=state.items.find(x=>x.id===id);
+   const data=normalizeGearSnapshot(previous?.equipmentData);
+   data.bonuses=[...$('inventoryBonusRows').querySelectorAll('.equip-bonus-row')].slice(0,8).map(row=>{
+@@ -1474,8 +1536,8 @@ $('resetBtn').addEventListener('click',()=>{if(!confirm('Reiniciar SOMENTE o FIL
+ 
+ /* Exporta as três seções, inclusive descrições de TODAS as entradas, mesmo que apenas uma esteja selecionada na interface. */
+ function fillExportExtra(doc){const sheet=doc.querySelector('#tab-skills');if(!sheet)return;let appendix=doc.querySelector('#exportAppend');if(!appendix){appendix=doc.createElement('div');appendix.id='exportAppend';sheet.appendChild(appendix)}
+- for(const [type,records] of [['INVENTÁRIO',state.items],['HABILIDADES',state.skills]]){const section=doc.createElement('div');section.style.cssText='background:#070919;border:1px solid #7585b5;padding:18px;margin:16px 0;color:white;break-inside:avoid;';const h=doc.createElement('h3');h.textContent='✦ '+type+' — DESCRIÇÕES';h.style.cssText='font:13px monospace;margin:0 0 14px;color:#9ceeff';section.append(h);if(!records.length){const p=doc.createElement('p');p.textContent='Nenhum registro adicionado.';section.append(p)}for(const record of records){const p=doc.createElement('p');p.style.cssText='font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid #383c59;padding:10px 0;line-height:1.5;';p.textContent=(type==='HABILIDADES'?`${record.icon||'✦'} ${record.name} [${{damage:'DANO',heal:'CURA',buff:'BUFF'}[skillCategory(record)]}] — ${record.cost}% TP${skillCategory(record)==='buff'?' — +'+record.amount+' '+(buffLabel[record.target]||'atributo')+' / '+record.turns+' turnos':' — '+(record.power||0)+' '+(skillCategory(record)==='heal'?'HP recuperado':'dano')}`:`${record.type||'◆'} ${record.name} — x${record.quantity}${normalizeItemRarity(record.rarity)==='common'?'':' · '+ITEM_RARITY_LABELS[normalizeItemRarity(record.rarity)]}`)+'\n'+(record.description||'Sem descrição');section.append(p)}appendix.append(section)}}
+-async function captureSheet(){if(typeof html2canvas!=='function')throw new Error('Biblioteca de imagem indisponível. Verifique sua conexão.');await document.fonts.ready;return await html2canvas($('exportTarget'),{backgroundColor:'#090818',scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),useCORS:true,scrollY:-window.scrollY,onclone:doc=>{doc.querySelectorAll('.rpg-tabs,.export-actions,.editor-wrap,.entry-editor,.detail-actions,.footer,.controls,.skill-filters,.turn-btn,.buff-end').forEach(el=>el.style.display='none');doc.querySelectorAll('.tab-content').forEach(el=>{el.hidden=false;el.style.display='block';el.style.margin='24px 0'});doc.querySelectorAll('.petal').forEach(el=>el.style.animation='none');doc.querySelectorAll('.soul-svg').forEach(el=>el.style.animation='none');fillExportExtra(doc)}})}
++ for(const [type,records] of [['INVENTÁRIO',state.items],['HABILIDADES',state.skills]]){const section=doc.createElement('div');section.style.cssText='background:#070919;border:1px solid #7585b5;padding:18px;margin:16px 0;color:white;break-inside:avoid;';const h=doc.createElement('h3');h.textContent='✦ '+type+' — DESCRIÇÕES';h.style.cssText='font:13px monospace;margin:0 0 14px;color:#9ceeff';section.append(h);if(!records.length){const p=doc.createElement('p');p.textContent='Nenhum registro adicionado.';section.append(p)}for(const record of records){const p=doc.createElement('p');p.style.cssText='font:14px monospace;white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid #383c59;padding:10px 0;line-height:1.5;';p.textContent=(type==='HABILIDADES'?`${record.icon||'✦'} ${record.name} [${{damage:'DANO',heal:'CURA',buff:'BUFF'}[skillCategory(record)]}] — ${record.cost}% TP${skillCategory(record)==='buff'?' — +'+record.amount+' '+(buffLabel[record.target]||'atributo')+' / '+record.turns+' turnos':' — '+(record.power||0)+' '+(skillCategory(record)==='heal'?'HP recuperado':'dano')}${record.cooldown>0?' — recarga '+record.cooldown+' turno(s)':''}`:`${record.type||'◆'} ${record.name} — x${record.quantity}${normalizeItemRarity(record.rarity)==='common'?'':' · '+ITEM_RARITY_LABELS[normalizeItemRarity(record.rarity)]}`)+'\n'+(record.description||'Sem descrição');section.append(p)}appendix.append(section)}}
++async function captureSheet(){if(typeof html2canvas!=='function')throw new Error('Biblioteca de imagem indisponível. Verifique sua conexão.');await document.fonts.ready;return await html2canvas($('exportTarget'),{backgroundColor:'#090818',scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),useCORS:true,scrollY:-window.scrollY,onclone:doc=>{doc.querySelectorAll('.rpg-tabs,.export-actions,.editor-wrap,.entry-editor,.detail-actions,.footer,.controls,.skill-filters,.turn-btn,.skill-turn-btn,.buff-end').forEach(el=>el.style.display='none');doc.querySelectorAll('.tab-content').forEach(el=>{el.hidden=false;el.style.display='block';el.style.margin='24px 0'});doc.querySelectorAll('.proficiency-group').forEach(el=>el.open=true);doc.querySelectorAll('.proficiency-controls button').forEach(el=>el.style.display='none');doc.querySelectorAll('.petal').forEach(el=>el.style.animation='none');doc.querySelectorAll('.soul-svg').forEach(el=>el.style.animation='none');fillExportExtra(doc)}})}
+ function exportFileName(ext){return ((state.name||'personagem').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,45)||'personagem')+'_DELTA_RPG.'+ext}
+ $('exportPngBtn').addEventListener('click',async()=>{try{toast('Preparando imagem...');const canvas=await captureSheet();const a=document.createElement('a');a.download=exportFileName('png');a.href=canvas.toDataURL('image/png');document.body.append(a);a.click();a.remove();toast('Ficha exportada em PNG.')}catch(err){console.error(err);toast('Falha na imagem. Verifique conexão com a biblioteca de exportação.')}});
+ $('exportPdfBtn').addEventListener('click',async()=>{
+@@ -1485,6 +1547,7 @@ $('exportPdfBtn').addEventListener('click',async()=>{
+    const stats=SOUL_KEYS.map(key=>({key,label:{strength:'Força',defense:'Defesa',intelligence:'Inteligência',agility:'Agilidade'}[key],base:state[key],bonus:attrBonus(key)+equipmentBonus(key)}));
+    const payload={
+      name:state.name,level:state.level,stats,hp:state.hp,maxHp:maxHp(),
++     proficiencies:PROFICIENCY_GROUPS.map(g=>({label:g.label,skills:g.skills.map(([key,label])=>({label,value:state.proficiencies[key]}))})),
+      tp:state.tp,gain:gain(),shield:shieldHp(),
+      color:document.documentElement.style.getPropertyValue('--soul-color').trim(),
+      buffs:state.activeBuffs.map(b=>({...b,target:buffLabel[b.target]||b.target})),
+@@ -1531,6 +1594,7 @@ function cleanCharacter(input){
+  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Personagem inválido');
+  const v=baseState();v.name=short(input.name,32);v.level=clamp(Math.trunc(input.level),1,99);
+  for(const key of ['strength','defense','intelligence','agility'])v[key]=clamp(Math.trunc(input[key]),1,99);
++ v.proficiencies=normalizeProficiencies(input.proficiencies);
+  v.tp=clamp(one(input.tp),0,100);
+  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
+   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
+@@ -1543,7 +1607,7 @@ function cleanCharacter(input){
+   category:['damage','heal','buff'].includes(x.category)?x.category:'damage',
+   power:clamp(Math.trunc(x.power),0,9999),
+   target:['hp','strength','defense','intelligence','agility'].includes(x.target)?x.target:'strength',
+-  amount:clamp(Math.trunc(x.amount),1,999),turns:clamp(Math.trunc(x.turns),1,99)}));
++  amount:clamp(Math.trunc(x.amount),1,999),turns:clamp(Math.trunc(x.turns),1,99),cooldown:clamp(Math.trunc(x.cooldown||0),0,99),cooldownRemaining:clamp(Math.trunc(x.cooldownRemaining||0),0,clamp(Math.trunc(x.cooldown||0),0,99))}));
+  v.activeBuffs=(Array.isArray(input.activeBuffs)?input.activeBuffs:[]).slice(0,60)
+   .filter(x=>x&&typeof x==='object'&&['hp','strength','defense','intelligence','agility'].includes(x.target))
+   .map(x=>({id:short(x.id,80)||freshId(),skillId:short(x.skillId,80),name:short(x.name,55),
+@@ -2164,7 +2228,7 @@ window.DeltaRpgMasterBridge=Object.freeze({
+ });
+ 
+ makePetals('soulPetals',13);
+-loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
++setupProficiencies();loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
+ 
+ /* DELTA v5 — preferência estética independente do estado do personagem. */
+ const THEME_STORAGE_KEY = 'delta-rpg-appearance-v1';
+diff --git a/assets/proficiencies.css b/assets/proficiencies.css
+new file mode 100644
+index 0000000..b7deb78
+--- /dev/null
++++ b/assets/proficiencies.css
+@@ -0,0 +1,32 @@
++/* Perícias na ficha: grupos recolhíveis para manter a leitura leve. */
++.proficiencies{margin-top:18px;padding:24px 26px}
++.proficiency-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
++.proficiency-head .box-title{margin:0}
++.proficiency-head p{margin:10px 0 0;color:#b9b7d3;font-size:12px;line-height:1.6}
++.proficiency-budget{display:flex;align-items:center;gap:14px;padding:10px 14px;border:1px solid rgba(156,221,255,.3);background:rgba(6,14,33,.6)}
++.proficiency-budget span{color:#a9bdd6;font-size:10px;letter-spacing:.08em;font-weight:700}
++.proficiency-budget strong{color:var(--cyan,#a9edff);font-size:17px;white-space:nowrap}
++.proficiency-warning{margin:14px 0 0;color:#ffbd9d;font-size:12px;line-height:1.5}
++.proficiency-groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px;align-items:start}
++.proficiency-group{min-width:0;border:1px solid rgba(190,193,239,.25);background:rgba(6,9,27,.58)}
++.proficiency-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 10px;cursor:pointer;list-style:none;font-size:10px;font-weight:800;letter-spacing:.05em}
++.proficiency-group-head::-webkit-details-marker{display:none}
++.proficiency-group-head:after{content:'+';color:#b7a7ff;font-size:18px;line-height:1}
++.proficiency-group[open] .proficiency-group-head:after{content:'−'}
++.proficiency-group-head:focus-visible,.proficiency-controls button:focus-visible{outline:2px solid #a9edff;outline-offset:2px}
++.proficiency-group-total{margin-left:auto;color:#aab5d2;font-size:9px;white-space:nowrap}
++.proficiency-group[data-group="strength"] .proficiency-group-head{color:#ff879e}
++.proficiency-group[data-group="defense"] .proficiency-group-head{color:#7ee6ff}
++.proficiency-group[data-group="intelligence"] .proficiency-group-head{color:#d6a0ff}
++.proficiency-group[data-group="agility"] .proficiency-group-head{color:#7dffbf}
++.proficiency-list{border-top:1px solid rgba(190,193,239,.18);padding:5px 10px 8px}
++.proficiency-row{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:38px;font-size:12px}
++.proficiency-name{min-width:0;overflow-wrap:anywhere}
++.proficiency-controls{display:flex;align-items:center;gap:4px;flex-shrink:0}
++.proficiency-controls button{width:26px;height:27px;padding:0;background:#211e39;border:1px solid #56506f;color:#fff;font-size:17px;cursor:pointer}
++.proficiency-controls button:hover:not(:disabled){background:#493b77}
++.proficiency-controls button:disabled{opacity:.35;cursor:not-allowed}
++.proficiency-value{min-width:22px;text-align:center;color:#d7f7ff;font-weight:800;font-size:12px}
++@media(max-width:900px){.proficiency-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
++@media(max-width:480px){.proficiencies{padding:20px 16px}.proficiency-head{gap:12px}.proficiency-groups{gap:7px}.proficiency-group-head{font-size:9px;padding:12px 8px}.proficiency-list{padding:5px 7px}.proficiency-row{font-size:11px}.proficiency-controls{gap:2px}.proficiency-controls button{width:24px}}
++@media(max-width:480px){.proficiency-group[open]{grid-column:1/-1}}
+diff --git a/assets/skills-enhanced.css b/assets/skills-enhanced.css
+new file mode 100644
+index 0000000..dbc0dd4
+--- /dev/null
++++ b/assets/skills-enhanced.css
+@@ -0,0 +1,27 @@
++/* Painel de habilidades — acompanha as cores de cada mundo. */
++#tab-skills .library-head{align-items:center;gap:18px}
++#tab-skills .library-meta{line-height:1.6}
++.skill-combat-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:1px;margin:20px 0 17px;border:1px solid var(--stroke,rgba(166,201,239,.35));background:var(--stroke,rgba(166,201,239,.35));box-shadow:0 10px 30px rgba(0,0,0,.18)}
++.skill-combat-stat{display:flex;flex-direction:column;justify-content:center;gap:7px;min-width:0;padding:14px 17px;background:var(--panel,rgba(12,12,32,.92))}
++.skill-combat-stat span{font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--muted,#b7c7db)}
++.skill-combat-stat strong{font-size:17px;line-height:1.2;color:var(--cyan,#a9edff)}
++#tab-skills .skill-turn-btn{margin:0;border:0;min-height:64px;padding:12px 18px;background:rgba(49,75,110,.6);color:var(--paper,#fff)}
++#tab-skills .skill-turn-btn:hover,#tab-skills .skill-turn-btn:focus-visible{background:rgba(75,115,150,.8);outline:2px solid var(--cyan,#bdefff);outline-offset:-3px}
++#tab-skills .skill-filters{gap:8px;margin-bottom:16px}
++#tab-skills .skill-filter{min-height:40px}
++#tab-skills .entry-row{min-height:58px;transition:background .15s,border-color .15s}
++#tab-skills .entry-name{min-width:0;gap:9px}
++#tab-skills .entry-name>span:not(.delta-icon-sprite):not(.skill-row-cooldown){overflow-wrap:anywhere}
++#tab-skills .skill-row-cooldown{margin-left:auto;padding:4px 6px;border:1px solid rgba(255,220,134,.35);background:rgba(95,68,30,.35);color:#ffe1a4;font-size:9px;white-space:nowrap}
++#tab-skills .entry-detail{min-width:0}
++#tab-skills .detail-head{align-items:center}
++#tab-skills .detail-icon.delta-icon-sprite{width:76px;height:76px;min-width:76px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
++.skill-outcome{display:grid;gap:7px;margin:15px 0;padding:13px 15px;border:1px solid var(--stroke,rgba(155,213,235,.4));background:rgba(7,20,36,.5);line-height:1.5}
++.skill-outcome-label{font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--cyan,#a9edff)}
++.skill-outcome strong{font-size:12px;color:var(--paper,#fff)}
++.skill-cooldown-info,.skill-cooldown-hint{color:var(--muted,#b7c7db);font-size:11px;line-height:1.6}
++.skill-cooldown-hint{margin:0;padding:0 0 4px}
++.skill-optional{font-size:9px;color:var(--muted,#b7c7db)}
++#tab-skills .detail-actions .library-btn:disabled{opacity:.48;cursor:not-allowed}
++@media(max-width:700px){.skill-combat-bar{grid-template-columns:repeat(3,minmax(0,1fr))}.skill-combat-stat{padding:12px 10px}.skill-combat-stat span{font-size:9px}.skill-combat-stat strong{font-size:14px}#tab-skills .skill-turn-btn{grid-column:1/-1;min-height:44px}#tab-skills .detail-icon.delta-icon-sprite{width:58px;height:58px;min-width:58px}}
++@media(prefers-reduced-motion:reduce){#tab-skills .entry-row{transition:none}}
+diff --git a/docs/habilidades.md b/docs/habilidades.md
+new file mode 100644
+index 0000000..b7ce974
+--- /dev/null
++++ b/docs/habilidades.md
+@@ -0,0 +1,9 @@
++<!-- coderabbit-ai-generated:v1 -->
++
++# Habilidades e recarga
++
++Na aba Habilidades, o painel de combate mostra HP, TP e a quantidade de habilidades em recarga. A prévia informa o TP restante, a cura efetiva e quando um buff será renovado.
++
++Ao criar ou editar uma habilidade, **Recarga (turnos)** é opcional. Com valor 0, ela pode ser usada novamente assim que houver TP suficiente. Com valor maior, após o uso ela fica indisponível até passar a quantidade indicada de turnos. O botão **Passar turno** na ficha ou na aba Habilidades reduz simultaneamente recargas e duração dos buffs.
++
++Habilidades antigas recebem recarga 0. As regras de custo de TP, dano informado, cura, escudo e renovação de buffs continuam iguais. A recarga configurada e a restante são salvas no FILE e incluídas em exportação, importação e sincronização; versões antigas do site que não conhecem esses campos podem descartá-los.
+diff --git a/docs/pericias.md b/docs/pericias.md
+new file mode 100644
+index 0000000..c178031
+--- /dev/null
++++ b/docs/pericias.md
+@@ -0,0 +1,9 @@
++<!-- coderabbit-ai-generated:v1 -->
++
++# Perícias
++
++Na aba Ficha, cada ponto base de atributo acima de 1 concede dois pontos para distribuir entre todas as perícias. Bônus de equipamentos e buffs não concedem pontos. Os valores das perícias representam os pontos investidos, sem somar automaticamente o atributo.
++
++Os grupos são uma adaptação para os quatro atributos da ficha. Atletismo, Acrobacia, Furtividade, Prestidigitação, Investigação e Arcanismo foram inspirados nas [regras básicas de D&D](https://www.dndbeyond.com/sources/dnd/basic-rules-2014/using-ability-scores); a associação de Percepção à Inteligência e as perícias de Defesa são escolhas próprias desta ficha.
++
++Reduzir atributos pode deixar a distribuição acima do limite: os pontos investidos são preservados, um aviso aparece e novas alocações ficam desativadas até o ajuste. As perícias são salvas em cada FILE, incluídas na importação, exportação e sincronização da ficha e aparecem nas exportações de imagem e PDF. Arquivos antigos começam com todas as perícias em zero.
+# Prepared by CodeRabbit from the Deltarune-RPG checkout at 5cb431e71292b0e22329412cd5f7b189f8b12be8.
