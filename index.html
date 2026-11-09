@@ -132,12 +132,23 @@ main{padding-top:46px}
 /* alma e pétalas */
 .portrait .soul-wrap{height:165px;width:165px;position:relative;display:grid;place-items:center;z-index:2}
 .portrait .soul-svg{height:126px;width:126px;overflow:visible;image-rendering:pixelated;animation:soulBreath 2.4s ease-in-out infinite;filter:drop-shadow(0 0 9px var(--soul-glow));z-index:2;position:relative}
+.soul-outfit{position:absolute;z-index:4;left:50%;top:8px;width:112px;height:82px;transform:translateX(-50%);object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
+.soul-outfit.mask{top:50%;width:106px;height:82px;transform:translate(-50%,-50%)}
 .soul-stroke{stroke:#f5f8ff;stroke-width:.13;stroke-linejoin:miter;fill:none;transition:stroke .5s ease}
 .soul-fill{fill:var(--soul-color);opacity:0;transition:opacity .5s ease}
 @keyframes soulBreath{0%,100%{filter:drop-shadow(0 0 5px var(--soul-glow))}50%{filter:drop-shadow(0 0 17px var(--soul-glow))}}
 .petal-swarm{position:absolute;inset:0;pointer-events:none;z-index:3}
 .petal{position:absolute;width:13px;height:13px;background-repeat:no-repeat;background-size:contain;opacity:.83;image-rendering:pixelated;animation:petalFloat linear infinite;filter:drop-shadow(0 0 4px rgba(255,96,160,.5))}
 @keyframes petalFloat{0%{transform:translate3d(0,-12px,0) rotate(0deg);opacity:0}12%{opacity:.9}100%{transform:translate3d(var(--drift,12px),143px,0) rotate(250deg);opacity:0}}
+.outfit-picker{margin:-7px 0 21px}
+.outfit-picker-title{font-size:9px;font-weight:800;letter-spacing:.16em;color:#d2c8ef;margin-bottom:9px}
+.outfit-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.outfit-option{min-width:0;min-height:70px;padding:5px 3px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid rgba(176,173,220,.3);border-radius:3px;background:rgba(9,12,34,.68);color:#c8c8e5;cursor:pointer;font:700 8px 'Space Grotesk',sans-serif;line-height:1.2;text-align:center;transition:background .16s,border-color .16s,color .16s}
+.outfit-option:hover{background:rgba(94,57,139,.4);border-color:#b99bff;color:white}
+.outfit-option[aria-pressed="true"]{background:rgba(152,74,177,.29);border-color:#e4a6ff;color:white;box-shadow:inset 0 0 0 1px rgba(228,166,255,.25)}
+.outfit-option:focus-visible{outline:2px solid #a6f6ff;outline-offset:2px}
+.outfit-option img{width:53px;height:43px;object-fit:contain;image-rendering:pixelated}
+.outfit-option-none-icon{font-size:20px;line-height:1}
 .portrait-flavor{margin-top:20px}
 /* Biblioteca de habilidades e inventário, inspirada em menus de batalha de pixel art */
 .library-shell{padding:25px 25px 30px;min-height:470px}
@@ -604,8 +615,21 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
           <div class="box-head"><h2 class="box-title pixel">✦ PERSONAGEM</h2><span class="box-code">[ 01 / 02 ]</span></div>
           <div class="portrait" aria-label="Alma do personagem que muda de cor conforme os atributos">
             <div class="soul-wrap"><svg class="soul-svg" id="soulSvg" viewBox="-.15 -.15 8.3 7.3" shape-rendering="crispEdges" role="img" aria-label="Alma vazia, apenas contorno"><defs><clipPath id="soulClip"><path d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></clipPath></defs><rect id="soulFill" class="soul-fill" x="0" y="7" width="8" height="0" clip-path="url(#soulClip)"/><path id="soulStroke" class="soul-stroke" d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></svg><div id="secretSoulDecorations" class="secret-soul-decorations" hidden aria-hidden="true"></div><div class="petal-swarm" id="soulPetals" aria-hidden="true"></div></div>
+            <div class="soul-wrap"><svg class="soul-svg" id="soulSvg" viewBox="-.15 -.15 8.3 7.3" shape-rendering="crispEdges" role="img" aria-label="Alma vazia, apenas contorno"><defs><clipPath id="soulClip"><path d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></clipPath></defs><rect id="soulFill" class="soul-fill" x="0" y="7" width="8" height="0" clip-path="url(#soulClip)"/><path id="soulStroke" class="soul-stroke" d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></svg><div id="secretSoulDecorations" class="secret-soul-decorations" hidden aria-hidden="true"></div><div class="petal-swarm" id="soulPetals" aria-hidden="true"></div></div><img id="soulOutfit" class="soul-outfit" alt="" aria-hidden="true" hidden>
             <span class="portrait-caption">SOUL // PLAYER</span>
           </div>
+          <section class="outfit-picker" aria-labelledby="outfitPickerTitle">
+            <h3 class="outfit-picker-title" id="outfitPickerTitle">✦ ACESSÓRIOS DA ALMA</h3>
+            <div class="outfit-options" role="group" aria-label="Escolha um acessório para o coração">
+              <button class="outfit-option" type="button" data-outfit-choice="" aria-pressed="true" aria-label="Sem acessório"><span class="outfit-option-none-icon" aria-hidden="true">♥</span><span>SEM ACESSÓRIO</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="cartola" aria-pressed="false" aria-label="Cartola"><img src="./assets/outfits/cartola.png" alt=""><span>CARTOLA</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="witch" aria-pressed="false" aria-label="Chapéu de bruxa"><img src="./assets/outfits/chapeu-bruxa.png" alt=""><span>BRUXA</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="chef" aria-pressed="false" aria-label="Chapéu de cozinheiro"><img src="./assets/outfits/chapeu-cozinheiro.png" alt=""><span>COZINHEIRO</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="straw-flower" aria-pressed="false" aria-label="Chapéu de palha com flor"><img src="./assets/outfits/chapeu-palha-flor.png" alt=""><span>PALHA &amp; FLOR</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="purple-hat" aria-pressed="false" aria-label="Chapéu roxo"><img src="./assets/outfits/chapeu-roxo.png" alt=""><span>CHAPÉU ROXO</span></button>
+              <button class="outfit-option" type="button" data-outfit-choice="carnival-mask" aria-pressed="false" aria-label="Máscara de carnaval"><img src="./assets/outfits/mascara-carnaval.png" alt=""><span>MÁSCARA</span></button>
+            </div>
+          </section>
           <label class="field"><span class="field-label">NOME DO PERSONAGEM <small>EDITÁVEL</small></span><input class="text-input" id="characterName" type="text" maxlength="32" placeholder="Seu personagem..." autocomplete="off"></label>
           <label class="field"><span class="field-label">NÍVEL</span><input class="text-input" id="level" type="number" min="1" max="99" value="1" inputmode="numeric"></label>
           <p class="portrait-flavor"><b>*</b> Sua história começa aqui.<br>As informações são salvas neste navegador.</p>
@@ -830,6 +854,15 @@ function normalizeSecretHairColors(input,count){
 }
 const PROFICIENCY_KEYS=PROFICIENCY_GROUPS.flatMap(g=>g.skills.map(([key])=>key));
 const SECRET_PROFICIENCY_KEYS=SECRET_ATTRIBUTE_GROUPS.flatMap(g=>g.skills.map(([key])=>key));
+const OUTFIT_OPTIONS=[
+ {id:'cartola',label:'Cartola',src:'./assets/outfits/cartola.png'},
+ {id:'witch',label:'Chapéu de bruxa',src:'./assets/outfits/chapeu-bruxa.png'},
+ {id:'chef',label:'Chapéu de cozinheiro',src:'./assets/outfits/chapeu-cozinheiro.png'},
+ {id:'straw-flower',label:'Chapéu de palha com flor',src:'./assets/outfits/chapeu-palha-flor.png'},
+ {id:'purple-hat',label:'Chapéu roxo',src:'./assets/outfits/chapeu-roxo.png'},
+ {id:'carnival-mask',label:'Máscara de carnaval',src:'./assets/outfits/mascara-carnaval.png'}
+];
+const OUTFIT_IDS=new Set(OUTFIT_OPTIONS.map(option=>option.id));
 function normalizeProficiencies(input){const values={...input,fight:input?.fight??input?.brawling};return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(values[key]??0,0,784)*2)/2]))}
 function normalizeSecretAttributes(input){return Object.fromEntries(SECRET_ATTRIBUTE_GROUPS.map(({key})=>[key,clamp(Math.trunc(input?.[key]??1),1,99)]))}
 function normalizeSecretProficiencies(input){return Object.fromEntries(SECRET_PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(input?.[key]??0,0,784)*2)/2]))}
@@ -844,7 +877,7 @@ function normalizeRelationships(input){
   signatureItemAdded:x.signatureItemAdded===true
  }));
 }
-const baseState=()=>({proficiencies:normalizeProficiencies(null),secretAttributes:normalizeSecretAttributes(null),secretProficiencies:normalizeSecretProficiencies(null),secretHairColors:[],relationships:[],name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
+const baseState=()=>({proficiencies:normalizeProficiencies(null),secretAttributes:normalizeSecretAttributes(null),secretProficiencies:normalizeSecretProficiencies(null),secretHairColors:[],relationships:[],name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,outfit:null,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
 let state=baseState();
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -885,6 +918,7 @@ state.activeBuffs=Array.isArray(state.activeBuffs)?state.activeBuffs.filter(x=>x
 state.hp=clamp(state.hp,0,20+4*(state.defense+state.activeBuffs.filter(b=>b.target==='defense').reduce((n,b)=>n+b.amount,0)));
 state.skills=state.skills.map(s=>({...s,category:['damage','heal','buff'].includes(s.category)?s.category:(s.icon==='♥'?'heal':'damage'),power:clamp(Math.trunc(s.power??0),0,9999),target:s.target||'strength',amount:clamp(Math.trunc(s.amount??2),1,999),turns:clamp(Math.trunc(s.turns??3),1,99),cooldown:clamp(Math.trunc(s.cooldown||0),0,99),cooldownRemaining:clamp(Math.trunc(s.cooldownRemaining||0),0,clamp(Math.trunc(s.cooldown||0),0,99))}));
 state.name=String(state.name||'').slice(0,32);
+state.outfit=OUTFIT_IDS.has(state.outfit)?state.outfit:null;
 if(!['files','sheet','inventory','equipment','skills','relationships','mural'].includes(state.activeTab))state.activeTab='sheet';
 const attrBonus=key=>state.activeBuffs.filter(x=>x.target===key).reduce((sum,x)=>sum+x.amount,0);
 const equipmentBonus=key=>Object.values(state.equipment||{}).filter(Boolean).reduce((n,item)=>n+(item.bonuses||[]).filter(b=>b.stat===key).reduce((sum,b)=>sum+Number(b.value||0),0),0);
@@ -1277,6 +1311,25 @@ function updateSoul(animate=true){
  hueAnimation=requestAnimationFrame(frame);
 }
 
+function renderOutfit(){
+ const selected=OUTFIT_OPTIONS.find(option=>option.id===state.outfit);
+ const preview=$('soulOutfit');
+ preview.hidden=!selected;
+ preview.className='soul-outfit'+(selected?.id==='carnival-mask'?' mask':'');
+ if(selected&&preview.getAttribute('src')!==selected.src)preview.src=selected.src;
+ if(!selected)preview.removeAttribute('src');
+ document.querySelectorAll('[data-outfit-choice]').forEach(button=>{
+  const active=button.dataset.outfitChoice===(state.outfit||'');
+  button.setAttribute('aria-pressed',String(active));
+ });
+}
+document.querySelectorAll('[data-outfit-choice]').forEach(button=>button.addEventListener('click',()=>{
+ const chosen=button.dataset.outfitChoice;
+ state.outfit=OUTFIT_IDS.has(chosen)?chosen:null;
+ renderOutfit();
+ persist();
+}));
+
 function switchTab(tab){
  const tabs=['files','sheet','inventory','equipment','skills','relationships','mural'];
  if(!tabs.includes(tab))tab='files';state.activeTab=tab;
@@ -1294,7 +1347,7 @@ function renderStatus(animateSoul=false){
  const hpPct=100*state.hp/maxHp();$('hpFill').style.width=hpPct+'%';$('hpPercent').textContent=Math.round(hpPct)+'%';
  $('hpBar').setAttribute('aria-valuemax',String(maxHp()));$('hpBar').setAttribute('aria-valuenow',String(state.hp));
  $('tpFill').style.width=state.tp+'%';$('tpPercent').textContent=Math.round(state.tp)+'%';$('tpBar').setAttribute('aria-valuenow',String(state.tp));
- updateSoul(animateSoul);refreshShield();renderBuffs();renderSkillCombatBar();renderProficiencies();renderSecretAttributes();if(state.selectedSkill)renderDetails('skills')
+ updateSoul(animateSoul);renderOutfit();refreshShield();renderBuffs();renderSkillCombatBar();renderProficiencies();renderSecretAttributes();if(state.selectedSkill)renderDetails('skills')
 }
 function changeStat(stat,value){const missing=maxHp()-state.hp;state[stat]=clamp(Math.trunc(value),1,99);if(stat==='defense')state.hp=clamp(maxHp()-missing,0,maxHp());renderStatus(true);persist()}
 for(const stat of SOUL_KEYS){$(stat).addEventListener('input',e=>{if(e.target.value!=='')changeStat(stat,e.target.value)});$(stat).addEventListener('change',e=>changeStat(stat,e.target.value))}
@@ -1912,6 +1965,7 @@ function cleanCharacter(input){
  v.secretProficiencies=normalizeSecretProficiencies(input.secretProficiencies);
  v.secretHairColors=normalizeSecretHairColors(input.secretHairColors,Math.max(0,v.secretAttributes.cunty-1));
  v.relationships=normalizeRelationships(input.relationships);
+ v.outfit=OUTFIT_IDS.has(input.outfit)?input.outfit:null;
  v.tp=clamp(one(input.tp),0,100);
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
   id:short(x.id,80)||freshId(),name:short(x.name,55),description:short(x.description,3000),
