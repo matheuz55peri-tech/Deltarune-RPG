@@ -6,6 +6,11 @@
   const eye=document.createElement('button');
   eye.id='deltaSecretEye';eye.type='button';eye.title='';eye.setAttribute('aria-label','Segredo');
   eye.innerHTML='<img src="./assets/secret/eye.gif" alt="" aria-hidden="true">';document.body.append(eye);
+    const attributesShortcut=document.createElement('button');
+    attributesShortcut.id='deltaSecretAttributes';attributesShortcut.type='button';
+    attributesShortcut.title='Ir para atributos';attributesShortcut.setAttribute('aria-label','Ir para atributos');
+    attributesShortcut.innerHTML='<img src="./assets/secret/attribute-jester.svg" alt="" aria-hidden="true">';
+    document.body.append(attributesShortcut);
   const gate=document.createElement('dialog');gate.id='deltaSecretGate';
   gate.innerHTML='<form method="dialog" id="deltaSecretGateForm"><div class="delta-secret-gate-heading">✧ OLHO VELADO</div><p>Uma palavra desperta aquilo que observa.</p><label for="deltaSecretPassword">SENHA</label><input id="deltaSecretPassword" type="password" autocomplete="off" required maxlength="60"><span id="deltaSecretGateError" role="alert" aria-live="polite"></span><div class="delta-secret-gate-actions"><button type="button" id="deltaSecretGateCancel">VOLTAR</button><button type="submit">REVELAR</button></div></form>';
   document.body.append(gate);
@@ -33,6 +38,16 @@
   const password=gate.querySelector('#deltaSecretPassword'),error=gate.querySelector('#deltaSecretGateError');
   gate.querySelector('#deltaSecretGateCancel').addEventListener('click',()=>gate.close());
   eye.addEventListener('click',()=>{password.value='';error.textContent='';gate.showModal();password.focus();});
+    attributesShortcut.addEventListener('click',()=>{
+     document.querySelector('.rpg-tab[data-tab="sheet"]')?.click();
+     requestAnimationFrame(()=>{
+        const panel=document.querySelector('#tab-sheet .attributes');if(!panel)return;
+        panel.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+        const heading=panel.querySelector('.box-title');heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:true});
+        panel.classList.add('secret-attributes-reveal');
+        setTimeout(()=>panel.classList.remove('secret-attributes-reveal'),1200);
+     });
+    });
   function showRealm(){realm.hidden=false;realm.classList.remove('secret-revealed');document.body.style.overflow='hidden';}
   gate.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(password.value.trim()==='Oculto'){gate.close();showRealm();}else{error.textContent='A palavra não foi reconhecida.';password.select();}});
   realm.querySelector('#secretPupil').addEventListener('click',()=>{realm.classList.add('secret-revealed');});
