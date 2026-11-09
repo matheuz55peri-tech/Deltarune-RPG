@@ -10,7 +10,7 @@
     attributesShortcut.id='deltaSecretAttributes';attributesShortcut.type='button';
     attributesShortcut.title='Atributos ocultos';attributesShortcut.setAttribute('aria-label','Abrir ou fechar atributos ocultos');
     attributesShortcut.innerHTML='<img src="./assets/secret/attribute-jester.svg" alt="" aria-hidden="true">';
-    document.body.append(attributesShortcut);
+    document.querySelector('.attributes-stat-grid')?.append(attributesShortcut);
   const gate=document.createElement('dialog');gate.id='deltaSecretGate';
   gate.innerHTML='<form method="dialog" id="deltaSecretGateForm"><div class="delta-secret-gate-heading">✧ OLHO VELADO</div><p>Uma palavra desperta aquilo que observa.</p><label for="deltaSecretPassword">SENHA</label><input id="deltaSecretPassword" type="password" autocomplete="off" required maxlength="60"><span id="deltaSecretGateError" role="alert" aria-live="polite"></span><div class="delta-secret-gate-actions"><button type="button" id="deltaSecretGateCancel">VOLTAR</button><button type="submit">REVELAR</button></div></form>';
   document.body.append(gate);
