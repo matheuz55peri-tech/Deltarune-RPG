@@ -8,7 +8,7 @@
   eye.innerHTML='<img src="./assets/secret/eye.gif" alt="" aria-hidden="true">';document.body.append(eye);
     const attributesShortcut=document.createElement('button');
     attributesShortcut.id='deltaSecretAttributes';attributesShortcut.type='button';
-    attributesShortcut.title='Ir para atributos';attributesShortcut.setAttribute('aria-label','Ir para atributos');
+    attributesShortcut.title='Atributos ocultos';attributesShortcut.setAttribute('aria-label','Abrir ou fechar atributos ocultos');
     attributesShortcut.innerHTML='<img src="./assets/secret/attribute-jester.svg" alt="" aria-hidden="true">';
     document.body.append(attributesShortcut);
   const gate=document.createElement('dialog');gate.id='deltaSecretGate';
@@ -40,13 +40,7 @@
   eye.addEventListener('click',()=>{password.value='';error.textContent='';gate.showModal();password.focus();});
     attributesShortcut.addEventListener('click',()=>{
      document.querySelector('.rpg-tab[data-tab="sheet"]')?.click();
-     requestAnimationFrame(()=>{
-        const panel=document.querySelector('#tab-sheet .attributes');if(!panel)return;
-        panel.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
-        const heading=panel.querySelector('.box-title');heading?.setAttribute('tabindex','-1');heading?.focus({preventScroll:true});
-        panel.classList.add('secret-attributes-reveal');
-        setTimeout(()=>panel.classList.remove('secret-attributes-reveal'),1200);
-     });
+      requestAnimationFrame(()=>document.dispatchEvent(new CustomEvent('delta-rpg:toggle-secret-attributes')));
     });
   function showRealm(){realm.hidden=false;realm.classList.remove('secret-revealed');document.body.style.overflow='hidden';}
   gate.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(password.value.trim()==='Oculto'){gate.close();showRealm();}else{error.textContent='A palavra não foi reconhecida.';password.select();}});

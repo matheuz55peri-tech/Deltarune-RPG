@@ -19,9 +19,9 @@
 .proficiency-group[data-group="defense"] .proficiency-group-head{color:#7ee6ff}
 .proficiency-group[data-group="intelligence"] .proficiency-group-head{color:#d6a0ff}
 .proficiency-group[data-group="agility"] .proficiency-group-head{color:#7dffbf}
-.proficiency-list{border-top:1px solid rgba(190,193,239,.18);padding:5px 10px 8px}
-.proficiency-row{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:38px;font-size:12px}
-.proficiency-name{min-width:0;overflow-wrap:anywhere}
+.proficiency-list{border-top:1px solid rgba(190,193,239,.18);padding:7px 12px 10px}
+.proficiency-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;font-size:12px}
+.proficiency-name{flex:1;min-width:0;line-height:1.55;overflow-wrap:anywhere}
 .proficiency-controls{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .proficiency-controls button{width:26px;height:27px;padding:0;background:#211e39;border:1px solid #56506f;color:#fff;font-size:17px;cursor:pointer}
 .proficiency-controls button:hover:not(:disabled){background:#493b77}
@@ -30,3 +30,18 @@
 @media(max-width:900px){.proficiency-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.proficiency-head{gap:12px}.proficiency-groups{grid-template-columns:1fr;gap:7px}.proficiency-group-head{font-size:9px;padding:12px 8px}.proficiency-list{padding:5px 7px}.proficiency-row{font-size:11px}.proficiency-controls{gap:2px}.proficiency-controls button{width:24px}}
 @media(max-width:480px){.proficiency-group[open]{grid-column:1/-1}}
+.secret-attributes-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.secret-attributes-head .box-title{margin:0}
+.secret-attributes-head p{margin:9px 0 0;color:#b9b7d3;font-size:12px;line-height:1.6}
+.secret-attribute-grid{margin-bottom:20px}
+.secret-attribute-card{min-width:0;padding:14px;border:1px solid rgba(211,183,233,.3);background:rgba(8,7,24,.66)}
+.secret-attribute-label{display:block;margin-bottom:10px;color:#e8c9ff;font:10px 'Press Start 2P',monospace;line-height:1.7;overflow-wrap:anywhere}
+.secret-attribute-row{display:flex;align-items:center;gap:10px}
+.secret-attribute-number{width:76px;min-height:38px;padding:7px 9px;border:1px solid #49425f;background:#100e24;color:#fff;font:18px 'Press Start 2P',monospace}
+.secret-attribute-stepper{display:flex;gap:6px;margin-left:auto}
+.secret-attribute-stepper button{width:34px;height:34px;border:1px solid #625477;background:#211a34;color:#fff;font-family:inherit;font-size:17px;cursor:pointer}
+.secret-attribute-stepper button:hover{border-color:#e1b5f5;background:#3e2855}
+.secret-attribute-stepper button:focus-visible{outline:2px solid #e8c9ff;outline-offset:2px}
+.secret-proficiencies{margin-top:22px;padding-top:20px;border-top:1px solid rgba(211,183,233,.25)}
+.secret-proficiency-groups{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:480px){.secret-proficiency-groups{grid-template-columns:1fr}.secret-attributes-head .library-btn{width:100%}.secret-attribute-card{padding:12px}}
