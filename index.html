@@ -463,7 +463,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
 <link rel="stylesheet" href="./assets/proficiencies.css?v=2">
 <link rel="stylesheet" href="./assets/relationships.css?v=1">
-<link rel="stylesheet" href="./assets/secret-past.css?v=7">
+<link rel="stylesheet" href="./assets/secret-past.css?v=8">
 <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
 </head>
 <body>
@@ -1003,20 +1003,29 @@ function renderSecretHeartDecorations(){
  if(points.cunty){
   const hair=node('g',{class:'secret-hair'});
   for(let index=0;index<points.cunty;index++){
-   const x=.35+((index*1.61803398875)%7.3),side=x<4?-1:1,length=Math.min(1.05+Math.floor(index/3)*.14,4.2);
+    const x=.35+((index*1.61803398875)%7.3),side=x<4?-1:1,length=Math.min(2+Math.floor(index/3)*.22,5.4);
    const endX=Math.max(.08,Math.min(7.92,x+side*(.18+(index%4)*.08)));
-   node('path',{d:`M${x.toFixed(2)} -.35 C${(x-side*.2).toFixed(2)} .48 ${(x+side*.12).toFixed(2)} ${(length*.55).toFixed(2)} ${endX.toFixed(2)} ${length.toFixed(2)}`,stroke:state.secretHairColors[index],class:'secret-hair-strand'},hair);
+    const strand=`M${x.toFixed(2)} -.35 C${(x-side*.3).toFixed(2)} .8 ${(x+side*.2).toFixed(2)} ${(length*.55).toFixed(2)} ${endX.toFixed(2)} ${length.toFixed(2)}`;
+    node('path',{d:strand,stroke:state.secretHairColors[index],class:'secret-hair-strand'},hair);
+    node('path',{d:strand,transform:'translate(.035 0)',stroke:'#fff8','stroke-width':.055,fill:'none','stroke-linecap':'round'},hair);
   }
  }
  if(points.beauty){
-  const width=Math.min(1.1+points.beauty*.033,4.35),height=.25+points.beauty*.009,centerX=4,centerY=4.55;
+    const width=Math.min(3.2+points.beauty*.035,6.6),height=Math.min(1.05+points.beauty*.013,2.4),centerX=4,centerY=4.65;
   const left=centerX-width/2,right=centerX+width/2;
   node('path',{d:`M${left} ${centerY} C${left+width*.2} ${centerY-height*.52} ${centerX-width*.17} ${centerY-height*.5} ${centerX} ${centerY-height*.12} C${centerX+width*.17} ${centerY-height*.5} ${right-width*.2} ${centerY-height*.52} ${right} ${centerY} C${right-width*.16} ${centerY+height*.8} ${left+width*.16} ${centerY+height*.8} ${left} ${centerY}Z`,fill:'#e0003c',stroke:'#790020', 'stroke-width':.07,class:'secret-lipstick-mouth'});
-  node('path',{d:`M${left+width*.16} ${centerY+.03} Q${centerX} ${centerY-height*.19} ${right-width*.16} ${centerY+.03}`,fill:'none',stroke:'#ff829b','stroke-width':.055,'stroke-linecap':'round'});
+    const innerWidth=width*.76,innerHeight=height*.42,innerLeft=centerX-innerWidth/2,innerRight=centerX+innerWidth/2;
+    node('path',{d:`M${innerLeft} ${centerY+.04} C${centerX-innerWidth*.25} ${centerY-innerHeight*.28} ${centerX+innerWidth*.25} ${centerY-innerHeight*.28} ${innerRight} ${centerY+.04} C${centerX+innerWidth*.26} ${centerY+innerHeight*.72} ${centerX-innerWidth*.26} ${centerY+innerHeight*.72} ${innerLeft} ${centerY+.04}Z`,fill:'#250814'});
+    node('path',{d:`M${left+width*.14} ${centerY-height*.08} Q${centerX} ${centerY-height*.42} ${right-width*.14} ${centerY-height*.08}`,fill:'none',stroke:'#ff9aac','stroke-width':.1,'stroke-linecap':'round'});
  }
  if(points.performance){
-  const red=150+Math.round(105*points.performance/98),green=55-Math.round(40*points.performance/98),blue=90-Math.round(50*points.performance/98),color=`rgb(${red},${green},${blue})`,shoe=node('g',{class:'secret-high-heel',opacity:Math.min(.35+points.performance*.0065,1),transform:'translate(0 .9)'});
-  node('path',{d:'M1.15 6.05 C2.1 6.22 3.15 6.2 4.1 5.82 C4.55 5.62 4.62 5.05 4.53 4.67 C4.48 4.43 4.82 4.4 4.97 4.66 L5.72 5.78 C6.3 6.05 6.95 6 7.48 5.87 C7.91 5.76 8.02 6.22 7.61 6.43 L3.88 6.68 L3.67 7.15 L3.27 7.15 L3.34 6.67 L1.38 6.59Z',fill:color,stroke:'#ffb4c3','stroke-width':.08,'stroke-linejoin':'round'},shoe);
+    const red=150+Math.round(105*points.performance/98),green=55-Math.round(40*points.performance/98),blue=90-Math.round(50*points.performance/98),color=`rgb(${red},${green},${blue})`,shoes=node('g',{class:'secret-high-heels'});
+    const shoePath='M.12 1.2 C.65 1.18 1.25 .88 1.75 .53 L2.1 .12 C2.3 -.11 2.56 .09 2.44 .42 L2.12 1.06 C2.62 1.19 3.26 1.12 3.92 .96 C4.18 .9 4.25 1.23 3.98 1.43 C3.4 1.78 2.45 1.75 1.7 1.63 L1.45 2.05 L1.18 2.05 L1.28 1.51 C.82 1.7 .43 1.58 .1 1.39Z';
+    for(const transform of ['translate(.8 6.85) scale(.72)','translate(7.5 6.85) scale(-.72 .72)']){
+    const shoe=node('g',{class:'secret-high-heel',opacity:Math.min(.78+points.performance*.0022,1),transform},shoes);
+    node('path',{d:shoePath,fill:color,stroke:'#ffadb5','stroke-width':.08,'stroke-linejoin':'round'},shoe);
+    node('path',{d:'M.25 1.22 Q1.15 1.15 1.82 .55',fill:'none',stroke:'#ff9caa','stroke-width':.08,'stroke-linecap':'round'},shoe);
+    }
  }
  host.append(svg);
 }
