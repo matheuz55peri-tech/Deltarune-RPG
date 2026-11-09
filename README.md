@@ -7,6 +7,7 @@ Site de fichas inspirado visualmente em menus de RPGs de pixel art, publicado no
 ## Personagem e recursos
 - Atributos começam em 1: **Força, Defesa, Inteligência e Agilidade**.
 - A alma começa vazia, colore-se de acordo com a distribuição de pontos extras e mistura matizes na roda de cores.
+- Selecione um dos seis acessórios pixel art (ou deixe sem acessório) para personalizar o coração; a escolha é salva em cada FILE e acompanha exportações e sessões AO VIVO.
 - Pétalas pixeladas animadas ao redor da alma.
 - **HP máximo:** `20 + 4 × Defesa` (considerando buffs temporários de Defesa).
 - **TP máximo:** 100.
