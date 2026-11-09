@@ -463,7 +463,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
 <link rel="stylesheet" href="./assets/proficiencies.css?v=2">
 <link rel="stylesheet" href="./assets/relationships.css?v=1">
-<link rel="stylesheet" href="./assets/secret-past.css?v=6">
+<link rel="stylesheet" href="./assets/secret-past.css?v=7">
 <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
 </head>
 <body>
@@ -603,7 +603,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
         <article class="rpg-box profile">
           <div class="box-head"><h2 class="box-title pixel">✦ PERSONAGEM</h2><span class="box-code">[ 01 / 02 ]</span></div>
           <div class="portrait" aria-label="Alma do personagem que muda de cor conforme os atributos">
-            <div class="soul-wrap"><svg class="soul-svg" id="soulSvg" viewBox="-.15 -.15 8.3 7.3" shape-rendering="crispEdges" role="img" aria-label="Alma vazia, apenas contorno"><defs><clipPath id="soulClip"><path d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></clipPath></defs><rect id="soulFill" class="soul-fill" x="0" y="7" width="8" height="0" clip-path="url(#soulClip)"/><path id="soulStroke" class="soul-stroke" d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></svg><div class="petal-swarm" id="soulPetals" aria-hidden="true"></div></div>
+            <div class="soul-wrap"><svg class="soul-svg" id="soulSvg" viewBox="-.15 -.15 8.3 7.3" shape-rendering="crispEdges" role="img" aria-label="Alma vazia, apenas contorno"><defs><clipPath id="soulClip"><path d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></clipPath></defs><rect id="soulFill" class="soul-fill" x="0" y="7" width="8" height="0" clip-path="url(#soulClip)"/><path id="soulStroke" class="soul-stroke" d="M1 1V0H3V1H5V0H7V1H8V4H7V5H6V6H5V7H3V6H2V5H1V4H0V1Z"/></svg><div id="secretSoulDecorations" class="secret-soul-decorations" hidden aria-hidden="true"></div><div class="petal-swarm" id="soulPetals" aria-hidden="true"></div></div>
             <span class="portrait-caption">SOUL // PLAYER</span>
           </div>
           <label class="field"><span class="field-label">NOME DO PERSONAGEM <small>EDITÁVEL</small></span><input class="text-input" id="characterName" type="text" maxlength="32" placeholder="Seu personagem..." autocomplete="off"></label>
@@ -822,6 +822,12 @@ const SECRET_ATTRIBUTE_GROUPS=[
  {key:'performance',label:'PERFORMANCE',skills:[['dance','Dança'],['eloquence','Lábia'],['flirt','Flerte']]},
  {key:'voice',label:'VOZ',skills:[['singing','Canto'],['highPitch','Agudo'],['roan','Roan']]}
 ];
+const SECRET_HAIR_COLORS=['#f05a74','#ffb347','#f5e663','#55d187','#52c6dd','#6587f5','#ab72df','#f278c8','#f2dfc6','#77717f'];
+function normalizeSecretHairColors(input,count){
+ const colors=Array.isArray(input)?input.filter(color=>SECRET_HAIR_COLORS.includes(color)).slice(0,count):[];
+ while(colors.length<count)colors.push(SECRET_HAIR_COLORS[Math.floor(Math.random()*SECRET_HAIR_COLORS.length)]);
+ return colors;
+}
 const PROFICIENCY_KEYS=PROFICIENCY_GROUPS.flatMap(g=>g.skills.map(([key])=>key));
 const SECRET_PROFICIENCY_KEYS=SECRET_ATTRIBUTE_GROUPS.flatMap(g=>g.skills.map(([key])=>key));
 function normalizeProficiencies(input){const values={...input,fight:input?.fight??input?.brawling};return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(values[key]??0,0,784)*2)/2]))}
@@ -838,7 +844,7 @@ function normalizeRelationships(input){
   signatureItemAdded:x.signatureItemAdded===true
  }));
 }
-const baseState=()=>({proficiencies:normalizeProficiencies(null),secretAttributes:normalizeSecretAttributes(null),secretProficiencies:normalizeSecretProficiencies(null),relationships:[],name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
+const baseState=()=>({proficiencies:normalizeProficiencies(null),secretAttributes:normalizeSecretAttributes(null),secretProficiencies:normalizeSecretProficiencies(null),secretHairColors:[],relationships:[],name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
 let state=baseState();
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -868,6 +874,7 @@ for(const k of ['strength','defense','intelligence','agility'])state[k]=clamp(Ma
 state.proficiencies=normalizeProficiencies(state.proficiencies);
 state.secretAttributes=normalizeSecretAttributes(state.secretAttributes);
 state.secretProficiencies=normalizeSecretProficiencies(state.secretProficiencies);
+state.secretHairColors=normalizeSecretHairColors(state.secretHairColors,Math.max(0,state.secretAttributes.cunty-1));
 state.relationships=normalizeRelationships(state.relationships);
 state.level=clamp(Math.trunc(state.level),1,99);
 state.hp=clamp(Math.round(state.hp),0,Number.MAX_SAFE_INTEGER);
@@ -971,6 +978,47 @@ function renderSecretAttributes(){
   const input=$('secret-stat-'+group.key);if(input)input.value=state.secretAttributes[group.key];
  }
  renderSecretProficiencies();
+ renderSecretHeartDecorations();
+}
+function renderSecretHeartDecorations(){
+ const host=$('secretSoulDecorations');if(!host)return;
+ const points={beauty:Math.max(0,state.secretAttributes.beauty-1),performance:Math.max(0,state.secretAttributes.performance-1),cunty:Math.max(0,state.secretAttributes.cunty-1),voice:Math.max(0,state.secretAttributes.voice-1)};
+ state.secretHairColors=normalizeSecretHairColors(state.secretHairColors,points.cunty);
+ host.replaceChildren();
+ const active=!$('secretAttributesView').hidden,hasDecorations=Object.values(points).some(value=>value>0);
+ host.hidden=!active||!hasDecorations;if(host.hidden)return;
+ const namespace='http://www.w3.org/2000/svg',svg=document.createElementNS(namespace,'svg');
+ svg.setAttribute('viewBox','-.15 -.15 8.3 7.3');
+ const node=(tag,attributes,parent=svg)=>{
+  const element=document.createElementNS(namespace,tag);
+  for(const [name,value] of Object.entries(attributes))element.setAttribute(name,String(value));
+  parent.append(element);return element;
+ };
+ if(points.voice){
+  const strength=Math.min(.1+points.voice*.008,.88),lights=node('g',{class:'secret-voice-lights',opacity:strength});
+  node('path',{d:'M.25 -.65 3.25 2.25 3.75 5.15 1.65 4.35Z',fill:'#a844ff'},lights);
+  node('path',{d:'M7.75 -.65 4.75 2.25 4.25 5.15 6.35 4.35Z',fill:'#b950ff'},lights);
+  node('ellipse',{cx:4,cy:3.75,rx:.35+Math.min(points.voice*.015,1.8),ry:.4+Math.min(points.voice*.012,1.5),fill:'#c95cff',class:'secret-voice-glow'},lights);
+ }
+ if(points.cunty){
+  const hair=node('g',{class:'secret-hair'});
+  for(let index=0;index<points.cunty;index++){
+   const x=.35+((index*1.61803398875)%7.3),side=x<4?-1:1,length=Math.min(1.05+Math.floor(index/3)*.14,4.2);
+   const endX=Math.max(.08,Math.min(7.92,x+side*(.18+(index%4)*.08)));
+   node('path',{d:`M${x.toFixed(2)} -.35 C${(x-side*.2).toFixed(2)} .48 ${(x+side*.12).toFixed(2)} ${(length*.55).toFixed(2)} ${endX.toFixed(2)} ${length.toFixed(2)}`,stroke:state.secretHairColors[index],class:'secret-hair-strand'},hair);
+  }
+ }
+ if(points.beauty){
+  const width=Math.min(1.1+points.beauty*.033,4.35),height=.25+points.beauty*.009,centerX=4,centerY=4.55;
+  const left=centerX-width/2,right=centerX+width/2;
+  node('path',{d:`M${left} ${centerY} C${left+width*.2} ${centerY-height*.52} ${centerX-width*.17} ${centerY-height*.5} ${centerX} ${centerY-height*.12} C${centerX+width*.17} ${centerY-height*.5} ${right-width*.2} ${centerY-height*.52} ${right} ${centerY} C${right-width*.16} ${centerY+height*.8} ${left+width*.16} ${centerY+height*.8} ${left} ${centerY}Z`,fill:'#e0003c',stroke:'#790020', 'stroke-width':.07,class:'secret-lipstick-mouth'});
+  node('path',{d:`M${left+width*.16} ${centerY+.03} Q${centerX} ${centerY-height*.19} ${right-width*.16} ${centerY+.03}`,fill:'none',stroke:'#ff829b','stroke-width':.055,'stroke-linecap':'round'});
+ }
+ if(points.performance){
+  const red=150+Math.round(105*points.performance/98),green=55-Math.round(40*points.performance/98),blue=90-Math.round(50*points.performance/98),color=`rgb(${red},${green},${blue})`,shoe=node('g',{class:'secret-high-heel',opacity:Math.min(.35+points.performance*.0065,1),transform:'translate(0 .9)'});
+  node('path',{d:'M1.15 6.05 C2.1 6.22 3.15 6.2 4.1 5.82 C4.55 5.62 4.62 5.05 4.53 4.67 C4.48 4.43 4.82 4.4 4.97 4.66 L5.72 5.78 C6.3 6.05 6.95 6 7.48 5.87 C7.91 5.76 8.02 6.22 7.61 6.43 L3.88 6.68 L3.67 7.15 L3.27 7.15 L3.34 6.67 L1.38 6.59Z',fill:color,stroke:'#ffb4c3','stroke-width':.08,'stroke-linejoin':'round'},shoe);
+ }
+ host.append(svg);
 }
 function toggleSecretAttributes(){
  const secret=$('secretAttributesView'),showSecret=secret.hidden;
@@ -1012,7 +1060,7 @@ function setupSecretAttributes(){
  });
  stats.addEventListener('input',event=>{
   const key=event.target.dataset.secretStatInput;if(!key||event.target.value==='')return;
-  state.secretAttributes[key]=clamp(Math.trunc(event.target.value),1,99);renderSecretProficiencies();persist();
+  state.secretAttributes[key]=clamp(Math.trunc(event.target.value),1,99);renderSecretProficiencies();renderSecretHeartDecorations();persist();
  });
  stats.addEventListener('change',event=>{
   const key=event.target.dataset.secretStatInput;if(!key)return;
@@ -1853,6 +1901,7 @@ function cleanCharacter(input){
  v.proficiencies=normalizeProficiencies(input.proficiencies);
  v.secretAttributes=normalizeSecretAttributes(input.secretAttributes);
  v.secretProficiencies=normalizeSecretProficiencies(input.secretProficiencies);
+ v.secretHairColors=normalizeSecretHairColors(input.secretHairColors,Math.max(0,v.secretAttributes.cunty-1));
  v.relationships=normalizeRelationships(input.relationships);
  v.tp=clamp(one(input.tp),0,100);
  v.items=(Array.isArray(input.items)?input.items:[]).slice(0,256).filter(x=>x&&typeof x==='object').map(x=>({
