@@ -429,7 +429,6 @@ window.addEventListener('beforeunload',()=>{try{peer?.destroy()}catch(_){}});
 refresh();
 if(queryCode&&/^[A-F0-9]{24}$/i.test(queryCode)){
  report('Convite reconhecido! Abra seu FILE e clique em ENTRAR COMO JOGADOR.');
- $('dmJoinOpen').click();
 }else if(settings.active&&settings.code){
  if(settings.mode==='owner')hostRoom(settings.code);
  else if(settings.mode==='player'&&bridge.readFile(settings.fileId))joinRoom(settings.code,settings.fileId,true);
