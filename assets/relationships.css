@@ -15,7 +15,7 @@
 .relationship-action{min-height:34px;padding:7px 9px;border:1px solid rgba(161,208,240,.42);background:rgba(19,31,54,.72);color:#e8f4ff;font:9px 'Press Start 2P',monospace;cursor:pointer}
 .relationship-action:hover:not(:disabled){border-color:#ff8baa;background:rgba(98,24,51,.55)}
 .relationship-action:disabled{opacity:.55;cursor:default}
-.relationship-action:focus-visible,.relationship-heart:focus-visible,.relationship-field input:focus-visible,.relationship-field textarea:focus-visible{outline:2px solid #a9edff;outline-offset:2px}
+.relationship-action:focus-visible,.relationship-heart:focus-visible,.relationship-field input:focus-visible,.relationship-field textarea:focus-visible,.relationship-color-swatch:focus-visible,.relationship-color-picker input[type="color"]:focus-visible{outline:2px solid #a9edff;outline-offset:2px}
 .relationship-description{margin:15px 0 0;color:#cec9df;font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
 .relationship-hearts{display:flex;align-items:center;gap:7px;margin:17px 0;padding:10px 12px;border-top:1px solid rgba(190,193,239,.18);border-bottom:1px solid rgba(190,193,239,.18)}
 .relationship-level-label,.relationship-level-count{color:#a7a5c4;font:9px 'Press Start 2P',monospace}
@@ -42,6 +42,12 @@
 .relationship-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .relationship-fields label{display:grid;gap:7px;color:#b8b2cd;font-size:9px;font-weight:800;letter-spacing:.04em}
 .relationship-fields .relationship-wide{grid-column:1/-1}
+.relationship-color-picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.relationship-color-swatches{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.relationship-color-swatch{width:30px;height:30px;padding:0;border:2px solid rgba(220,225,255,.46);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.relationship-color-swatch[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px #a68cff,0 0 12px rgba(187,151,255,.52)}
+.relationship-color-picker input[type="color"]{width:38px;height:34px;padding:3px;border:1px solid rgba(190,193,239,.42);border-radius:7px;background:rgba(7,10,29,.82);cursor:pointer}
+.relationship-color-picker span{flex-basis:100%;color:#aaa4c1;font-size:10px;line-height:1.6}
 .relationship-icon-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .relationship-icon-upload input[type="file"]{max-width:100%;color:#ddd8ee;font-size:11px;font-family:inherit}
 .relationship-icon-upload span{flex-basis:100%;color:#aaa4c1;font-size:10px;line-height:1.6}

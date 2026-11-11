@@ -28,7 +28,7 @@ Crie itens com nome, tipo, quantidade e descrição nas abas de inventário.
 
 ## Relacionamentos
 
-Crie personagens próprios na aba **Relacionamentos**, envie uma imagem PNG, JPG ou WebP como ícone e acompanhe o vínculo de até três corações. A imagem aparece como uma marca d'água decorativa no cartão, é compactada no navegador e acompanha o personagem nos FILES e nas exportações/importações.
+Crie personagens próprios na aba **Relacionamentos**, escolha uma cor pronta ou qualquer cor para o fundo, envie uma imagem PNG, JPG ou WebP como ícone e acompanhe o vínculo de até três corações. A imagem aparece como uma marca d'água decorativa no cartão; imagem e cor acompanham o personagem nos FILES e nas exportações/importações.
 
 ## Dados e exportação
 - Ficha, habilidades, inventário e buffs são salvos individualmente via `localStorage` no dispositivo.
