@@ -26,6 +26,10 @@ O botão **Passar turno** reduz a duração de buffs ativos. Ao chegar a zero, o
 ## Inventário
 Crie itens com nome, tipo, quantidade e descrição nas abas de inventário.
 
+## Relacionamentos
+
+Crie personagens próprios na aba **Relacionamentos**, escolha um ícone para cada um e acompanhe o vínculo de até três corações. O ícone aparece como uma marca d'água decorativa no cartão. A escolha acompanha o personagem nos FILES e nas exportações/importações; arquivos antigos ou ícones inválidos usam o ícone padrão.
+
 ## Dados e exportação
 - Ficha, habilidades, inventário e buffs são salvos individualmente via `localStorage` no dispositivo.
 - A versão 4 mantém a chave de armazenamento `delta-rpg-character-v3` para preservar dados já criados na versão anterior.

@@ -474,7 +474,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/item-icon-catalog.css?v=4">
 <link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
 <link rel="stylesheet" href="./assets/proficiencies.css?v=2">
-<link rel="stylesheet" href="./assets/relationships.css?v=1">
+<link rel="stylesheet" href="./assets/relationships.css?v=2">
 <link rel="stylesheet" href="./assets/secret-past.css?v=8">
 <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
 </head>
@@ -811,6 +811,10 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="relationship-fields">
         <label>NOME<input name="name" maxlength="60" required placeholder="Ex.: Susie" autocomplete="off"></label>
         <label>QUEM É?<input name="role" maxlength="80" placeholder="Ex.: Guerreira do grupo" autocomplete="off"></label>
+        <label class="relationship-wide">ÍCONE DO PERSONAGEM
+          <div class="relationship-icon-picker" id="relationshipIconPicker" role="group" aria-label="Escolha um ícone para o personagem"></div>
+          <input name="icon" type="hidden" value="✦">
+        </label>
         <label class="relationship-wide">INFORMAÇÕES<textarea name="description" maxlength="1200" placeholder="História, personalidade, detalhes importantes..."></textarea></label>
       </div>
       <div class="relationship-form-actions"><button class="library-btn" type="submit">SALVAR PERSONAGEM</button><button class="library-btn secondary" id="cancelRelationshipBtn" type="button">CANCELAR</button></div>
@@ -863,19 +867,27 @@ const OUTFIT_OPTIONS=[
  {id:'carnival-mask',label:'Máscara de carnaval',src:'./assets/outfits/mascara-carnaval.png'}
 ];
 const OUTFIT_IDS=new Set(OUTFIT_OPTIONS.map(option=>option.id));
+const RELATIONSHIP_ICONS=['✦','♥','♡','⚔️','🛡️','👑','🧙','🎭','🌸','🔥','❄️','🌙','⭐','🐉','🦇','💀','🗡️','🧪','🪽','🍀','💜','✨'];
+const RELATIONSHIP_ICON_SET=new Set(RELATIONSHIP_ICONS);
 function normalizeProficiencies(input){const values={...input,fight:input?.fight??input?.brawling};return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(values[key]??0,0,784)*2)/2]))}
 function normalizeSecretAttributes(input){return Object.fromEntries(SECRET_ATTRIBUTE_GROUPS.map(({key})=>[key,clamp(Math.trunc(input?.[key]??1),1,99)]))}
 function normalizeSecretProficiencies(input){return Object.fromEntries(SECRET_PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(input?.[key]??0,0,784)*2)/2]))}
 function normalizeRelationships(input){
  if(!Array.isArray(input))return [];
- return input.slice(0,100).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).map((x,index)=>({
-  id:String(x.id||`relationship_${Date.now()}_${index}`).slice(0,80),name:String(x.name||'').trim().slice(0,60),
+ const usedIds=new Set();
+ return input.slice(0,100).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)&&String(x.name||'').trim()).map((x,index)=>{
+  const baseId=String(x.id||`relationship_${Date.now()}_${index}`).slice(0,80);let id=baseId,suffix=1;
+  while(usedIds.has(id)){const tail=`_${suffix++}`;id=baseId.slice(0,80-tail.length)+tail}
+  usedIds.add(id);
+  return {
+  id,name:String(x.name||'').trim().slice(0,60),icon:RELATIONSHIP_ICON_SET.has(x.icon)?x.icon:'✦',
   role:String(x.role||'').slice(0,80),description:String(x.description||'').slice(0,1200),
   level:clamp(Math.trunc(x.level||0),0,3),contactInfo:String(x.contactInfo||'').slice(0,300),
   meetingDate:String(x.meetingDate||'').slice(0,10),met:x.met===true,
   signatureItem:String(x.signatureItem||'').slice(0,80),signatureDescription:String(x.signatureDescription||'').slice(0,500),
   signatureItemAdded:x.signatureItemAdded===true
- }));
+  };
+ });
 }
 const baseState=()=>({proficiencies:normalizeProficiencies(null),secretAttributes:normalizeSecretAttributes(null),secretProficiencies:normalizeSecretProficiencies(null),secretHairColors:[],relationships:[],name:'',level:1,strength:1,defense:1,intelligence:1,agility:1,hp:24,tp:0,outfit:null,activeTab:'sheet',items:[],skills:[],equipment:{},selectedItem:null,selectedSkill:null,activeBuffs:[],muralNotes:[]});
 let state=baseState();
@@ -1140,6 +1152,7 @@ function renderRelationships(){
  if(!state.relationships.length){host.append(makeEl('div','relationship-empty','Nenhum personagem cadastrado.'));return}
  for(const relationship of state.relationships){
   const card=makeEl('article','relationship-card');card.dataset.relationship=relationship.id;
+  card.append(makeEl('span','relationship-card-icon',relationship.icon));
   const top=makeEl('header','relationship-card-head'),identity=makeEl('div','relationship-identity');
   identity.append(makeEl('h3','',relationship.name),makeEl('p','',relationship.role||'Personagem'));
   const actions=makeEl('div','relationship-card-actions');
@@ -1180,16 +1193,30 @@ function openRelationshipEditor(id=null){
  editingRelationshipId=relationship?.id||null;form.reset();form.hidden=false;
  $('relationshipFormHeading').textContent=relationship?'♥ EDITAR PERSONAGEM':'♥ NOVO PERSONAGEM';
  form.elements.name.value=relationship?.name||'';form.elements.role.value=relationship?.role||'';
+ form.elements.icon.value=relationship?.icon||'✦';renderRelationshipIconPicker();
  form.elements.description.value=relationship?.description||'';form.scrollIntoView({behavior:'smooth',block:'nearest'});
  form.elements.name.focus();
+}
+function renderRelationshipIconPicker(){
+ const host=$('relationshipIconPicker'),selected=$('relationshipForm').elements.icon.value;
+ host.replaceChildren();
+ for(const icon of RELATIONSHIP_ICONS){
+  const button=makeEl('button','relationship-icon-option',icon);button.type='button';button.dataset.relationshipIcon=icon;
+  button.setAttribute('aria-label','Ícone '+icon);button.setAttribute('aria-pressed',String(icon===selected));host.append(button);
+ }
 }
 function setupRelationships(){
  const host=$('relationshipList'),form=$('relationshipForm');
  $('addRelationshipBtn').addEventListener('click',()=>openRelationshipEditor());
  $('cancelRelationshipBtn').addEventListener('click',()=>{form.hidden=true;editingRelationshipId=null});
+ form.addEventListener('click',event=>{
+  const button=event.target.closest('[data-relationship-icon]');if(!button)return;
+  form.elements.icon.value=button.dataset.relationshipIcon;
+  form.querySelectorAll('[data-relationship-icon]').forEach(option=>option.setAttribute('aria-pressed',String(option===button)));
+ });
  form.addEventListener('submit',event=>{
   event.preventDefault();const name=form.elements.name.value.trim();if(!name){form.elements.name.focus();return}
-  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim()};
+  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim(),icon:RELATIONSHIP_ICON_SET.has(form.elements.icon.value)?form.elements.icon.value:'✦'};
   const existing=state.relationships.find(item=>item.id===editingRelationshipId);
   if(!existing&&state.relationships.length>=100){toast('Limite de 100 personagens relacionados.');return}
   if(existing)Object.assign(existing,draft);else state.relationships.push({id:makeId(),...draft,level:0,contactInfo:'',meetingDate:'',met:false,signatureItem:'',signatureDescription:'',signatureItemAdded:false});
