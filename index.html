@@ -130,10 +130,11 @@ main{padding-top:46px}
 .export-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin:20px 0 2px}
 .export-actions .action-btn{min-height:42px}
 /* alma e pétalas */
-.portrait .soul-wrap{height:165px;width:165px;position:relative;display:grid;place-items:center;z-index:2}
+.portrait .soul-wrap{height:165px;width:165px;position:relative;display:grid;place-items:center;z-index:2;transform:translateY(20px)}
 .portrait .soul-svg{height:126px;width:126px;overflow:visible;image-rendering:pixelated;animation:soulBreath 2.4s ease-in-out infinite;filter:drop-shadow(0 0 9px var(--soul-glow));z-index:2;position:relative}
-.soul-outfit{position:absolute;z-index:4;left:50%;top:-58px;width:110px;height:88px;transform:translateX(-50%);object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
-.soul-outfit.mask{top:50%;width:104px;height:90px;transform:translate(-50%,-50%)}
+.soul-outfit{position:absolute;z-index:4;left:50%;top:60px;width:110px;height:auto;transform:translate(-50%,-100%);object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.62))}
+.soul-outfit.straw-flower,.soul-outfit.purple-hat{width:120px}
+.soul-outfit.mask{top:50%;width:104px;transform:translate(-50%,-50%)}
 .soul-stroke{stroke:#f5f8ff;stroke-width:.13;stroke-linejoin:miter;fill:none;transition:stroke .5s ease}
 .soul-fill{fill:var(--soul-color);opacity:0;transition:opacity .5s ease}
 @keyframes soulBreath{0%,100%{filter:drop-shadow(0 0 5px var(--soul-glow))}50%{filter:drop-shadow(0 0 17px var(--soul-glow))}}
@@ -1314,7 +1315,7 @@ function renderOutfit(){
  const selected=OUTFIT_OPTIONS.find(option=>option.id===state.outfit);
  const preview=$('soulOutfit');
  preview.hidden=!selected;
- preview.className='soul-outfit'+(selected?.id==='carnival-mask'?' mask':'');
+ preview.className='soul-outfit'+(selected?' '+selected.id:'')+(selected?.id==='carnival-mask'?' mask':'');
  if(selected&&preview.getAttribute('src')!==selected.src)preview.src=selected.src;
  if(!selected)preview.removeAttribute('src');
  document.querySelectorAll('[data-outfit-choice]').forEach(button=>{
