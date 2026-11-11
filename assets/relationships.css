@@ -5,7 +5,7 @@
 .relationship-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
 .relationship-empty{grid-column:1/-1;min-height:200px;display:grid;place-items:center;border:1px dashed rgba(190,193,239,.3);color:#aaa4c1;text-align:center;padding:24px}
 .relationship-card{min-width:0;padding:18px;border:1px solid rgba(190,193,239,.3);background:rgba(6,9,27,.56);position:relative;isolation:isolate;overflow:hidden}
-.relationship-card-icon{position:absolute;z-index:0;right:18px;top:14px;max-width:45%;overflow:hidden;color:#e3c2ff;font-size:clamp(58px,10vw,94px);line-height:1;opacity:.16;text-shadow:0 0 20px rgba(173,125,255,.62);pointer-events:none;user-select:none}
+.relationship-card-icon{position:absolute;z-index:0;right:18px;top:14px;width:clamp(58px,10vw,94px);height:clamp(58px,10vw,94px);object-fit:contain;overflow:hidden;color:#e3c2ff;font-size:clamp(58px,10vw,94px);line-height:1;opacity:.2;filter:drop-shadow(0 0 14px rgba(173,125,255,.62));pointer-events:none;user-select:none}
 .relationship-card>:not(.relationship-card-icon){position:relative;z-index:1}
 .relationship-card-head{display:flex;align-items:start;justify-content:space-between;gap:12px}
 .relationship-identity{min-width:0}
@@ -42,11 +42,10 @@
 .relationship-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .relationship-fields label{display:grid;gap:7px;color:#b8b2cd;font-size:9px;font-weight:800;letter-spacing:.04em}
 .relationship-fields .relationship-wide{grid-column:1/-1}
-.relationship-icon-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:7px}
-.relationship-icon-option{min-width:38px;min-height:38px;padding:3px;border:1px solid rgba(174,184,221,.3);background:rgba(7,10,29,.72);color:#e9ddff;font:22px/1 'Segoe UI Emoji','Apple Color Emoji',sans-serif;cursor:pointer}
-.relationship-icon-option:hover{border-color:#b99bff;background:rgba(94,57,139,.4)}
-.relationship-icon-option[aria-pressed="true"]{border-color:#e4a6ff;background:rgba(152,74,177,.29);box-shadow:inset 0 0 0 1px rgba(228,166,255,.3),0 0 12px rgba(190,131,255,.2)}
-.relationship-icon-option:focus-visible{outline:2px solid #a6f6ff;outline-offset:2px}
+.relationship-icon-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.relationship-icon-upload input[type="file"]{max-width:100%;color:#ddd8ee;font-size:11px;font-family:inherit}
+.relationship-icon-upload span{flex-basis:100%;color:#aaa4c1;font-size:10px;line-height:1.6}
+.relationship-icon-preview{width:64px;height:64px;padding:5px;border:1px solid rgba(190,193,239,.3);background:rgba(7,10,29,.72);object-fit:contain}
 .relationship-form-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
 @media(max-width:720px){.relationships-shell{padding:20px}.relationship-list{grid-template-columns:1fr}}
 @media(max-width:480px){.relationships-shell{padding:17px}.relationship-card{padding:14px}.relationship-card-head{flex-wrap:wrap}.relationship-fields{grid-template-columns:1fr}.relationship-fields .relationship-wide{grid-column:auto}.relationship-reward-head strong{font-size:8px}.relationship-action{font-size:8px;padding:7px}.relationship-heart{width:32px;height:32px}}

@@ -474,7 +474,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/item-icon-catalog.css?v=4">
 <link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
 <link rel="stylesheet" href="./assets/proficiencies.css?v=2">
-<link rel="stylesheet" href="./assets/relationships.css?v=2">
+<link rel="stylesheet" href="./assets/relationships.css?v=3">
 <link rel="stylesheet" href="./assets/secret-past.css?v=8">
 <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
 </head>
@@ -811,9 +811,14 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="relationship-fields">
         <label>NOME<input name="name" maxlength="60" required placeholder="Ex.: Susie" autocomplete="off"></label>
         <label>QUEM É?<input name="role" maxlength="80" placeholder="Ex.: Guerreira do grupo" autocomplete="off"></label>
-        <label class="relationship-wide">ÍCONE DO PERSONAGEM
-          <div class="relationship-icon-picker" id="relationshipIconPicker" role="group" aria-label="Escolha um ícone para o personagem"></div>
-          <input name="icon" type="hidden" value="✦">
+        <label class="relationship-wide">ÍCONE PERSONALIZADO DO PERSONAGEM
+          <div class="relationship-icon-upload">
+            <input name="iconFile" id="relationshipIconFile" type="file" accept="image/png,image/jpeg,image/webp">
+            <img id="relationshipIconPreview" class="relationship-icon-preview" alt="Prévia do ícone personalizado" hidden>
+            <input name="iconImage" type="hidden">
+            <button class="relationship-action" id="removeRelationshipIcon" type="button" hidden>REMOVER ÍCONE</button>
+            <span id="relationshipIconStatus" role="status">Envie uma imagem PNG, JPG ou WebP para usar como ícone.</span>
+          </div>
         </label>
         <label class="relationship-wide">INFORMAÇÕES<textarea name="description" maxlength="1200" placeholder="História, personalidade, detalhes importantes..."></textarea></label>
       </div>
@@ -867,8 +872,8 @@ const OUTFIT_OPTIONS=[
  {id:'carnival-mask',label:'Máscara de carnaval',src:'./assets/outfits/mascara-carnaval.png'}
 ];
 const OUTFIT_IDS=new Set(OUTFIT_OPTIONS.map(option=>option.id));
-const RELATIONSHIP_ICONS=['✦','♥','♡','⚔️','🛡️','👑','🧙','🎭','🌸','🔥','❄️','🌙','⭐','🐉','🦇','💀','🗡️','🧪','🪽','🍀','💜','✨'];
-const RELATIONSHIP_ICON_SET=new Set(RELATIONSHIP_ICONS);
+const MAX_RELATIONSHIP_ICON_LENGTH=30000;
+const RELATIONSHIP_ICON_PATTERN=/^data:image\/webp;base64,[A-Za-z0-9+/=]+$/;
 function normalizeProficiencies(input){const values={...input,fight:input?.fight??input?.brawling};return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(values[key]??0,0,784)*2)/2]))}
 function normalizeSecretAttributes(input){return Object.fromEntries(SECRET_ATTRIBUTE_GROUPS.map(({key})=>[key,clamp(Math.trunc(input?.[key]??1),1,99)]))}
 function normalizeSecretProficiencies(input){return Object.fromEntries(SECRET_PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(input?.[key]??0,0,784)*2)/2]))}
@@ -880,7 +885,8 @@ function normalizeRelationships(input){
   while(usedIds.has(id)){const tail=`_${suffix++}`;id=baseId.slice(0,80-tail.length)+tail}
   usedIds.add(id);
   return {
-  id,name:String(x.name||'').trim().slice(0,60),icon:RELATIONSHIP_ICON_SET.has(x.icon)?x.icon:'✦',
+  id,name:String(x.name||'').trim().slice(0,60),
+  iconImage:typeof x.iconImage==='string'&&x.iconImage.length<=MAX_RELATIONSHIP_ICON_LENGTH&&RELATIONSHIP_ICON_PATTERN.test(x.iconImage)?x.iconImage:'',
   role:String(x.role||'').slice(0,80),description:String(x.description||'').slice(0,1200),
   level:clamp(Math.trunc(x.level||0),0,3),contactInfo:String(x.contactInfo||'').slice(0,300),
   meetingDate:String(x.meetingDate||'').slice(0,10),met:x.met===true,
@@ -1152,7 +1158,9 @@ function renderRelationships(){
  if(!state.relationships.length){host.append(makeEl('div','relationship-empty','Nenhum personagem cadastrado.'));return}
  for(const relationship of state.relationships){
   const card=makeEl('article','relationship-card');card.dataset.relationship=relationship.id;
-  card.append(makeEl('span','relationship-card-icon',relationship.icon));
+  if(relationship.iconImage){
+   const icon=document.createElement('img');icon.className='relationship-card-icon';icon.src=relationship.iconImage;icon.alt='';icon.setAttribute('aria-hidden','true');card.append(icon);
+  }else card.append(makeEl('span','relationship-card-icon','✦'));
   const top=makeEl('header','relationship-card-head'),identity=makeEl('div','relationship-identity');
   identity.append(makeEl('h3','',relationship.name),makeEl('p','',relationship.role||'Personagem'));
   const actions=makeEl('div','relationship-card-actions');
@@ -1193,30 +1201,62 @@ function openRelationshipEditor(id=null){
  editingRelationshipId=relationship?.id||null;form.reset();form.hidden=false;
  $('relationshipFormHeading').textContent=relationship?'♥ EDITAR PERSONAGEM':'♥ NOVO PERSONAGEM';
  form.elements.name.value=relationship?.name||'';form.elements.role.value=relationship?.role||'';
- form.elements.icon.value=relationship?.icon||'✦';renderRelationshipIconPicker();
+ form.elements.iconImage.value=relationship?.iconImage||'';renderRelationshipIconPreview(form.elements.iconImage.value);
  form.elements.description.value=relationship?.description||'';form.scrollIntoView({behavior:'smooth',block:'nearest'});
  form.elements.name.focus();
 }
-function renderRelationshipIconPicker(){
- const host=$('relationshipIconPicker'),selected=$('relationshipForm').elements.icon.value;
- host.replaceChildren();
- for(const icon of RELATIONSHIP_ICONS){
-  const button=makeEl('button','relationship-icon-option',icon);button.type='button';button.dataset.relationshipIcon=icon;
-  button.setAttribute('aria-label','Ícone '+icon);button.setAttribute('aria-pressed',String(icon===selected));host.append(button);
- }
+function renderRelationshipIconPreview(image){
+ const preview=$('relationshipIconPreview'),remove=$('removeRelationshipIcon'),status=$('relationshipIconStatus');
+ preview.src=image||'';preview.hidden=!image;remove.hidden=!image;
+ status.textContent=image?'Ícone personalizado pronto.':'Envie uma imagem PNG, JPG ou WebP para usar como ícone.';
+}
+async function prepareRelationshipIcon(file){
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('Use uma imagem PNG, JPG ou WebP.');
+ if(file.size>5*1024*1024)throw Error('A imagem deve ter no máximo 5 MB.');
+ const url=URL.createObjectURL(file);
+ try{
+  const image=new Image();
+  image.src=url;
+  await image.decode();
+  if(image.naturalWidth>4096||image.naturalHeight>4096)throw Error('A imagem deve ter no máximo 4096 × 4096 pixels.');
+  const canvas=document.createElement('canvas'),context=canvas.getContext('2d');
+  if(!context)throw Error('Não foi possível preparar a imagem neste navegador.');
+  context.imageSmoothingEnabled=false;
+  for(const side of [128,96,72]){
+   const scale=Math.min(1,side/Math.max(image.naturalWidth,image.naturalHeight));
+   canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+   canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+   context.clearRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+   for(const quality of [.82,.68,.5]){
+    const data=canvas.toDataURL('image/webp',quality);
+    if(RELATIONSHIP_ICON_PATTERN.test(data)&&data.length<=MAX_RELATIONSHIP_ICON_LENGTH)return data;
+   }
+  }
+  throw Error('A imagem ficou grande demais. Tente uma imagem mais simples ou menor.');
+ }finally{URL.revokeObjectURL(url)}
 }
 function setupRelationships(){
  const host=$('relationshipList'),form=$('relationshipForm');
  $('addRelationshipBtn').addEventListener('click',()=>openRelationshipEditor());
  $('cancelRelationshipBtn').addEventListener('click',()=>{form.hidden=true;editingRelationshipId=null});
- form.addEventListener('click',event=>{
-  const button=event.target.closest('[data-relationship-icon]');if(!button)return;
-  form.elements.icon.value=button.dataset.relationshipIcon;
-  form.querySelectorAll('[data-relationship-icon]').forEach(option=>option.setAttribute('aria-pressed',String(option===button)));
+ $('relationshipIconFile').addEventListener('change',async event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  const saveButton=form.querySelector('[type="submit"]');saveButton.disabled=true;
+  $('relationshipIconStatus').textContent='Preparando ícone...';
+  try{
+   const image=await prepareRelationshipIcon(file);
+   form.elements.iconImage.value=image;renderRelationshipIconPreview(image);
+  }catch(error){
+   event.target.value='';$('relationshipIconStatus').textContent=error.message;
+   toast(error.message);
+  }finally{saveButton.disabled=false}
+ });
+ $('removeRelationshipIcon').addEventListener('click',()=>{
+  form.elements.iconImage.value='';$('relationshipIconFile').value='';renderRelationshipIconPreview('');
  });
  form.addEventListener('submit',event=>{
   event.preventDefault();const name=form.elements.name.value.trim();if(!name){form.elements.name.focus();return}
-  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim(),icon:RELATIONSHIP_ICON_SET.has(form.elements.icon.value)?form.elements.icon.value:'✦'};
+  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim(),iconImage:form.elements.iconImage.value};
   const existing=state.relationships.find(item=>item.id===editingRelationshipId);
   if(!existing&&state.relationships.length>=100){toast('Limite de 100 personagens relacionados.');return}
   if(existing)Object.assign(existing,draft);else state.relationships.push({id:makeId(),...draft,level:0,contactInfo:'',meetingDate:'',met:false,signatureItem:'',signatureDescription:'',signatureItemAdded:false});
