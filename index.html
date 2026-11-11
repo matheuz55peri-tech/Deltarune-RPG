@@ -474,7 +474,7 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 <link rel="stylesheet" href="./assets/item-icon-catalog.css?v=4">
 <link rel="stylesheet" href="./assets/skills-enhanced.css?v=1">
 <link rel="stylesheet" href="./assets/proficiencies.css?v=2">
-<link rel="stylesheet" href="./assets/relationships.css?v=4">
+<link rel="stylesheet" href="./assets/relationships.css?v=5">
 <link rel="stylesheet" href="./assets/secret-past.css?v=8">
 <link rel="stylesheet" href="./assets/secret-past-showcase.css?v=2">
 </head>
@@ -811,6 +811,13 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <div class="relationship-fields">
         <label>NOME<input name="name" maxlength="60" required placeholder="Ex.: Susie" autocomplete="off"></label>
         <label>QUEM É?<input name="role" maxlength="80" placeholder="Ex.: Guerreira do grupo" autocomplete="off"></label>
+        <label class="relationship-wide">COR DO FUNDO
+          <div class="relationship-color-picker">
+            <div class="relationship-color-swatches" id="relationshipColorSwatches" role="group" aria-label="Cores prontas para o fundo"></div>
+            <input name="backgroundColor" id="relationshipBackgroundColor" type="color" value="#06091b" aria-label="Escolher qualquer cor para o fundo">
+            <span>Escolha uma cor pronta ou use a rodinha para selecionar qualquer cor.</span>
+          </div>
+        </label>
         <label class="relationship-wide">ÍCONE PERSONALIZADO DO PERSONAGEM
           <div class="relationship-icon-upload">
             <input name="iconFile" id="relationshipIconFile" type="file" accept="image/png,image/jpeg,image/webp">
@@ -874,6 +881,18 @@ const OUTFIT_OPTIONS=[
 const OUTFIT_IDS=new Set(OUTFIT_OPTIONS.map(option=>option.id));
 const MAX_RELATIONSHIP_ICON_LENGTH=30000;
 const RELATIONSHIP_ICON_PATTERN=/^data:image\/webp;base64,[A-Za-z0-9+/=]+$/;
+const RELATIONSHIP_BACKGROUND_COLORS=[
+ {label:'Roxo',value:'#49275f'},
+ {label:'Rosa',value:'#71364f'},
+ {label:'Vermelho',value:'#6b3036'},
+ {label:'Laranja',value:'#784626'},
+ {label:'Dourado',value:'#6b5928'},
+ {label:'Verde',value:'#28523f'},
+ {label:'Turquesa',value:'#24545a'},
+ {label:'Azul',value:'#29456d'},
+ {label:'Índigo',value:'#34375f'},
+ {label:'Cinza',value:'#454754'}
+];
 function normalizeProficiencies(input){const values={...input,fight:input?.fight??input?.brawling};return Object.fromEntries(PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(values[key]??0,0,784)*2)/2]))}
 function normalizeSecretAttributes(input){return Object.fromEntries(SECRET_ATTRIBUTE_GROUPS.map(({key})=>[key,clamp(Math.trunc(input?.[key]??1),1,99)]))}
 function normalizeSecretProficiencies(input){return Object.fromEntries(SECRET_PROFICIENCY_KEYS.map(key=>[key,Math.round(clamp(input?.[key]??0,0,784)*2)/2]))}
@@ -887,6 +906,7 @@ function normalizeRelationships(input){
   return {
   id,name:String(x.name||'').trim().slice(0,60),
   iconImage:typeof x.iconImage==='string'&&x.iconImage.length<=MAX_RELATIONSHIP_ICON_LENGTH&&RELATIONSHIP_ICON_PATTERN.test(x.iconImage)?x.iconImage:'',
+  backgroundColor:/^#[0-9a-f]{6}$/i.test(x.backgroundColor||'')?x.backgroundColor.toLowerCase():'#06091b',
   role:String(x.role||'').slice(0,80),description:String(x.description||'').slice(0,1200),
   level:clamp(Math.trunc(x.level||0),0,3),contactInfo:String(x.contactInfo||'').slice(0,300),
   meetingDate:String(x.meetingDate||'').slice(0,10),met:x.met===true,
@@ -1158,6 +1178,7 @@ function renderRelationships(){
  if(!state.relationships.length){host.append(makeEl('div','relationship-empty','Nenhum personagem cadastrado.'));return}
  for(const relationship of state.relationships){
   const card=makeEl('article','relationship-card');card.dataset.relationship=relationship.id;
+  card.style.backgroundColor=relationshipBackgroundCssColor(relationship.backgroundColor);
   if(relationship.iconImage){
    const icon=document.createElement('img');icon.className='relationship-card-icon';icon.src=relationship.iconImage;icon.alt='';icon.setAttribute('aria-hidden','true');card.append(icon);
   }else card.append(makeEl('span','relationship-card-icon','✦'));
@@ -1201,6 +1222,7 @@ function openRelationshipEditor(id=null){
  editingRelationshipId=relationship?.id||null;form.reset();form.hidden=false;
  $('relationshipFormHeading').textContent=relationship?'♥ EDITAR PERSONAGEM':'♥ NOVO PERSONAGEM';
  form.elements.name.value=relationship?.name||'';form.elements.role.value=relationship?.role||'';
+ form.elements.backgroundColor.value=relationship?.backgroundColor||'#06091b';renderRelationshipColorSwatches();
  form.elements.iconImage.value=relationship?.iconImage||'';renderRelationshipIconPreview(form.elements.iconImage.value);
  form.elements.description.value=relationship?.description||'';form.scrollIntoView({behavior:'smooth',block:'nearest'});
  form.elements.name.focus();
@@ -1209,6 +1231,20 @@ function renderRelationshipIconPreview(image){
  const preview=$('relationshipIconPreview'),remove=$('removeRelationshipIcon'),status=$('relationshipIconStatus');
  preview.src=image||'';preview.hidden=!image;remove.hidden=!image;
  status.textContent=image?'Ícone personalizado pronto.':'Envie uma imagem PNG, JPG ou WebP para usar como ícone.';
+}
+function relationshipBackgroundCssColor(value){
+ if(!/^#[0-9a-f]{6}$/i.test(value||''))return 'rgba(6,9,27,.56)';
+ const channels=value.slice(1).match(/.{2}/g).map(channel=>parseInt(channel,16));
+ return `rgba(${channels.join(',')},.48)`;
+}
+function renderRelationshipColorSwatches(){
+ const host=$('relationshipColorSwatches'),selected=$('relationshipForm').elements.backgroundColor.value.toLowerCase();
+ host.replaceChildren();
+ for(const color of RELATIONSHIP_BACKGROUND_COLORS){
+  const button=makeEl('button','relationship-color-swatch');button.type='button';
+  button.dataset.relationshipColor=color.value;button.title=color.label;button.setAttribute('aria-label',color.label);
+  button.setAttribute('aria-pressed',String(color.value===selected));button.style.backgroundColor=color.value;host.append(button);
+ }
 }
 async function prepareRelationshipIcon(file){
  if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('Use uma imagem PNG, JPG ou WebP.');
@@ -1239,6 +1275,11 @@ function setupRelationships(){
  const host=$('relationshipList'),form=$('relationshipForm');
  $('addRelationshipBtn').addEventListener('click',()=>openRelationshipEditor());
  $('cancelRelationshipBtn').addEventListener('click',()=>{form.hidden=true;editingRelationshipId=null});
+ $('relationshipColorSwatches').addEventListener('click',event=>{
+  const button=event.target.closest('[data-relationship-color]');if(!button)return;
+  form.elements.backgroundColor.value=button.dataset.relationshipColor;renderRelationshipColorSwatches();
+ });
+ form.elements.backgroundColor.addEventListener('input',renderRelationshipColorSwatches);
  $('relationshipIconFile').addEventListener('change',async event=>{
   const file=event.target.files?.[0];if(!file)return;
   const saveButton=form.querySelector('[type="submit"]');saveButton.disabled=true;
@@ -1256,7 +1297,7 @@ function setupRelationships(){
  });
  form.addEventListener('submit',event=>{
   event.preventDefault();const name=form.elements.name.value.trim();if(!name){form.elements.name.focus();return}
-  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim(),iconImage:form.elements.iconImage.value};
+  const draft={name,role:form.elements.role.value.trim(),description:form.elements.description.value.trim(),iconImage:form.elements.iconImage.value,backgroundColor:form.elements.backgroundColor.value};
   const existing=state.relationships.find(item=>item.id===editingRelationshipId);
   if(!existing&&state.relationships.length>=100){toast('Limite de 100 personagens relacionados.');return}
   if(existing)Object.assign(existing,draft);else state.relationships.push({id:makeId(),...draft,level:0,contactInfo:'',meetingDate:'',met:false,signatureItem:'',signatureDescription:'',signatureItemAdded:false});
