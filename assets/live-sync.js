@@ -5,6 +5,8 @@
   function init() {
     const bridge=window.DeltaRpgLiveBridge;
     if(!bridge||document.getElementById('deltaLiveToggle'))return;
+    const packets=window.DeltaRpgLivePackets;
+    if(!packets){console.error('Ficha ao vivo: transporte de pacotes indisponível.');return;}
     const $=id=>document.getElementById(id);
 
     const btn=document.createElement('button');
@@ -79,19 +81,20 @@
     function packageState(){
       const file=read();if(!file)return null;
       const msg={kind:'state',revision,label:file.label,character:file.character};
-      if(JSON.stringify(msg).length>220000){
-        report('O FILE ultrapassou o limite da sala ao vivo.');
+      if(!packets.valid(msg)){
+        report('O FILE ultrapassou o limite de 6 MB da sala ao vivo. Seus dados locais continuam salvos.');
         return null;
       }
       return msg;
     }
     function send(c,data){
-      if(!c||!c.open||!data)return false;
-      try{c.send(data);return true}catch(err){console.warn('P2P:',err);return false}
+      return packets.send(c,data);
     }
     function broadcast(){
       const data=packageState();
-      for(const c of clients)send(c,data);
+      let success=Boolean(data);
+      for(const c of clients)if(!send(c,data))success=false;
+      return success;
     }
     function flush(){
       if(mode==='offline'||!sharedId)return;
@@ -99,11 +102,12 @@
       if(!file){stop('O FILE compartilhado foi excluído. Sala encerrada.');return;}
       if(mode==='host'){
         revision++;
-        broadcast();
-        report('SALA ATIVA · '+clients.size+' participante(s) · atualizações enviadas.');
+        report(broadcast()?'SALA ATIVA · '+clients.size+' participante(s) · atualizações enviadas.':
+          '⚠ Não foi possível enviar a ficha completa. Os dados locais foram preservados.');
       }else if(hostConn?.open){
-        send(hostConn,{kind:'edit',character:file.character});
-        report('CONECTADO · alterações enviadas para a sala.');
+        const sent=send(hostConn,{kind:'edit',character:file.character});
+        report(sent?'CONECTADO · alterações enviadas para a sala.':
+          '⚠ Não foi possível enviar a ficha. Ela continua salva neste dispositivo.');
       }
     }
     addEventListener('delta-rpg:save',event=>{
@@ -115,7 +119,7 @@
     function receive(data,isFirst){
       if(!data||typeof data!=='object'||Array.isArray(data))return false;
       try{
-        if(JSON.stringify(data.character).length>220000)return false;
+        if(!packets.valid({character:data.character}))return false;
         applying=true;
         if(isFirst){
           sharedId=bridge.createSharedFile(data.character,data.label);
@@ -135,11 +139,14 @@
       }
       clients.add(c);
       c.on('open',()=>{
-        send(c,packageState());
+        const sent=send(c,packageState());
         refresh();
-        report('SALA ATIVA · '+clients.size+' participante(s) conectados.');
+        report(sent?'SALA ATIVA · '+clients.size+' participante(s) conectados.':
+          '⚠ Não foi possível enviar a ficha completa. Os dados locais foram preservados.');
       });
       c.on('data',data=>{
+        data=packets.receive(c,data);
+        if(!data)return;
         if(!c.open||!data||data.kind!=='edit'||!data.character)return;
         if(!receive(data,false))return;
         revision++;
@@ -159,6 +166,8 @@
       hostConn=c;
       c.on('open',()=>report('Conectado · recebendo ficha compartilhada...'));
       c.on('data',data=>{
+        data=packets.receive(c,data);
+        if(!data)return;
         if(!data||typeof data!=='object')return;
         if(data.kind==='full'){
           stop('A sala chegou ao limite de participantes.');return;

@@ -13,7 +13,8 @@ const BASELINES_KEY='delta-rpg-master-baselines-v1';
 const BACKUPS_KEY='delta-rpg-master-backups-v1';
 const PREFIX='delta-master-';
 const MAX_PLAYERS=5;
-const MAX_PACKET=420000;
+const packets=window.DeltaRpgLivePackets;
+if(!packets){console.error('Sala do Mestre: transporte de pacotes indisponível.');return;}
 const $=id=>document.getElementById(id);
 const randomHex=(size)=>Array.from(crypto.getRandomValues(new Uint8Array(size)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();
 const makeCode=()=>randomHex(12);
@@ -150,12 +151,10 @@ async function loadPeer(){
  return peerLoader;
 }
 function validPacket(msg){
- if(!msg||typeof msg!=='object'||Array.isArray(msg))return false;
- try{return JSON.stringify(msg).length<=MAX_PACKET}catch(_){return false}
+ return packets.valid(msg);
 }
 function emit(conn,data){
- if(!conn?.open||!validPacket(data))return false;
- try{conn.send(data);return true}catch(e){console.warn('Sala do Mestre: envio falhou',e);return false}
+ return packets.send(conn,data);
 }
 function disconnect(resetSaved=true){
  clearTimeout(retryTimer);clearTimeout(editTimer);retryTimer=null;editTimer=null;
@@ -192,6 +191,8 @@ function onHostConnection(c){
  if(mode!=='owner'){try{c.close()}catch(_){}return;}
  let playerSession=null;
  c.on('data',msg=>{
+  msg=packets.receive(c,msg);
+  if(!msg)return;
   if(!validPacket(msg))return;
   if(!playerSession){
    if(msg.kind!=='hello'||!/^[A-F0-9]{24}$/i.test(msg.playerId||'')||!msg.character)return;
@@ -227,9 +228,13 @@ function onHostConnection(c){
    const file=bridge.readFile(fileId);
    if(!file){emit(c,{kind:'error',message:'O FILE compartilhado não foi encontrado.'});c.close();return;}
    session.last=fingerprint(file);
-   emit(c,{kind:'snapshot',label:file.label,character:file.character});
+   const snapshotSent=emit(c,{kind:'snapshot',label:file.label,character:file.character});
+   if(!snapshotSent){
+    emit(c,{kind:'error',message:'A ficha é grande demais para sincronizar. Os dados locais foram preservados.'});
+    report('⚠ Não foi possível enviar a ficha completa. Os FILEs locais continuam salvos.',true);
+   }
    window.DeltaRpgInitiative?.hostPlayerJoined?.(session,c);
-   report('Jogador conectado: '+session.name+'. Abra a ficha para editar.');
+   if(snapshotSent)report('Jogador conectado: '+session.name+'. Abra a ficha para editar.');
    renderPlayers();
    return;
   }
@@ -314,10 +319,15 @@ async function joinRoom(code,fileId,reconnect=false){
    c.on('open',()=>{
     const live=getFile();
     if(!live){report('O FILE compartilhado foi excluído.',true);disconnect();return;}
-    emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character,lastKnown:getBaseline(room,joinedFileId)});
+    if(!emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character,lastKnown:getBaseline(room,joinedFileId)})){
+     report('⚠ Não foi possível enviar sua ficha (limite de 6 MB). O conteúdo permanece salvo neste dispositivo.',true);
+     return;
+    }
     report('Conectado. Aguardando a ficha do mestre...');
    });
    c.on('data',msg=>{
+    msg=packets.receive(c,msg);
+    if(!msg)return;
     if(!validPacket(msg))return;
     if(window.DeltaRpgInitiative?.playerMessage?.(msg))return;
     if(msg.kind==='full'){report('Esta sala já tem cinco jogadores.',true);disconnect();return;}
@@ -373,7 +383,7 @@ function autoSync(e){
     if(sign===s.last)continue;
     if(emit(s.conn,{kind:'update',character:file.character,label:file.label})){
      s.last=sign;report('✓ Atualização enviada automaticamente para '+s.name+'.');
-    }
+    }else report('⚠ Não foi possível enviar a ficha de '+s.name+'. Os dados locais foram preservados.',true);
    }
   }else if(mode==='player'&&connected&&joinedFileId===id&&connection?.open){
    const file=getFile();if(!file)return;
@@ -381,7 +391,7 @@ function autoSync(e){
    if(sign===playerLast)return;
    if(emit(connection,{kind:'update',character:file.character,label:file.label})){
     playerLast=sign;report('✓ Alterações da sua ficha enviadas ao mestre.');
-   }
+   }else report('⚠ Não foi possível enviar a ficha. Ela continua salva neste dispositivo.',true);
   }
  },350);
 }
