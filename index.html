@@ -415,6 +415,9 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
 .files-summary{color:#bdcbe5;font-size:13px;max-width:660px;line-height:1.65;margin:0}
 .files-counter{font:10px 'Press Start 2P',monospace;padding:14px;border:1px solid var(--file-border);background:rgba(0,0,0,.22);border-radius:5px;color:var(--file-accent);white-space:nowrap}
 .files-tools{display:flex;flex-wrap:wrap;gap:10px;padding:20px 0}
+.files-backup-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 0 18px}
+.files-backup-status{flex:1 1 100%;color:#b9c9df;font-size:11px;line-height:1.55}
+.files-backup-tools select{min-width:180px;min-height:40px;padding:8px 10px;border:1px solid var(--file-border);border-radius:5px;background:#090d20;color:#eef4ff}
 .files-button,.file-btn{cursor:pointer;border:1px solid var(--file-border);background:rgba(9,13,32,.8);color:#eef4ff;border-radius:5px;font-weight:800;letter-spacing:.05em;transition:background .2s,border-color .2s,transform .2s}
 .files-button{padding:11px 15px;min-height:44px;font-size:11px}
 .files-button.primary{background:linear-gradient(110deg,rgba(79,132,217,.34),rgba(110,79,179,.19));border-color:var(--file-accent)}
@@ -605,8 +608,19 @@ html[data-theme="forest"] .files-shell{--file-accent:#8ef5cb;--file-border:rgba(
       <button class="files-button" type="button" id="exportActiveFileBtn">⇧ EXPORTAR ATUAL</button>
       <input type="file" id="importFileInput" accept=".deltarpg,.json,application/json" hidden aria-label="Importar arquivo de personagem">
     </div>
+    <div class="files-backup-tools" id="filesBackupTools" aria-label="Backups e recuperação">
+       <span class="files-backup-status" id="filesBackupStatus" role="status" aria-live="polite">Preparando backup automático...</span>
+       <button class="files-button" type="button" id="downloadFullBackupBtn">⇧ BAIXAR BACKUP COMPLETO</button>
+       <button class="files-button" type="button" id="importFullBackupBtn">⇩ RESTAURAR BACKUP</button>
+       <input type="file" id="importFullBackupInput" accept=".delta-backup,.json,application/json" hidden aria-label="Importar backup completo">
+       <select id="backupHistorySelect" aria-label="Versões de backup disponíveis">
+         <option value="">Backups anteriores...</option>
+       </select>
+       <button class="files-button" type="button" id="restoreHistoryBackupBtn" disabled>RECUPERAR VERSÃO</button>
+       <button class="files-button primary" type="button" id="restoreNewerBackupBtn" hidden>RECUPERAR BACKUP AUTOMÁTICO</button>
+    </div>
     <div class="files-list" id="filesList" aria-live="polite"></div>
-    <div class="files-help"><b>✦ SALVAMENTO AUTOMÁTICO</b> — Os FILES ficam separados neste navegador. Exporte o arquivo <strong>.deltarpg</strong> para enviar a um amigo; a importação cria um novo slot, sem apagar nenhum outro.</div>
+    <div class="files-help"><b>✦ SALVAMENTO AUTOMÁTICO</b> — Os FILES e o histórico de recuperação ficam neste navegador. Exporte um <strong>.delta-backup</strong> para guardar uma cópia completa fora dele; limpar os dados do navegador também pode apagar os backups locais. O arquivo <strong>.deltarpg</strong> compartilha um personagem e a importação cria um novo slot.</div>
   </div>
 </section>
 <div id="exportTarget">
@@ -973,14 +987,28 @@ function nextTurn(){if(!state.activeBuffs.length&&!state.skills.some(s=>s.cooldo
 const extraPoints=key=>Math.max(0,state[key]-1);
 const proficiencyBudget=key=>extraPoints(key)*0.5;
 const FILE_STORE_KEY='delta-rpg-save-files-v1';
-let fileSlots=[],activeSaveId=null,filesReady=false;
-const persist=()=>{try{
-  localStorage.setItem(KEY,JSON.stringify(state));
-  if(filesReady)storeActiveFile();
-  $('saveStatus').textContent='SALVO NO NAVEGADOR';
-  if(filesReady)window.dispatchEvent(new CustomEvent('delta-rpg:save',
-    {detail:{fileId:activeSaveId}}));
- }catch(e){console.warn('Erro ao salvar FILE',e);$('saveStatus').textContent='FALHA AO SALVAR'}};
+let fileSlots=[],activeSaveId=null,filesReady=false,fileRevision=0;
+let backupPersistenceStarted=false,backupBootFinished=false,backupUserChangedDuringBoot=false;
+window.addEventListener('delta-rpg:backup-ready',event=>{
+ const minimumRevision=event.detail?.minimumRevision;
+ if(backupUserChangedDuringBoot&&Number.isSafeInteger(minimumRevision)&&minimumRevision>=0)
+  fileRevision=Math.max(fileRevision,minimumRevision);
+ backupPersistenceStarted=true;
+ if(backupUserChangedDuringBoot){
+  backupUserChangedDuringBoot=false;
+  try{commitFiles();localStorage.setItem(KEY,JSON.stringify(state))}
+  catch(err){console.warn('Não foi possível registrar a ficha editada durante a recuperação',err)}
+ }
+});
+const persist=()=>{
+ if(backupBootFinished&&!backupPersistenceStarted)backupUserChangedDuringBoot=true;
+ const errors=[];
+ if(filesReady)try{storeActiveFile()}catch(e){errors.push(e);console.warn('Erro ao salvar FILES locais',e)}
+ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){errors.push(e);console.warn('Erro ao salvar estado local',e)}
+ $('saveStatus').textContent=errors.length?'SALVAMENTO LOCAL LIMITADO · BACKUP EM ANDAMENTO':'SALVO NO NAVEGADOR';
+ if(filesReady)window.dispatchEvent(new CustomEvent('delta-rpg:save',
+  {detail:{fileId:activeSaveId,storageFailed:errors.length>0}}));
+};
 let toastTimeout;
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),2300)}
 const SOUL_PALETTE={strength:[255,48,105],defense:[52,213,118],intelligence:[57,127,249],agility:[255,216,73]};
@@ -2105,7 +2133,24 @@ function createFile(data,label){
  return{id:freshId(),label:short(label||'ARQUIVO DE SALVAMENTO',36),createdAt:time,updatedAt:time,data:cleanCharacter(data)};
 }
 function commitFiles(){
- localStorage.setItem(FILE_STORE_KEY,JSON.stringify({version:FILE_VERSION,activeId:activeSaveId,slots:fileSlots}));
+ if(backupBootFinished&&!backupPersistenceStarted)backupUserChangedDuringBoot=true;
+ if(backupPersistenceStarted)fileRevision++;
+ const archive={version:FILE_VERSION,revision:fileRevision,activeId:activeSaveId,slots:fileSlots};
+ try{localStorage.setItem(FILE_STORE_KEY,JSON.stringify(archive))}
+ finally{window.dispatchEvent(new CustomEvent('delta-rpg:archive-change',
+  {detail:{revision:fileRevision}}))}
+}
+function normalizeFileSlots(source){
+ return source.slice(0,MAX_FILES).map(x=>{
+  try{if(!x||!x.data)return null;
+   return{id:short(x.id,100)||freshId(),label:short(x.label||'FILE',36),
+    createdAt:short(x.createdAt,32)||stamp(),updatedAt:short(x.updatedAt,32)||stamp(),
+    data:cleanCharacter(x.data),remoteSource:short(x.remoteSource||'',160)};
+  }catch(err){console.warn('FILE ignorado durante a recuperação',err);return null}
+ }).filter(Boolean);
+}
+function validFileArchive(archive){
+ return Boolean(archive&&archive.version===FILE_VERSION&&Array.isArray(archive.slots));
 }
 function storeActiveFile(){
  const slot=fileSlots.find(x=>x.id===activeSaveId);
@@ -2115,13 +2160,9 @@ function storeActiveFile(){
 function loadFileSystem(){
  let archive=null;
  try{archive=JSON.parse(localStorage.getItem(FILE_STORE_KEY)||'null')}catch(err){console.warn('FILES ilegíveis',err)}
- if(archive&&archive.version===FILE_VERSION&&Array.isArray(archive.slots)){
-  fileSlots=archive.slots.slice(0,MAX_FILES).map(x=>{
-   try{if(!x||!x.data)return null;
-    return{id:short(x.id,100)||freshId(),label:short(x.label||'FILE',36),
-     createdAt:short(x.createdAt,32)||stamp(),updatedAt:short(x.updatedAt,32)||stamp(),data:cleanCharacter(x.data),remoteSource:short(x.remoteSource||'',160)};
-   }catch(err){return null}
-  }).filter(Boolean);
+ if(validFileArchive(archive)){
+  fileRevision=Number.isSafeInteger(archive.revision)&&archive.revision>=0?archive.revision:0;
+  fileSlots=normalizeFileSlots(archive.slots);
   activeSaveId=archive.activeId;
  }
  if(!fileSlots.length){
@@ -2582,6 +2623,35 @@ window.DeltaRpgMuralBridge=Object.freeze({
 });
 window.DeltaRpgLiveBridge=Object.freeze({
  activeFileId(){return filesReady?activeSaveId:null},
+ readArchive(){
+  if(!filesReady)return null;
+  return{version:FILE_VERSION,revision:fileRevision,activeId:activeSaveId,
+   slots:fileSlots.map(slot=>({...slot,data:cleanCharacter(slot.data)}))};
+ },
+ restoreArchive(archive,options={}){
+  if(!filesReady||!validFileArchive(archive))return false;
+  const slots=normalizeFileSlots(archive.slots);
+  if(!slots.length)return false;
+  const active=slots.find(slot=>slot.id===archive.activeId)||slots[0];
+  const tab=state.activeTab,wasReady=backupPersistenceStarted;
+  fileSlots=slots;activeSaveId=active.id;
+  const minimumRevision=Number.isSafeInteger(options.minimumRevision)&&options.minimumRevision>=0?
+   options.minimumRevision:0;
+  fileRevision=options.recovery===true&&Number.isSafeInteger(archive.revision)&&archive.revision>=0?
+   archive.revision:Math.max(fileRevision,minimumRevision,Number.isSafeInteger(archive.revision)?archive.revision:0)+1;
+  state=cleanCharacter(active.data);state.activeTab=tab;backupPersistenceStarted=false;
+  try{
+   localStorage.setItem(FILE_STORE_KEY,JSON.stringify({version:FILE_VERSION,revision:fileRevision,activeId:activeSaveId,slots:fileSlots}));
+   localStorage.setItem(KEY,JSON.stringify(state));
+  }catch(err){console.warn('Backup recuperado apenas na memória; IndexedDB mantém a cópia segura',err)}
+  backupPersistenceStarted=wasReady;
+  renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();renderRelationships();renderFiles();
+  $('saveStatus').textContent='BACKUP RECUPERADO';
+  window.dispatchEvent(new CustomEvent('delta-rpg:file-changed',{detail:{fileId:activeSaveId}}));
+  window.dispatchEvent(new CustomEvent('delta-rpg:archive-change',{detail:{revision:fileRevision}}));
+  window.dispatchEvent(new CustomEvent('delta-rpg:save',{detail:{fileId:activeSaveId}}));
+  return true;
+ },
  openFile(id){if(!filesReady||!fileSlots.some(x=>x.id===id))return false;openFile(id);return true;},
  readFile(id){
   if(!filesReady)return null;
@@ -2708,6 +2778,7 @@ window.DeltaRpgMasterBridge=Object.freeze({
 
 makePetals('soulPetals',13);
 setupProficiencies();setupSecretAttributes();setupRelationships();loadFileSystem();renderStatus();renderLibrary('skills');renderLibrary('inventory');switchTab('files');renderFiles();persist();
+backupBootFinished=true;
 
 /* DELTA v5 — preferência estética independente do estado do personagem. */
 const THEME_STORAGE_KEY = 'delta-rpg-appearance-v1';
@@ -2779,6 +2850,7 @@ applyAppearance();
 
 </script>
 <script src="./assets/menu-sounds-v9.js?v=9" defer></script>
+<script src="./assets/automatic-backups.js?v=1" defer></script>
 <script src="./assets/live-sync.js?v=13" defer></script>
 <script src="./assets/secret-loot.js?v=23" defer></script>
 <script src="./assets/document-mural.js?v=10" defer></script>
