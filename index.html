@@ -2701,6 +2701,7 @@ const masterNameOf=slot=>{
  return{character:n,label};
 };
 window.DeltaRpgMasterBridge=Object.freeze({
+ normalizeIncoming(character){return cleanCharacter(character)},
  refreshExisting(received,remoteKey){
   if(!filesReady||!received?.character||!remoteKey)return false;
   const slot=fileSlots.find(x=>x.remoteSource===short(String(remoteKey),160));
@@ -2856,8 +2857,8 @@ applyAppearance();
 <script src="./assets/secret-loot.js?v=23" defer></script>
 <script src="./assets/document-mural.js?v=10" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
-<script src="./assets/initiative-room.js?v=1" defer></script>
-<script src="./assets/master-room.js?v=8" defer></script>
+<script src="./assets/initiative-room.js?v=2" defer></script>
+<script src="./assets/master-room.js?v=9" defer></script>
 <script src="./assets/secret-past.js?v=8" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
