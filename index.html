@@ -2658,6 +2658,48 @@ window.DeltaRpgLiveBridge=Object.freeze({
   const slot=fileSlots.find(x=>x.id===id);
   return slot?{label:slot.label,character:cleanCharacter(slot.data)}:null;
  },
+ applyMasterPatch(id,base,changes){
+  if(!filesReady||!base||typeof base!=='object'||!changes||typeof changes!=='object'||Array.isArray(changes))
+   return{ok:false,conflict:false,character:this.readFile(id)?.character||null};
+  const allowed=new Set(['name','level','hp','tp','strength','defense','intelligence','agility']);
+  const keys=Object.keys(changes),slot=fileSlots.find(x=>x.id===id);
+  if(!slot||!keys.length||keys.some(key=>!allowed.has(key)))
+   return{ok:false,conflict:false,character:slot?cleanCharacter(slot.data):null};
+  for(const key of keys){
+   const value=changes[key];
+   if(key==='name'&&(typeof value!=='string'||!value.trim()||value.trim().length>32)||
+     key==='level'&&(!Number.isSafeInteger(value)||value<1||value>99)||
+     key==='tp'&&(!Number.isSafeInteger(value)||value<0||value>100)||
+     key==='hp'&&(!Number.isSafeInteger(value)||value<0||value>9999)||
+     ['strength','defense','intelligence','agility'].includes(key)&&
+      (!Number.isSafeInteger(value)||value<1||value>99))
+    return{ok:false,conflict:false,character:this.readFile(id)?.character||null};
+  }
+  const current=cleanCharacter(slot.id===activeSaveId?state:slot.data);
+  if(keys.some(key=>JSON.stringify(current[key])!==JSON.stringify(base[key])))
+   return{ok:false,conflict:true,character:current};
+  const next=cleanCharacter({...current,...changes});
+  const previous=slot.data,previousActiveState=slot.id===activeSaveId?cleanCharacter(state):null;
+  const previousUpdatedAt=slot.updatedAt,previousRevision=fileRevision;
+  const activeTab=state.activeTab;
+  slot.data=next;slot.updatedAt=stamp();
+  if(slot.id===activeSaveId){state=next;state.activeTab=activeTab}
+  try{commitFiles()}
+  catch(error){
+   slot.data=previous;slot.updatedAt=previousUpdatedAt;fileRevision=previousRevision;
+   if(slot.id===activeSaveId){state=previousActiveState;state.activeTab=activeTab}
+   throw error;
+  }
+  if(slot.id===activeSaveId){
+   try{localStorage.setItem(KEY,JSON.stringify(state))}
+   catch(error){console.warn('A ficha foi salva no FILE, mas a chave de recuperação local não pôde ser atualizada.',error)}
+   renderStatus();renderLibrary('skills');renderLibrary('inventory');renderEquipment();renderRelationships();
+  }
+  renderFiles();
+  window.dispatchEvent(new CustomEvent('delta-rpg:mural-refresh',{detail:{fileId:id}}));
+  window.dispatchEvent(new CustomEvent('delta-rpg:save',{detail:{fileId:id,masterEdit:true}}));
+  return{ok:true,conflict:false,character:next};
+ },
  createSharedFile(character,label){
   if(!filesReady||fileSlots.length>=MAX_FILES)return null;
   const normalized=cleanCharacter(character);
@@ -2858,7 +2900,7 @@ applyAppearance();
 <script src="./assets/document-mural.js?v=10" defer></script>
 <script src="./assets/owner-share.js?v=2" defer></script>
 <script src="./assets/initiative-room.js?v=2" defer></script>
-<script src="./assets/master-room.js?v=9" defer></script>
+<script src="./assets/master-room.js?v=10" defer></script>
 <script src="./assets/secret-past.js?v=8" defer></script>
 <script src="codex-bridge.js"></script>
 </body>
