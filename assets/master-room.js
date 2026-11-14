@@ -1,6 +1,5 @@
 /* DELTA RPG · Sala do Mestre (sem configuração de banco)
-   Sincronização WebRTC ponto a ponto: cada jogador compartilha somente o FILE
-   que escolher, e as edições do mestre retornam para esse mesmo FILE. */
+   Fichas fluem do jogador para uma visualização somente leitura do mestre. */
 (()=>{
 'use strict';
 const bridge=window.DeltaRpgLiveBridge;
@@ -9,7 +8,6 @@ const tab=document.getElementById('tab-files');
 if(!bridge||!master||!tab||document.getElementById('deltaMasterRoom'))return;
 const STORAGE='delta-rpg-master-room-v1';
 const PLAYER_KEY='delta-rpg-master-player-id-v1';
-const BASELINES_KEY='delta-rpg-master-baselines-v1';
 const BACKUPS_KEY='delta-rpg-master-backups-v1';
 const PREFIX='delta-master-';
 const MAX_PLAYERS=5;
@@ -27,12 +25,6 @@ const hashCharacter=character=>{
  for(let i=0;i<s.length;i++)n=Math.imul(n^s.charCodeAt(i),16777619);
  return(n>>>0).toString(36);
 };
-const baselineKey=(code,id)=>code+'|'+playerId+'|'+id;
-function getBaseline(code,id){return readLocal(BASELINES_KEY,{})[baselineKey(code,id)]||''}
-function setBaseline(code,id,character){
- const saved=readLocal(BASELINES_KEY,{});saved[baselineKey(code,id)]=hashCharacter(character);
- saveLocal(BASELINES_KEY,saved);
-}
 function backupKey(code,id){return code+'|'+playerId+'|'+id}
 function latestBackup(){return readLocal(BACKUPS_KEY,{})[backupKey(settings.code,settings.fileId)]||null}
 function refreshBackupButton(){
@@ -51,8 +43,6 @@ function keepOldVersion(code,id,file){
   return true;
  }catch(e){console.warn('Não foi possível guardar a versão anterior',e);return false}
 }
-const recordKey=(code,pid)=>'sala-'+code+'-'+pid;
-const getArchived=(source)=>{try{const a=JSON.parse(localStorage.getItem('delta-rpg-save-files-v1')||'null');return a?.slots?.find(x=>x.remoteSource===source)||null}catch(_){return null}};
 let settings=readLocal(STORAGE,{mode:'',code:'',name:'',active:false,fileId:''});
 const queryCode=new URLSearchParams(location.search).get('deltaSala');
 if(queryCode&&/^[A-F0-9]{24}$/i.test(queryCode))settings={...settings,mode:'player',code:queryCode.toUpperCase(),active:false};
@@ -64,7 +54,7 @@ let peerLoader=null;
 const ui=document.createElement('section');ui.id='deltaMasterRoom';
 ui.innerHTML=[
  '<div class="dm-head"><div><span class="dm-eyebrow">✦ DELTA RPG · MULTIJOGADOR</span>',
- '<h2>SALA DO MESTRE</h2><p>Edite as fichas dos jogadores e envie as alterações automaticamente.</p></div>',
+ '<h2>SALA DO MESTRE</h2><p>Veja as fichas ao vivo. Só o jogador altera e salva a própria ficha.</p></div>',
  '<span id="dmBadge" class="dm-badge">DESCONECTADO</span></div>',
  '<div class="dm-actions"><button id="dmStart" type="button">✦ CRIAR SALA</button>',
  '<button id="dmJoinOpen" type="button">↳ ENTRAR COMO JOGADOR</button>',
@@ -127,12 +117,11 @@ function renderPlayers(){
   const c=document.createElement('article');c.className='dm-player';
   const details=document.createElement('div');details.className='dm-player-info';
   const title=document.createElement('strong');title.textContent=s.name||'Jogador';
-  const file=bridge.readFile(s.fileId);
-  const name=document.createElement('span');name.textContent=(file?.character?.name||'PERSONAGEM')+' · '+(file?.label||'FILE');
+  const name=document.createElement('span');name.textContent=(s.character?.name||'PERSONAGEM')+' · ficha ao vivo';
   const indicator=document.createElement('small');indicator.textContent=s.conn.open?'● ONLINE · SINCRONIZADO':'○ DESCONECTADO';
   details.append(title,name,indicator);
-  const action=document.createElement('button');action.type='button';action.textContent='✎ ABRIR E EDITAR';
-  action.onclick=()=>{if(!bridge.openFile?.(s.fileId))report('Não foi possível abrir essa ficha.');else report('Edite o FILE de '+s.name+'. As mudanças serão enviadas automaticamente.')};
+  const action=document.createElement('button');action.type='button';action.textContent='👁 VER FICHA AO VIVO';
+  action.onclick=()=>showPlayerSheet(s.pid);
   c.append(details,action);host.append(c);
  }
  refresh();
@@ -183,9 +172,43 @@ async function copyInvite(){
 function getFile(){
  return joinedFileId?bridge.readFile(joinedFileId):null;
 }
-function remoteWrite(fileId,character){
- if(!validPacket({character}))return false;
- return bridge.writeRemoteFile(fileId,character);
+const viewer=document.createElement('dialog');viewer.id='dmSheetDialog';
+viewer.innerHTML='<div class="dm-sheet-view"><header><div><span class="dm-eyebrow">FICHA DO JOGADOR · SOMENTE LEITURA</span><h2 id="dmSheetTitle"></h2><p id="dmSheetStatus">Recebendo atualizações ao vivo…</p></div><button id="dmSheetClose" type="button" aria-label="Fechar ficha">FECHAR</button></header><div id="dmSheetContent"></div></div>';
+document.body.append(viewer);
+const viewerStyle=document.createElement('style');
+viewerStyle.textContent='#dmSheetDialog{width:min(920px,94vw);max-width:94vw;max-height:88vh;overflow:auto;padding:0;border:1px solid rgba(173,145,226,.65);border-radius:14px;background:#0b0a1a;color:#f5efff;box-shadow:0 24px 90px #000b}#dmSheetDialog::backdrop{background:#03020bcc;backdrop-filter:blur(5px)}.dm-sheet-view{padding:clamp(18px,4vw,36px)}.dm-sheet-view header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #55466d;padding-bottom:18px;margin-bottom:18px}.dm-sheet-view h2{margin:8px 0;font:700 22px monospace}.dm-sheet-view p{margin:0;color:#c5b9d8}.dm-sheet-view button{border:1px solid #8065a3;border-radius:6px;padding:10px 14px;background:#211832;color:#fff;cursor:pointer}.dm-sheet-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin:16px 0 24px}.dm-sheet-stat,.dm-sheet-section{padding:14px;border:1px solid #39304c;border-radius:8px;background:#121020}.dm-sheet-stat small{display:block;color:#b5a7c9;font-size:10px;letter-spacing:.1em}.dm-sheet-stat strong{display:block;margin-top:8px}.dm-sheet-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}.dm-sheet-section h3{margin:0 0 12px;color:#c9a9f3;font-size:12px;letter-spacing:.08em}.dm-sheet-entry{padding:9px 0;border-top:1px solid #30283e;overflow-wrap:anywhere;white-space:pre-wrap}.dm-sheet-entry:first-of-type{border-top:0;padding-top:0}.dm-sheet-entry strong{display:block}.dm-sheet-entry small{color:#c5b9d8}.dm-sheet-empty{color:#8e829f}@media(max-width:520px){.dm-sheet-view header{flex-direction:column}.dm-sheet-view header button{align-self:flex-end}}';
+document.head.append(viewerStyle);
+function appendSheetSection(parent,title,entries,format){
+ const section=document.createElement('section');section.className='dm-sheet-section';
+ const heading=document.createElement('h3');heading.textContent=title;section.append(heading);
+ if(!entries.length){const empty=document.createElement('p');empty.className='dm-sheet-empty';empty.textContent='Nenhum registro.';section.append(empty)}
+ for(const entry of entries){
+  const row=document.createElement('div');row.className='dm-sheet-entry';
+  const parts=format(entry),name=document.createElement('strong');name.textContent=parts.title;row.append(name);
+  if(parts.detail){const detail=document.createElement('small');detail.textContent=parts.detail;row.append(detail)}
+  if(parts.description){const description=document.createElement('div');description.textContent=parts.description;row.append(description)}
+  section.append(row);
+ }
+ parent.append(section);
+}
+function showPlayerSheet(pid){
+ const session=sessions.get(pid);if(!session?.character)return;
+ viewer.dataset.playerId=pid;
+ $('dmSheetTitle').textContent=session.character.name||'Personagem';
+ $('dmSheetStatus').textContent='Jogador: '+session.name+' · atualizada ao vivo enquanto estiver conectado.';
+ const content=$('dmSheetContent');content.replaceChildren();
+ const character=session.character,stats=document.createElement('div');stats.className='dm-sheet-stats';
+ for(const [label,value] of [['NÍVEL',character.level],['HP',character.hp],['TP',character.tp],['FORÇA',character.strength],['DEFESA',character.defense],['INTELIGÊNCIA',character.intelligence],['AGILIDADE',character.agility]]){
+  const stat=document.createElement('div');stat.className='dm-sheet-stat';const caption=document.createElement('small');caption.textContent=label;const number=document.createElement('strong');number.textContent=String(value??0);stat.append(caption,number);stats.append(stat);
+ }
+ content.append(stats);
+ const sections=document.createElement('div');sections.className='dm-sheet-sections';
+ appendSheetSection(sections,'INVENTÁRIO',Array.isArray(character.items)?character.items:[],item=>({title:(item.icon||'◆')+' '+(item.name||'Item')+' ×'+(item.quantity||1),description:item.description||''}));
+ appendSheetSection(sections,'HABILIDADES',Array.isArray(character.skills)?character.skills:[],skill=>({title:(skill.icon||'✦')+' '+(skill.name||'Habilidade'),detail:'TP '+(skill.cost||0)+' · '+(skill.category||'dano'),description:skill.description||''}));
+ appendSheetSection(sections,'EQUIPAMENTOS',Object.entries(character.equipment||{}).filter(([,item])=>item).map(([slot,item])=>({slot,item})),entry=>({title:(entry.item.name||'Item')+' · '+entry.slot,description:entry.item.description||''}));
+ appendSheetSection(sections,'RELACIONAMENTOS',Array.isArray(character.relationships)?character.relationships:[],relationship=>({title:relationship.name||'Personagem',detail:relationship.role||'',description:relationship.description||''}));
+ appendSheetSection(sections,'MURAL DE DOCUMENTOS',Array.isArray(character.muralNotes)?character.muralNotes:[],note=>({title:note.title||'Bilhete',description:note.text||''}));
+ content.append(sections);if(!viewer.open)viewer.showModal();
 }
 function onHostConnection(c){
  if(mode!=='owner'){try{c.close()}catch(_){}return;}
@@ -200,60 +223,39 @@ function onHostConnection(c){
    const current=sessions.get(pid);
    if(!current&&sessions.size>=MAX_PLAYERS){emit(c,{kind:'full'});c.close();return;}
    if(current){try{current.conn.close()}catch(_){}sessions.delete(pid)}
-   const source=recordKey(room,pid);
-   let saved=getArchived(source);
-   let fileId=saved?.id;
-   const incoming={label:safeLabel(msg.label,36),playerName:safeLabel(msg.name,36),character:msg.character};
-   if(!saved){
-    // Find the original FILE by the character name, regardless of what it is.
-    // Never make another copy if a unique matching FILE already exists.
-    const occupied=[...sessions.values()].map(s=>s.fileId);
-    const received=master.upsertReceived(incoming,source,occupied,true);
-    if(!received){emit(c,{kind:'error',message:'Não foi possível associar a ficha. Verifique o limite de FILES ou se existem fichas repetidas com o mesmo nome.'});c.close();return;}
-    fileId=received.id;
-    report(received.linkedByName?'✓ FILE existente associado automaticamente a '+(incoming.character.name||incoming.playerName)+'.':'✓ Ficha de '+(incoming.character.name||incoming.playerName)+' recebida.');
-   }else{
-    // If the master has not changed this character since the last sync,
-    // an offline edit from the player can safely update this SAME FILE.
-    const hostFile=bridge.readFile(fileId);
-    const base=typeof msg.lastKnown==='string'?msg.lastKnown:'';
-    if(base&&hostFile&&base===hashCharacter(hostFile.character)&&
-        hashCharacter(msg.character)!==base){
-     const received=master.upsertReceived(incoming,source);
-     if(received)fileId=received.id;
-    }
-   }
-   const session={pid,name:safeLabel(msg.name,36)||'Jogador',fileId,conn:c,ready:true,last:''};
+   let character;
+   try{character=master.normalizeIncoming(msg.character)}
+   catch(error){console.warn('Ficha do jogador inválida:',error);emit(c,{kind:'error',message:'A ficha não pôde ser exibida; os dados locais do jogador foram preservados.'});c.close();return;}
+   if(!character){emit(c,{kind:'error',message:'A ficha não pôde ser exibida; os dados locais do jogador foram preservados.'});c.close();return;}
+   const session={pid,name:safeLabel(msg.name,36)||'Jogador',character,conn:c,ready:true,last:fingerprint({character})};
    sessions.set(pid,session);playerSession=session;
-   const file=bridge.readFile(fileId);
-   if(!file){emit(c,{kind:'error',message:'O FILE compartilhado não foi encontrado.'});c.close();return;}
-   session.last=fingerprint(file);
-   const snapshotSent=emit(c,{kind:'snapshot',label:file.label,character:file.character});
-   if(!snapshotSent){
-    emit(c,{kind:'error',message:'A ficha é grande demais para sincronizar. Os dados locais foram preservados.'});
-    report('⚠ Não foi possível enviar a ficha completa. Os FILEs locais continuam salvos.',true);
-   }
+   emit(c,{kind:'ack',signature:hashCharacter(character)});
    window.DeltaRpgInitiative?.hostPlayerJoined?.(session,c);
-   if(snapshotSent)report('Jogador conectado: '+session.name+'. Abra a ficha para editar.');
+   report('Ficha ao vivo recebida: '+session.character.name+'. Os dados ficam no dispositivo do jogador.');
    renderPlayers();
    return;
   }
   if(window.DeltaRpgInitiative?.hostMessage?.(msg,playerSession,c))return;
-  if(msg.kind!=='update'||!msg.character||!playerSession.fileId)return;
-  const source=recordKey(room,playerSession.pid);
-  const next=fingerprint({character:msg.character});
+  if(msg.kind!=='update'||!msg.character)return;
+  let character;
+  try{character=master.normalizeIncoming(msg.character)}
+  catch(error){console.warn('Atualização de ficha inválida:',error);emit(c,{kind:'error',message:'Atualização inválida; a ficha local do jogador foi preservada.'});return;}
+  if(!character){emit(c,{kind:'error',message:'Atualização inválida; a ficha local do jogador foi preservada.'});return;}
+  const next=fingerprint({character});
   if(next===playerSession.last)return;
-  const received=master.upsertReceived({label:safeLabel(msg.label,36)||'FILE',character:msg.character},source);
-  if(!received){emit(c,{kind:'error',message:'O mestre não conseguiu salvar a atualização.'});return;}
-  playerSession.fileId=received.id;
+  playerSession.character=character;
   playerSession.last=next;
-  emit(c,{kind:'ack',signature:hashCharacter(msg.character)});
+  emit(c,{kind:'ack',signature:hashCharacter(character)});
+  if(viewer.open&&viewer.dataset.playerId===playerSession.pid)showPlayerSheet(playerSession.pid);
+  window.DeltaRpgInitiative?.hostPlayerUpdated?.(playerSession);
   renderPlayers();
  });
  c.on('close',()=>{
   window.DeltaRpgInitiative?.hostPlayerLeft?.(playerSession);
   if(playerSession&&sessions.get(playerSession.pid)===playerSession){
    sessions.delete(playerSession.pid);renderPlayers();
+   if(viewer.open&&viewer.dataset.playerId===playerSession.pid)
+    $('dmSheetStatus').textContent='Jogador desconectado · exibindo a última ficha recebida.';
    report('Um jogador desconectou. O FILE permanece salvo em seus arquivos.');
   }
  });
@@ -319,11 +321,12 @@ async function joinRoom(code,fileId,reconnect=false){
    c.on('open',()=>{
     const live=getFile();
     if(!live){report('O FILE compartilhado foi excluído.',true);disconnect();return;}
-    if(!emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character,lastKnown:getBaseline(room,joinedFileId)})){
+    playerLast=fingerprint(live);
+    if(!emit(c,{kind:'hello',playerId,name:settings.name||'Jogador',label:live.label,character:live.character})){
      report('⚠ Não foi possível enviar sua ficha (limite de 6 MB). O conteúdo permanece salvo neste dispositivo.',true);
      return;
     }
-    report('Conectado. Aguardando a ficha do mestre...');
+    report('Enviado com segurança. Aguardando confirmação do mestre…');
    });
    c.on('data',msg=>{
     msg=packets.receive(c,msg);
@@ -334,26 +337,15 @@ async function joinRoom(code,fileId,reconnect=false){
     if(msg.kind==='error'){report(msg.message||'Falha ao sincronizar.',true);return;}
     if(msg.kind==='ack'){
      if(typeof msg.signature==='string'){
-      const all=readLocal(BASELINES_KEY,{});
-      all[baselineKey(room,joinedFileId)]=msg.signature;
-      saveLocal(BASELINES_KEY,all);
+      connected=true;refresh();
+      report('✓ CONECTADO · o mestre está vendo sua ficha ao vivo. Seus arquivos continuam no seu dispositivo.');
+      if(fingerprint(getFile())!==playerLast)autoSync({detail:{fileId:joinedFileId}});
      }
      return;
     }
     if(msg.kind==='snapshot'||msg.kind==='update'){
-     const before=getFile();
-     if(!before){report('O FILE compartilhado não existe mais.',true);return;}
-     // One replaceable backup per player FILE in localStorage (not another FILE).
-     if(msg.kind==='snapshot'&&fingerprint(before)!==fingerprint({character:msg.character})){
-      if(!keepOldVersion(room,joinedFileId,before)){
-       report('Seu arquivo difere do mestre. Faça uma exportação manual antes de sincronizar.',true);
-       disconnect();return;
-      }
-     }
-     if(!remoteWrite(joinedFileId,msg.character)){report('Não foi possível aplicar a ficha recebida.',true);return;}
-     playerLast=fingerprint({character:msg.character});
-     setBaseline(room,joinedFileId,msg.character);
-     connected=true;report('✓ SINCRONIZADO · a mesma ficha é atualizada sem gerar cópias.');refresh();
+     report('Esta versão da sala tentou substituir sua ficha. Para proteger seus dados, a conexão foi encerrada; atualize a página do mestre.',true);
+     disconnect();return;
     }
    });
    c.on('close',()=>{
@@ -375,17 +367,7 @@ function autoSync(e){
  if(!id)return;
  clearTimeout(editTimer);
  editTimer=setTimeout(()=>{
-  if(mode==='owner'){
-   for(const s of sessions.values()){
-    if(s.fileId!==id||!s.conn.open)continue;
-    const file=bridge.readFile(id);if(!file)continue;
-    const sign=fingerprint(file);
-    if(sign===s.last)continue;
-    if(emit(s.conn,{kind:'update',character:file.character,label:file.label})){
-     s.last=sign;report('✓ Atualização enviada automaticamente para '+s.name+'.');
-    }else report('⚠ Não foi possível enviar a ficha de '+s.name+'. Os dados locais foram preservados.',true);
-   }
-  }else if(mode==='player'&&connected&&joinedFileId===id&&connection?.open){
+  if(mode==='player'&&connected&&joinedFileId===id&&connection?.open){
    const file=getFile();if(!file)return;
    const sign=fingerprint(file);
    if(sign===playerLast)return;
@@ -416,6 +398,7 @@ $('dmConnect').onclick=()=>{
  dialog.close();joinRoom(code,id);
 };
 $('dmClose').onclick=()=>dialog.close();
+$('dmSheetClose').onclick=()=>viewer.close();
 $('dmStop').onclick=()=>{disconnect();report('Desconectado. Os FILES locais foram preservados.');};
 $('dmCopy').onclick=copyInvite;
 $('dmBackup').onclick=()=>{

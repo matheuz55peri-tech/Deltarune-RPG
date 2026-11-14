@@ -183,12 +183,16 @@ function hostPlayerLeft(session){
  if(role!=='host'||!session)return;
  if(sessions.get(session.pid)?.session===session)sessions.delete(session.pid);
 }
+function hostPlayerUpdated(session){
+ if(role!=='host'||!session||sessions.get(session.pid)?.session!==session)return;
+ draw();
+}
 function hostMessage(message,session,conn){
  if(!message||message.kind!=='initiative-roll')return false;
  if(role!=='host'||!open||!session||session.conn!==conn||!conn.open)return true;
  if(!Number.isInteger(message.round)||message.round!==state.round||
   state.rolls.some(x=>x.pid===session.pid)){snapshot(conn);return true;}
- const character=window.DeltaRpgLiveBridge?.readFile?.(session.fileId)?.character;
+ const character=session.character||window.DeltaRpgLiveBridge?.readFile?.(session.fileId)?.character;
  if(!character){snapshot(conn);return true;}
  const die=d20(),agility=agi(character);
  state.rolls.push({pid:session.pid,playerName:session.name||'Jogador',
@@ -206,7 +210,7 @@ function playerMessage(message){
  return true;
 }
 window.DeltaRpgInitiative=Object.freeze({
- mount,refresh,stop,hostStarted,playerStarted,hostPlayerJoined,hostPlayerLeft,
+ mount,refresh,stop,hostStarted,playerStarted,hostPlayerJoined,hostPlayerLeft,hostPlayerUpdated,
  hostMessage,playerMessage,playerConnected,
  connection:()=>playerConnection
 });
