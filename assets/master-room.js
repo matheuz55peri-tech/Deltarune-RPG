@@ -54,7 +54,7 @@ let peerLoader=null;
 const ui=document.createElement('section');ui.id='deltaMasterRoom';
 ui.innerHTML=[
  '<div class="dm-head"><div><span class="dm-eyebrow">✦ DELTA RPG · MULTIJOGADOR</span>',
- '<h2>SALA DO MESTRE</h2><p>Veja as fichas ao vivo. Só o jogador altera e salva a própria ficha.</p></div>',
+ '<h2>SALA DO MESTRE</h2><p>Veja e ajuste as fichas ao vivo. Alterações conflitantes nunca substituem o que o jogador acabou de fazer.</p></div>',
  '<span id="dmBadge" class="dm-badge">DESCONECTADO</span></div>',
  '<div class="dm-actions"><button id="dmStart" type="button">✦ CRIAR SALA</button>',
  '<button id="dmJoinOpen" type="button">↳ ENTRAR COMO JOGADOR</button>',
@@ -148,7 +148,10 @@ function emit(conn,data){
 function disconnect(resetSaved=true){
  clearTimeout(retryTimer);clearTimeout(editTimer);retryTimer=null;editTimer=null;
  explicitStop=true;sequence++;
- for(const s of sessions.values())try{s.conn.close()}catch(_){}
+ for(const s of sessions.values()){
+  for(const pending of s.pendingEdits?.values()||[])clearTimeout(pending.timer);
+  try{s.conn.close()}catch(_){}
+ }
  sessions.clear();
  try{connection?.close()}catch(_){}
  connection=null;
@@ -173,35 +176,44 @@ function getFile(){
  return joinedFileId?bridge.readFile(joinedFileId):null;
 }
 const viewer=document.createElement('dialog');viewer.id='dmSheetDialog';
-viewer.innerHTML='<div class="dm-sheet-view"><header><div><span class="dm-eyebrow">FICHA DO JOGADOR · SOMENTE LEITURA</span><h2 id="dmSheetTitle"></h2><p id="dmSheetStatus">Recebendo atualizações ao vivo…</p></div><button id="dmSheetClose" type="button" aria-label="Fechar ficha">FECHAR</button></header><div id="dmSheetContent"></div></div>';
+viewer.innerHTML='<div class="dm-sheet-view"><header><div><span class="dm-eyebrow">FICHA DO JOGADOR · AO VIVO</span><h2 id="dmSheetTitle"></h2><p id="dmSheetStatus">Recebendo atualizações ao vivo…</p></div><div class="dm-sheet-head-actions"><button id="dmSheetEdit" class="dm-sheet-primary" type="button">✎ AJUSTAR FICHA</button><button id="dmSheetClose" type="button" aria-label="Fechar ficha">FECHAR</button></div></header><form id="dmSheetEditForm" class="dm-sheet-edit" hidden><div class="dm-sheet-edit-title"><strong>AJUSTE DO MESTRE</strong><span>Se o jogador alterar estes campos antes de você salvar, seu ajuste será recusado.</span></div><div class="dm-sheet-edit-grid"><label>PERSONAGEM<input name="name" maxlength="32" required></label><label>NÍVEL<input name="level" type="number" min="1" max="99" required></label><label>HP<input name="hp" type="number" min="0" max="9999" required></label><label>TP<input name="tp" type="number" min="0" max="100" required></label><label>FORÇA<input name="strength" type="number" min="1" max="99" required></label><label>DEFESA<input name="defense" type="number" min="1" max="99" required></label><label>INTELIGÊNCIA<input name="intelligence" type="number" min="1" max="99" required></label><label>AGILIDADE<input name="agility" type="number" min="1" max="99" required></label></div><div class="dm-sheet-edit-actions"><button type="submit" class="dm-sheet-primary">ENVIAR AJUSTE</button><button id="dmSheetEditCancel" type="button">CANCELAR</button></div></form><div id="dmSheetContent"></div></div>';
 document.body.append(viewer);
 const viewerStyle=document.createElement('style');
-viewerStyle.textContent='#dmSheetDialog{width:min(920px,94vw);max-width:94vw;max-height:88vh;overflow:auto;padding:0;border:1px solid rgba(173,145,226,.65);border-radius:14px;background:#0b0a1a;color:#f5efff;box-shadow:0 24px 90px #000b}#dmSheetDialog::backdrop{background:#03020bcc;backdrop-filter:blur(5px)}.dm-sheet-view{padding:clamp(18px,4vw,36px)}.dm-sheet-view header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #55466d;padding-bottom:18px;margin-bottom:18px}.dm-sheet-view h2{margin:8px 0;font:700 22px monospace}.dm-sheet-view p{margin:0;color:#c5b9d8}.dm-sheet-view button{border:1px solid #8065a3;border-radius:6px;padding:10px 14px;background:#211832;color:#fff;cursor:pointer}.dm-sheet-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin:16px 0 24px}.dm-sheet-stat,.dm-sheet-section{padding:14px;border:1px solid #39304c;border-radius:8px;background:#121020}.dm-sheet-stat small{display:block;color:#b5a7c9;font-size:10px;letter-spacing:.1em}.dm-sheet-stat strong{display:block;margin-top:8px}.dm-sheet-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}.dm-sheet-section h3{margin:0 0 12px;color:#c9a9f3;font-size:12px;letter-spacing:.08em}.dm-sheet-entry{padding:9px 0;border-top:1px solid #30283e;overflow-wrap:anywhere;white-space:pre-wrap}.dm-sheet-entry:first-of-type{border-top:0;padding-top:0}.dm-sheet-entry strong{display:block}.dm-sheet-entry small{color:#c5b9d8}.dm-sheet-empty{color:#8e829f}@media(max-width:520px){.dm-sheet-view header{flex-direction:column}.dm-sheet-view header button{align-self:flex-end}}';
+viewerStyle.textContent='#dmSheetDialog{width:min(820px,94vw);max-width:94vw;max-height:86vh;overflow:auto;padding:0;border:1px solid rgba(173,145,226,.65);border-radius:14px;background:radial-gradient(ellipse at 10% 0%,#292044 0,#11101f 42%,#0b0a16 100%);color:#f5efff;box-shadow:0 24px 90px #000b}#dmSheetDialog::backdrop{background:#03020bcc;backdrop-filter:blur(5px)}.dm-sheet-view{padding:clamp(15px,3vw,24px)}.dm-sheet-view header{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #55466d;padding-bottom:12px;margin-bottom:14px}.dm-sheet-view h2{margin:5px 0;font:700 19px monospace}.dm-sheet-view p{margin:0;color:#c5b9d8;font-size:12px}.dm-sheet-head-actions,.dm-sheet-edit-actions{display:flex;align-items:center;gap:8px}.dm-sheet-view button{border:1px solid #59496f;border-radius:7px;padding:8px 11px;background:#211832;color:#fff;font-size:11px;font-weight:800;cursor:pointer;transition:background .15s,border-color .15s}.dm-sheet-view button:hover{border-color:#d6b2ff;background:#35274a}.dm-sheet-view .dm-sheet-primary{border-color:#a983d5;background:linear-gradient(120deg,#5d3d7e,#33264b)}.dm-sheet-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 14px}.dm-sheet-stat{position:relative;min-height:55px;padding:9px 11px;border:1px solid #39304c;border-radius:8px;background:linear-gradient(145deg,#191629,#11101d)}.dm-sheet-stat:first-child,.dm-sheet-stat:nth-child(2){border-color:#665180}.dm-sheet-stat small{display:block;color:#b5a7c9;font-size:9px;font-weight:800;letter-spacing:.1em}.dm-sheet-stat strong{display:block;margin-top:4px;font:700 17px monospace;color:#f8edff}.dm-sheet-vitals{display:flex;gap:8px;margin:0 0 14px}.dm-sheet-vital{flex:1;padding:8px 11px;border:1px solid #443853;border-radius:7px;background:#12101f;font-size:11px}.dm-sheet-vital strong{margin-left:5px;color:#f7d8ff}.dm-sheet-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dm-sheet-section{min-width:0;border:1px solid #342b45;border-radius:8px;background:#100f1b}.dm-sheet-section summary{padding:9px 11px;color:#d9c0f7;font-size:10px;font-weight:900;letter-spacing:.09em;cursor:pointer;list-style:none}.dm-sheet-section summary::-webkit-details-marker{display:none}.dm-sheet-section summary:after{content:\"＋\";float:right;color:#9e86bd}.dm-sheet-section[open] summary:after{content:\"−\"}.dm-sheet-section-body{padding:0 11px 9px}.dm-sheet-entry{padding:7px 0;border-top:1px solid #30283e;overflow-wrap:anywhere;white-space:pre-wrap;font-size:11px}.dm-sheet-entry:first-child{border-top:0}.dm-sheet-entry strong{display:block;color:#f2eaff}.dm-sheet-entry small{color:#c5b9d8}.dm-sheet-empty{padding:6px 0;color:#8e829f;font-size:11px}.dm-sheet-edit{margin:0 0 13px;padding:12px;border:1px solid #755c91;border-radius:9px;background:#100e1c}.dm-sheet-edit-title{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:10px}.dm-sheet-edit-title strong{color:#dfc5ff;letter-spacing:.1em}.dm-sheet-edit-title span{color:#ad9fbe}.dm-sheet-edit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.dm-sheet-edit-grid label{display:grid;gap:4px;color:#baaacd;font-size:9px;font-weight:800;letter-spacing:.07em}.dm-sheet-edit-grid input{width:100%;min-width:0;padding:7px 8px;border:1px solid #443953;border-radius:5px;background:#090812;color:white;font:600 13px monospace}.dm-sheet-edit-actions{justify-content:flex-end;margin-top:10px}.dm-sheet-edit-actions button{min-width:110px}@media(max-width:560px){.dm-sheet-view header{align-items:flex-start;flex-direction:column}.dm-sheet-head-actions{width:100%;justify-content:flex-end}.dm-sheet-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.dm-sheet-stat{min-height:50px;padding:7px}.dm-sheet-stat strong{font-size:14px}.dm-sheet-sections{grid-template-columns:1fr}.dm-sheet-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dm-sheet-edit-title{flex-direction:column}}';
 document.head.append(viewerStyle);
 function appendSheetSection(parent,title,entries,format){
- const section=document.createElement('section');section.className='dm-sheet-section';
- const heading=document.createElement('h3');heading.textContent=title;section.append(heading);
- if(!entries.length){const empty=document.createElement('p');empty.className='dm-sheet-empty';empty.textContent='Nenhum registro.';section.append(empty)}
+ const section=document.createElement('details');section.className='dm-sheet-section';
+ const heading=document.createElement('summary');heading.textContent=title+' · '+entries.length;section.append(heading);
+ const body=document.createElement('div');body.className='dm-sheet-section-body';
+ if(!entries.length){const empty=document.createElement('p');empty.className='dm-sheet-empty';empty.textContent='Nenhum registro.';body.append(empty)}
  for(const entry of entries){
   const row=document.createElement('div');row.className='dm-sheet-entry';
   const parts=format(entry),name=document.createElement('strong');name.textContent=parts.title;row.append(name);
   if(parts.detail){const detail=document.createElement('small');detail.textContent=parts.detail;row.append(detail)}
   if(parts.description){const description=document.createElement('div');description.textContent=parts.description;row.append(description)}
-  section.append(row);
+  body.append(row);
  }
+ section.append(body);
  parent.append(section);
 }
 function showPlayerSheet(pid){
  const session=sessions.get(pid);if(!session?.character)return;
  viewer.dataset.playerId=pid;
  $('dmSheetTitle').textContent=session.character.name||'Personagem';
- $('dmSheetStatus').textContent='Jogador: '+session.name+' · atualizada ao vivo enquanto estiver conectado.';
+ $('dmSheetStatus').textContent='● '+session.name+' · ao vivo'+(session.pendingEdits?.size?' · ajuste aguardando confirmação':'');
+ $('dmSheetEdit').disabled=Boolean(session.pendingEdits?.size);
  const content=$('dmSheetContent');content.replaceChildren();
  const character=session.character,stats=document.createElement('div');stats.className='dm-sheet-stats';
- for(const [label,value] of [['NÍVEL',character.level],['HP',character.hp],['TP',character.tp],['FORÇA',character.strength],['DEFESA',character.defense],['INTELIGÊNCIA',character.intelligence],['AGILIDADE',character.agility]]){
+ for(const [label,value] of [['NÍVEL',character.level],['FORÇA',character.strength],['DEFESA',character.defense],['INTELIGÊNCIA',character.intelligence],['AGILIDADE',character.agility]]){
   const stat=document.createElement('div');stat.className='dm-sheet-stat';const caption=document.createElement('small');caption.textContent=label;const number=document.createElement('strong');number.textContent=String(value??0);stat.append(caption,number);stats.append(stat);
  }
  content.append(stats);
+ const vitals=document.createElement('div');vitals.className='dm-sheet-vitals';
+ for(const [label,value] of [['HP',character.hp],['TP',character.tp]]){
+  const vital=document.createElement('div');vital.className='dm-sheet-vital';vital.textContent=label;
+  const number=document.createElement('strong');number.textContent=String(value??0);vital.append(number);vitals.append(vital);
+ }
+ content.append(vitals);
  const sections=document.createElement('div');sections.className='dm-sheet-sections';
  appendSheetSection(sections,'INVENTÁRIO',Array.isArray(character.items)?character.items:[],item=>({title:(item.icon||'◆')+' '+(item.name||'Item')+' ×'+(item.quantity||1),description:item.description||''}));
  appendSheetSection(sections,'HABILIDADES',Array.isArray(character.skills)?character.skills:[],skill=>({title:(skill.icon||'✦')+' '+(skill.name||'Habilidade'),detail:'TP '+(skill.cost||0)+' · '+(skill.category||'dano'),description:skill.description||''}));
@@ -209,6 +221,67 @@ function showPlayerSheet(pid){
  appendSheetSection(sections,'RELACIONAMENTOS',Array.isArray(character.relationships)?character.relationships:[],relationship=>({title:relationship.name||'Personagem',detail:relationship.role||'',description:relationship.description||''}));
  appendSheetSection(sections,'MURAL DE DOCUMENTOS',Array.isArray(character.muralNotes)?character.muralNotes:[],note=>({title:note.title||'Bilhete',description:note.text||''}));
  content.append(sections);if(!viewer.open)viewer.showModal();
+}
+const editFields=['name','level','hp','tp','strength','defense','intelligence','agility'];
+function openSheetEditor(pid){
+ const session=sessions.get(pid);if(!session?.character||session.pendingEdits?.size)return;
+ const form=$('dmSheetEditForm'),character=session.character;
+ for(const field of editFields)form.elements.namedItem(field).value=String(character[field]??'');
+ form.dataset.playerId=pid;form.hidden=false;
+ $('dmSheetStatus').textContent='Edite os campos e envie. Outros dados do jogador não serão alterados.';
+ $('dmSheetEdit').disabled=true;
+ form.elements.namedItem('name').focus();
+}
+function closeSheetEditor(){
+ $('dmSheetEditForm').hidden=true;$('dmSheetEdit').disabled=false;
+ $('dmSheetEditForm').removeAttribute('data-player-id');
+}
+function submitSheetEdit(event){
+ event.preventDefault();
+ const form=event.currentTarget,pid=form.dataset.playerId,session=sessions.get(pid);
+ if(!session?.conn?.open||!session.character){report('Jogador desconectado; a ficha dele não foi alterada.',true);return}
+ const changes={},base={};
+ for(const field of editFields){
+  const raw=form.elements.namedItem(field).value;
+  const value=field==='name'?raw.trim():Number(raw);
+  if(field==='name'&&(!value||value.length>32)){form.elements.namedItem(field).focus();return}
+  if(field!=='name'&&(!Number.isSafeInteger(value)||
+    field==='level'&&(value<1||value>99)||field==='tp'&&(value<0||value>100)||
+    !['level','tp'].includes(field)&&(value<0||value>9999)||
+    ['strength','defense','intelligence','agility'].includes(field)&&(value<1||value>99))){
+   form.elements.namedItem(field).focus();return;
+  }
+  if(JSON.stringify(value)!==JSON.stringify(session.character[field])){
+   base[field]=session.character[field];changes[field]=value;
+  }
+ }
+ if(!Object.keys(changes).length){closeSheetEditor();showPlayerSheet(pid);return}
+ const requestId='edit-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+ if(!session.pendingEdits)session.pendingEdits=new Map();
+ const pending={base,changes,timer:0};
+ pending.timer=setTimeout(()=>{
+  if(!session.pendingEdits.delete(requestId))return;
+  report('O jogador não confirmou o ajuste. Peça para atualizar a página; a ficha dele não foi alterada.',true);
+  if(viewer.open&&viewer.dataset.playerId===pid){
+   showPlayerSheet(pid);$('dmSheetStatus').textContent='Sem confirmação. Atualize a página do jogador; nenhum dado local foi alterado.';
+  }
+ },12000);
+ session.pendingEdits.set(requestId,pending);
+ if(!emit(session.conn,{kind:'master-edit',requestId,base,changes})){
+  clearTimeout(pending.timer);session.pendingEdits.delete(requestId);
+  report('Não foi possível enviar o ajuste. A ficha original continua intacta.',true);return;
+ }
+ closeSheetEditor();showPlayerSheet(pid);
+ $('dmSheetStatus').textContent='Enviando ajuste… a ficha só muda se o jogador ainda não alterou os mesmos campos.';
+ $('dmSheetEdit').disabled=true;
+}
+function acceptPlayerCharacter(session,raw){
+ let character;
+ try{character=master.normalizeIncoming(raw)}
+ catch(error){console.warn('Atualização de ficha inválida:',error);return false}
+ if(!character)return false;
+ session.character=character;session.last=fingerprint({character});
+ return true;
 }
 function onHostConnection(c){
  if(mode!=='owner'){try{c.close()}catch(_){}return;}
@@ -223,29 +296,46 @@ function onHostConnection(c){
    const current=sessions.get(pid);
    if(!current&&sessions.size>=MAX_PLAYERS){emit(c,{kind:'full'});c.close();return;}
    if(current){try{current.conn.close()}catch(_){}sessions.delete(pid)}
-   let character;
-   try{character=master.normalizeIncoming(msg.character)}
-   catch(error){console.warn('Ficha do jogador inválida:',error);emit(c,{kind:'error',message:'A ficha não pôde ser exibida; os dados locais do jogador foram preservados.'});c.close();return;}
-   if(!character){emit(c,{kind:'error',message:'A ficha não pôde ser exibida; os dados locais do jogador foram preservados.'});c.close();return;}
-   const session={pid,name:safeLabel(msg.name,36)||'Jogador',character,conn:c,ready:true,last:fingerprint({character})};
+   const session={pid,name:safeLabel(msg.name,36)||'Jogador',character:null,conn:c,ready:true,last:'',pendingEdits:new Map()};
+   if(!acceptPlayerCharacter(session,msg.character)){
+    console.warn('Ficha do jogador inválida.');emit(c,{kind:'error',message:'A ficha não pôde ser exibida; os dados locais do jogador foram preservados.'});c.close();return;
+   }
    sessions.set(pid,session);playerSession=session;
-   emit(c,{kind:'ack',signature:hashCharacter(character)});
+   emit(c,{kind:'ack',signature:hashCharacter(session.character)});
    window.DeltaRpgInitiative?.hostPlayerJoined?.(session,c);
    report('Ficha ao vivo recebida: '+session.character.name+'. Os dados ficam no dispositivo do jogador.');
    renderPlayers();
    return;
   }
   if(window.DeltaRpgInitiative?.hostMessage?.(msg,playerSession,c))return;
+  if(msg.kind==='edit-result'){
+   if(typeof msg.requestId!=='string'||!playerSession.pendingEdits?.has(msg.requestId))return;
+   const pending=playerSession.pendingEdits.get(msg.requestId);
+   clearTimeout(pending.timer);playerSession.pendingEdits.delete(msg.requestId);
+   if(!acceptPlayerCharacter(playerSession,msg.character)){
+    report('O jogador respondeu com uma ficha inválida; o ajuste não foi aplicado.',true);return;
+   }
+   if(msg.status==='applied'){
+    report('Ajuste aplicado e salvo na ficha de '+playerSession.name+'.');
+   }else if(msg.status==='conflict'){
+    closeSheetEditor();
+    report('O jogador alterou a ficha ao mesmo tempo. As alterações dele foram preservadas; revise a versão atual e tente novamente.',true);
+   }else{
+    report('O jogador não conseguiu salvar o ajuste. A ficha dele foi preservada.',true);
+   }
+   if(viewer.open&&viewer.dataset.playerId===playerSession.pid)showPlayerSheet(playerSession.pid);
+   if(msg.status==='applied')$('dmSheetStatus').textContent='✓ Ajuste salvo na ficha de '+playerSession.name+'.';
+   else if(msg.status==='conflict')$('dmSheetStatus').textContent='Conflito: alterações do jogador preservadas. Revise a ficha atual antes de tentar de novo.';
+   else $('dmSheetStatus').textContent='Ajuste não aplicado. A ficha original do jogador foi preservada.';
+   window.DeltaRpgInitiative?.hostPlayerUpdated?.(playerSession);
+   renderPlayers();return;
+  }
   if(msg.kind!=='update'||!msg.character)return;
-  let character;
-  try{character=master.normalizeIncoming(msg.character)}
-  catch(error){console.warn('Atualização de ficha inválida:',error);emit(c,{kind:'error',message:'Atualização inválida; a ficha local do jogador foi preservada.'});return;}
-  if(!character){emit(c,{kind:'error',message:'Atualização inválida; a ficha local do jogador foi preservada.'});return;}
-  const next=fingerprint({character});
-  if(next===playerSession.last)return;
-  playerSession.character=character;
-  playerSession.last=next;
-  emit(c,{kind:'ack',signature:hashCharacter(character)});
+  if(!acceptPlayerCharacter(playerSession,msg.character)){
+   console.warn('Atualização de ficha inválida.');emit(c,{kind:'error',message:'Atualização inválida; a ficha local do jogador foi preservada.'});return;
+  }
+  emit(c,{kind:'ack',signature:hashCharacter(playerSession.character)});
+  if(playerSession.pendingEdits?.size)$('dmSheetStatus').textContent='O jogador atualizou a ficha; seus ajustes serão conferidos antes de salvar.';
   if(viewer.open&&viewer.dataset.playerId===playerSession.pid)showPlayerSheet(playerSession.pid);
   window.DeltaRpgInitiative?.hostPlayerUpdated?.(playerSession);
   renderPlayers();
@@ -253,6 +343,7 @@ function onHostConnection(c){
  c.on('close',()=>{
   window.DeltaRpgInitiative?.hostPlayerLeft?.(playerSession);
   if(playerSession&&sessions.get(playerSession.pid)===playerSession){
+   for(const pending of playerSession.pendingEdits?.values()||[])clearTimeout(pending.timer);
    sessions.delete(playerSession.pid);renderPlayers();
    if(viewer.open&&viewer.dataset.playerId===playerSession.pid)
     $('dmSheetStatus').textContent='Jogador desconectado · exibindo a última ficha recebida.';
@@ -335,6 +426,24 @@ async function joinRoom(code,fileId,reconnect=false){
     if(window.DeltaRpgInitiative?.playerMessage?.(msg))return;
     if(msg.kind==='full'){report('Esta sala já tem cinco jogadores.',true);disconnect();return;}
     if(msg.kind==='error'){report(msg.message||'Falha ao sincronizar.',true);return;}
+    if(msg.kind==='master-edit'){
+     const keys=msg.changes&&typeof msg.changes==='object'&&!Array.isArray(msg.changes)?
+      Object.keys(msg.changes):[];
+     if(typeof msg.requestId!=='string'||!/^edit-[a-z0-9-]{8,64}$/i.test(msg.requestId)||
+       !keys.length||keys.length>editFields.length||keys.some(key=>!editFields.includes(key))){
+      report('Ajuste do mestre inválido; sua ficha não foi alterada.',true);return;
+     }
+     let result;
+     try{result=bridge.applyMasterPatch(joinedFileId,msg.base,msg.changes)}
+     catch(error){console.error('Não foi possível aplicar o ajuste do mestre',error);result=null}
+     const status=result?.ok?'applied':result?.conflict?'conflict':'error';
+     const sent=emit(connection,{kind:'edit-result',requestId:msg.requestId,status,character:result?.character||getFile()?.character});
+     if(!sent)report('Não foi possível confirmar o ajuste. A ficha permanece salva neste dispositivo.',true);
+     else if(status==='conflict')report('Ajuste do mestre não aplicado: sua edição mais recente foi preservada.');
+     else if(status==='error')report('O ajuste do mestre não pôde ser salvo; sua ficha foi preservada.',true);
+     else report('Ajuste do mestre recebido e salvo na sua ficha.');
+     return;
+    }
     if(msg.kind==='ack'){
      if(typeof msg.signature==='string'){
       connected=true;refresh();
@@ -399,6 +508,9 @@ $('dmConnect').onclick=()=>{
 };
 $('dmClose').onclick=()=>dialog.close();
 $('dmSheetClose').onclick=()=>viewer.close();
+$('dmSheetEdit').onclick=()=>openSheetEditor(viewer.dataset.playerId);
+$('dmSheetEditCancel').onclick=()=>{closeSheetEditor();showPlayerSheet(viewer.dataset.playerId)};
+$('dmSheetEditForm').addEventListener('submit',submitSheetEdit);
 $('dmStop').onclick=()=>{disconnect();report('Desconectado. Os FILES locais foram preservados.');};
 $('dmCopy').onclick=copyInvite;
 $('dmBackup').onclick=()=>{
