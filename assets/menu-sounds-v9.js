@@ -18,11 +18,11 @@ const DELTA_MENU_SOUNDS=["SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAzAAAAAAAAAA
  }
  if(btn){btn.addEventListener('click',()=>{enabled=!enabled;unlocked=true;try{localStorage.setItem(KEY,String(enabled))}catch(_){}repaint();if(enabled)play(true)});repaint()}
  document.addEventListener('pointerover',e=>{
-  const target=e.target.closest?.('button,.file-card,.entry-row,.theme-option,.theme-scene-btn');
+  const target=e.target.closest?.('button,.file-card,.entry-row');
   if(target&&!target.contains(e.relatedTarget))play(false)
  },{passive:true});
  document.addEventListener('click',e=>{
   unlocked=true;
-  if(e.target.closest?.('button,.file-card,.entry-row,.theme-option,.theme-scene-btn')&&!e.target.closest('#soundToggle'))play(true);
+  if(e.target.closest?.('button,.file-card,.entry-row')&&!e.target.closest('#soundToggle'))play(true);
  },true);
 })();

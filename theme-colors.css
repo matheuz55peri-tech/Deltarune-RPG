@@ -7,26 +7,6 @@
 --ui-shadow:rgba(84,44,194,.15);--ui-tab:rgba(44,28,93,.87);--ui-popover:rgba(10,12,31,.98);
 --ui-tp-start:#31bfd9;--ui-tp-end:#a8ecff;--ui-hp-start:#fa4d89;--ui-hp-end:#ff9fc3;
 }
-html[data-theme="snow"]{
---ui-ink:#f1fbff;--ui-muted:#c4d9ee;--ui-accent:#a7e7ff;--ui-secondary:#b5cfff;--ui-glint:#e9f9ff;
---ui-line:rgba(172,226,254,.60);--ui-line-soft:rgba(159,203,231,.32);
---ui-surface:rgba(8,33,59,.86);--ui-surface-soft:rgba(12,52,79,.78);
---ui-highlight:rgba(120,205,246,.18);--ui-input:rgba(6,30,51,.94);
---ui-shadow:rgba(101,212,255,.18);--ui-tab:rgba(19,79,114,.89);--ui-popover:rgba(10,34,56,.98);
---ui-tp-start:#52c7ea;--ui-tp-end:#caefff;--ui-hp-start:#e77da5;--ui-hp-end:#ffd5e4;
---muted:#c4d9ee;--purple:#badcff;--cyan:#c3f6ff;--stroke:rgba(178,228,250,.41);--panel:rgba(8,32,56,.86);
---theme-overlay-left:rgba(4,24,42,.82);--theme-overlay-center:rgba(20,63,94,.17);--theme-overlay-right:rgba(3,29,51,.78);
-}
-html[data-theme="forest"]{
---ui-ink:#ecfff8;--ui-muted:#a7d1cf;--ui-accent:#70f1bf;--ui-secondary:#8ccffc;--ui-glint:#e1ec99;
---ui-line:rgba(90,228,176,.5);--ui-line-soft:rgba(85,184,160,.3);
---ui-surface:rgba(1,18,30,.9);--ui-surface-soft:rgba(5,37,43,.81);
---ui-highlight:rgba(37,168,121,.17);--ui-input:rgba(1,24,34,.94);
---ui-shadow:rgba(46,225,162,.13);--ui-tab:rgba(3,64,57,.9);--ui-popover:rgba(1,21,31,.99);
---ui-tp-start:#2bc7ac;--ui-tp-end:#9ef6c2;--ui-hp-start:#df6890;--ui-hp-end:#ffb6ae;
---muted:#a7d1cf;--purple:#a6e3d7;--cyan:#76f4bf;--stroke:rgba(88,205,165,.4);--panel:rgba(1,19,30,.87);
---theme-overlay-left:rgba(0,9,20,.84);--theme-overlay-center:rgba(0,33,31,.16);--theme-overlay-right:rgba(0,11,21,.79);
-}
 html .brand-sub,html .box-code,html .library-meta,html .stat-help,html .attrs-subtitle,html .resource-intro,
 html .bar-foot,html .intro,html .portrait-flavor,html .library-help{color:var(--ui-muted)}
 html .eyebrow{color:var(--ui-secondary);text-shadow:0 0 15px var(--ui-shadow)}
@@ -66,25 +46,6 @@ html .entry-row.inventory-row.selected{background:var(--ui-highlight);border-col
 html .entry-detail{box-shadow:inset 0 0 20px rgba(0,0,0,.11)}
 html .editor-wrap{border-color:var(--ui-line)}html .editor-heading{color:var(--ui-accent)}
 html .inventory-row .entry-icon,html .entry-quantity{color:var(--ui-secondary)}
-html .theme-toggle{border-color:var(--ui-line);color:var(--ui-ink)}
-html .theme-toggle::before,html .theme-now{color:var(--ui-accent)}
-html .theme-toggle[aria-expanded="true"]{border-color:var(--ui-accent);background:var(--ui-highlight)}
-html .theme-popover{background:var(--ui-popover);border-color:var(--ui-line);box-shadow:0 18px 60px rgba(0,0,0,.66),0 0 24px var(--ui-shadow)}
-html .theme-option{border-color:var(--ui-line-soft);background:var(--ui-surface);color:var(--ui-ink)}
-html .theme-option:hover{border-color:var(--ui-accent);box-shadow:0 0 14px var(--ui-shadow)}
-html .theme-option[aria-pressed="true"]{border-color:var(--ui-accent);box-shadow:0 0 0 1px var(--ui-accent),0 0 18px var(--ui-shadow)}
-html .theme-option[aria-pressed="true"] .theme-info::after{color:var(--ui-accent)}
-html .theme-close{background:var(--ui-surface-soft);border-color:var(--ui-line-soft);color:var(--ui-ink)}
-html .winter-choice{color:var(--ui-ink);background:var(--ui-surface-soft);border-color:var(--ui-line-soft)}
-html .winter-choice[aria-pressed="true"]{background:var(--ui-highlight);border-color:var(--ui-accent)}
-html .theme-info small,html .theme-panel-sub,html .theme-tip{color:var(--ui-muted)}
-html .theme-option[data-theme-choice="classic"] .theme-info strong{color:#d4baff}
-html .theme-option[data-theme-choice="snow"] .theme-info strong{color:#a9e7ff}
-html .theme-option[data-theme-choice="forest"] .theme-info strong{color:#93edc1}
-.theme-info strong::before{content:'✦';display:inline-block;margin-right:6px;color:currentColor;opacity:.9}
-html .theme-option[data-theme-choice="classic"] .theme-info{box-shadow:inset 0 -3px #ba9cff}
-html .theme-option[data-theme-choice="snow"] .theme-info{box-shadow:inset 0 -3px #9beaff}
-html .theme-option[data-theme-choice="forest"] .theme-info{box-shadow:inset 0 -3px #4be0a9}
 html .entry-row.category-heal.selected{border-color:#6cfcb1;background:rgba(18,92,57,.3)}
 html .entry-row.category-damage.selected{border-color:#ff728f;background:rgba(104,31,50,.3)}
 html .entry-row.category-buff.selected{border-color:#cb92ff;background:rgba(75,37,117,.3)}
